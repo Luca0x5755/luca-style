@@ -17,7 +17,7 @@ Blocked by: none
 
 PR-STYLE-15 — 樣張部署於 `https://luca0x5755.github.io/luca-style/`；設計系統入口、設計基礎、共用元件、產品介面範本、介紹頁範本五個路由可經導覽切換並顯示對應頁面。
 PR-STYLE-16 — 在部署 base path 下直接開啟或重新整理五個路由任一深層網址，回應 HTTP 200 並顯示對應頁面。
-PR-STYLE-17 — 部署 base path 下不存在的網址回應 HTTP 404。
+PR-STYLE-17 — 部署 base path 下不存在的網址回應 HTTP 404，顯示找不到頁面（§5.3.6），並提供返回設計系統入口的主要行動。
 PR-STYLE-18 — 樣張內所有內部連結、導覽與品牌連結在部署 base path 下指向該 base path 內的路由；本機開發與預覽在 `/` 下的行為不變。
 PR-STYLE-19 — push 到 `main` 後，build、typecheck、lint 與 Playwright 全部通過才部署 Pages；任一失敗則不更新線上樣張。
 PR-STYLE-20 — `Navigation` 接受品牌連結 `brandHref`；未提供時品牌連結為 `/`，既有使用端不需修改。
@@ -43,12 +43,12 @@ PR-STYLE-24 — 前端規格路由表註明路徑相對於部署 base path（Git
 - 部署前必須通過 build、typecheck、lint 與 Playwright；不採 push 即部署。
 - README 快速開始精簡並連至使用端接入文件；不採完整重寫安裝步驟，避免兩處維護。
 - 截圖以 Playwright 腳本產生；不採手動截圖，避免過時。腳本不列入 `npm test`，避免截圖變動造成測試失敗。
+- 404 新增「找不到頁面」頁，沿用樣張外殼與共用元件，補齊四態與 48 張 Pencil frame；不採沿用入口頁內容，也不採脫離設計系統的靜態頁。
 - README 維持中文並保留開頭英文簡介；不採全英文或中英雙份。
 - `Navigation` 新增 `brandHref`，預設 `/`；修正公開元件寫死根路徑的缺陷。
 - 前端規格路由表路徑不改寫，僅加註相對 base path。
 
 ## Open questions
 
-- 404 頁顯示內容：沿用樣張外殼並提供返回入口，或使用簡單靜態頁。實作時依樣張既有空白／錯誤狀態文案決定，並經使用者檢視。
 - 截圖頁面：預設為設計系統入口 1280px；若其他頁更具代表性，實作時提出並由使用者決定。
 - 外部依賴：repo Settings → Pages 來源須由使用者改為「GitHub Actions」，部署才會生效。
