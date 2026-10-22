@@ -19,7 +19,9 @@
     "test": "playwright test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "test:consumer": "node scripts/verify-consumer.mjs"
+    "test:consumer": "node scripts/verify-consumer.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "verify:screenshots": "node scripts/verify-screenshots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
