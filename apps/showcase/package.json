@@ -1,5 +1,5 @@
 {
   "name": "@luca-style/showcase", "private": true, "version": "0.1.0", "type": "module",
   "dependencies": {"@luca-style/react": "0.1.0", "@luca-style/tokens": "0.1.0", "react": "^19.0.0", "react-dom": "^19.0.0"},
-  "scripts": {"dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"}
+  "scripts": {"dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort", "build:pages": "vite build --base=/luca-style/ --outDir dist-pages && node ../../scripts/build-pages.mjs dist-pages", "preview:subpath": "vite build --base=/luca-style/ --outDir dist-subpath && vite preview --base=/luca-style/ --outDir dist-subpath --host 127.0.0.1 --port 4175 --strictPort"}
 }

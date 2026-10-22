@@ -1,3 +1,4 @@
+import {withBase} from './routes';
 import {useState,type FormEvent} from 'react';
 import {Button,TextField,Select,StatusMessage,ContentState,MetricCard,DataTable,type TableColumn} from '@luca-style/react';
 type Item={id:string;category?:string;name:string;date:string;value:string;direction:'positive'|'negative'};
@@ -18,4 +19,4 @@ export function Product(){
  <DataTable caption="近期項目" columns={columns} rows={state==='success'?items:[]} rowKey={row=>row.id}>{state!=='success' && <p>{state==='loading'?'正在載入項目…':state==='empty'?'尚無近期項目。':'項目暫時無法載入，請使用上方重試。'}</p>}</DataTable><p className="data-legend">資料方向：<span className="data-positive">＋ 增加</span> / <span className="data-negative">− 減少</span>。資料色由此範本另行定義，與成功、錯誤等操作結果無關。</p></div>
  {state==='success' && <section className="product-plan"><h2>下一個小計畫</h2><p>從清楚的名稱開始，為重要的事情留出位置。</p><form aria-label="建立計畫" onSubmit={submit} noValidate><TextField name="planName" label="計畫名稱" value={name} onChange={e=>setName(e.target.value)} error={submitted&&!name.trim()?'請輸入計畫名稱。':undefined} helper="清楚的名稱，讓下一步更容易。"/><Select label="計畫分類" value={category} onChange={e=>setCategory(e.target.value)}><option>個人計畫</option><option>團隊活動</option></Select><Button type="submit">建立計畫</Button>{created&&<StatusMessage tone="success">計畫已建立，已加入近期項目。</StatusMessage>}<small>本機示例 · {category} · 不永久儲存。</small></form></section>}</div><p>介面組合示例，使用示意資料。</p></div>;
 }
-export function ProductSamples(){return <section aria-labelledby="display-components"><h2 id="display-components">導覽、指標與表格</h2><p>產品介面使用相同公開元件組合。</p><MetricCard label="本月累計" value="128,640" detail="TWD · 資料示例" highlight/><DataTable caption="表格示例" columns={columns} rows={initial} rowKey={row=>row.id}/><p><a href="/templates/product">檢視產品介面範本 →</a></p></section>;}
+export function ProductSamples(){return <section aria-labelledby="display-components"><h2 id="display-components">導覽、指標與表格</h2><p>產品介面使用相同公開元件組合。</p><MetricCard label="本月累計" value="128,640" detail="TWD · 資料示例" highlight/><DataTable caption="表格示例" columns={columns} rows={initial} rowKey={row=>row.id}/><p><a href={withBase('/templates/product')}>檢視產品介面範本 →</a></p></section>;}

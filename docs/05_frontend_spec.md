@@ -43,6 +43,9 @@
 | 共用元件 | `/components` | 無頁面級登入要求 | 設計系統 | 檢視元件與互動狀態 | `docs/mockup/components.pen` |
 | 產品介面範本 | `/templates/product` | 無頁面級登入要求 | 設計系統 | 檢視產品介面的響應式範本 | `docs/mockup/components.pen` |
 | 介紹頁範本 | `/templates/intro` | 無頁面級登入要求 | 設計系統 | 檢視介紹頁的響應式範本 | `docs/mockup/components.pen` |
+| 找不到頁面 | 未列於本表的路徑 | 無頁面級登入要求 | 設計系統 | 告知網址不存在，引導回到樣張 | `docs/mockup/components.pen` |
+
+路徑相對於部署的 base path：本機開發與預覽為 `/`，GitHub Pages 為 `/luca-style/`。各路由的直接開啟與重新整理皆回應 HTTP 200；找不到頁面回應 HTTP 404。
 
 Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字級檢視網站的存取設定。
 
@@ -50,15 +53,15 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 
 各頁以一個主要問題及一個主要行動組織內容。四態描述頁面主內容的可用性；Success 表示正常內容呈現，不等同操作成功通知。共用元件中的操作結果通知與頁面四態分開命名。
 
-五頁共用 `docs/mockup/components.pen`，frame 名稱組合為：`<page>/<suite>/<mode>/<device>/<state>`。
+六頁共用 `docs/mockup/components.pen`，frame 名稱組合為：`<page>/<suite>/<mode>/<device>/<state>`。
 
-- page：`Home`、`Foundations`、`Components`、`Product`、`Intro`。
+- page：`Home`、`Foundations`、`Components`、`Product`、`Intro`、`NotFound`。
 - suite：`Vibrant`、`Professional`。
 - mode：`Light`、`Dark`。
 - device：`Desktop`、`Tablet`、`Mobile`，分別以 1280、834、390px 寬度檢視。
 - state：`Loading`、`Empty`、`Error`、`Success`。
 
-每頁涵蓋全部組合，共 48 張 frame，五頁共 240 張；切換狀態時保留頁面標題與導覽脈絡。Loading 不呈現誤導性的空白結論；Empty 說明尚無內容；Error 說明載入失敗並提供重試入口。
+每頁涵蓋全部組合，共 48 張 frame，六頁共 288 張；切換狀態時保留頁面標題與導覽脈絡。Loading 不呈現誤導性的空白結論；Empty 說明尚無內容；Error 說明載入失敗並提供重試入口。
 
 ### 5.3.1 設計系統入口（能力：設計系統）→ `docs/mockup/components.pen`
 
@@ -104,6 +107,15 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 - **Loading**：保留品牌與導覽，介紹主內容呈現載入提示。
 - **Empty**：說明介紹內容尚未提供，保留返回入口。
 - **Error**：說明介紹內容載入失敗，提供重試。
+
+### 5.3.6 找不到頁面（能力：設計系統）→ `docs/mockup/components.pen`
+
+- **Story**：作為打錯或點到失效網址的訪客，我想知道這個頁面不存在，以便回到樣張繼續瀏覽。
+- **Dominant region**：回答「這個網址為什麼沒有內容」；主要行動為返回設計系統入口。
+- **Success**：保留品牌、導覽、套系與明暗模式切換。主區塊說明找不到頁面並顯示所請求的路徑，提供返回入口的主要行動，其他頁面維持在導覽中。
+- **Loading**：保留品牌與導覽，主區塊呈現載入提示。
+- **Empty**：說明此處尚無可顯示的內容，保留返回入口。
+- **Error**：說明頁面內容無法載入，提供重試並保留返回入口。
 
 ## 5.4 共用風格角色（能力：設計系統）
 
@@ -192,6 +204,6 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 
 ### 5.5.4 畫面核對（能力：設計系統）
 
-Pencil 檔案包含 22 個母版元件、12 張元件檢視板及 240 張頁面 frame。以頁名前綴搜尋即可定位，例如 `Product/Professional/Dark/Mobile/Error`。
+Pencil 檔案包含 22 個母版元件、12 張元件檢視板及 288 張頁面 frame。以頁名前綴搜尋即可定位，例如 `Product/Professional/Dark/Mobile/Error`。
 
-頁面矩陣核對 suite、mode、device、state 組合的完整性與唯一性。截圖檢視涵蓋五頁的桌面、手機、平板及載入、空白、錯誤狀態樣本；檢查文字換行、主要操作、表格、表單及頁尾。Pencil 檢視屬於設計驗證；React 瀏覽器與使用端驗證另見[交付驗證](delivery-verification.md)。
+頁面矩陣核對 suite、mode、device、state 組合的完整性與唯一性。截圖檢視涵蓋六頁的桌面、手機、平板及載入、空白、錯誤狀態樣本；檢查文字換行、主要操作、表格、表單及頁尾。Pencil 檢視屬於設計驗證；React 瀏覽器與使用端驗證另見[交付驗證](delivery-verification.md)。
