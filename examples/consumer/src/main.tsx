@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {ThemeProvider, useTheme, Button, Select, Checkbox, StatusMessage, type StyleSuite} from '@luca-style/react';
+import {ThemeProvider, useTheme, Button, Select, Checkbox, StatusMessage, Navigation, type StyleSuite} from '@luca-style/react';
 import '@luca-style/tokens/css';
 import '@luca-style/react/fonts.css';
 import '@luca-style/react/css';
@@ -19,6 +19,7 @@ function App() {
   const [custom,setCustom] = useState(false);
   const [count,setCount] = useState(0);
   return <ThemeProvider suite={suite} accent={custom ? {primary:'#275A83',secondary:'#6995B8',soft:'#E7F0F7',ink:'#FFFFFF'} : undefined}>
+    <Navigation label="子路徑導覽" brandHref="/luca-style/" items={[{label:'首頁',href:'/luca-style/'}]}/>
     <main><h1>新專案接入範例</h1><p>公開資料包含 {Object.keys(themes).length} 套風格；正文角色：{typography.body.desktop}。</p>
       <Select label="風格套系" value={suite} onChange={event=>setSuite(event.target.value as StyleSuite)}><option value="vibrant">精緻活力</option><option value="professional">精緻專業</option></Select>
       <ModeControl/><Checkbox label="專案強調色" checked={custom} onChange={event=>setCustom(event.target.checked)}/>

@@ -16,7 +16,7 @@ export function Components() {
         <TextField label="停用欄位" defaultValue="目前不可編輯" disabled/><Select label="選單示例" defaultValue="vibrant"><option value="vibrant">精緻活力 · 潮汐</option><option value="professional">精緻專業 · 石墨紫</option></Select><div className="component-sample"><Checkbox label="接收更新通知"/><Checkbox label="已停用的通知" disabled defaultChecked/></div></div></section>
       <section aria-labelledby="component-status"><h2 id="component-status">操作結果</h2><div className="component-grid"><StatusMessage tone="success">設定已儲存。</StatusMessage><StatusMessage tone="warning">請確認後再繼續。</StatusMessage><StatusMessage tone="error">儲存失敗，請重試。</StatusMessage></div></section>
       <section aria-labelledby="component-states"><h2 id="component-states">內容狀態</h2><p>內容是否可用，與操作結果分開呈現。</p><StateExamples/></section>
-      <section aria-label="導覽示例"><Navigation label="範例導覽" items={[{label:"設計基礎",href:"/foundations"},{label:"產品範本",href:"/templates/product"}]}/></section><ProductSamples/><section aria-labelledby="component-form"><h2 id="component-form">試試實際操作</h2><p>本機示例，資料不會傳送或永久儲存。</p><DemoForm/></section>
+      <section aria-label="導覽示例"><Navigation label="範例導覽" items={[{label:"設計基礎",href:"/foundations"},{label:"產品範本",href:"/templates/product"}]}/><Navigation label="子路徑導覽" brand="子路徑部署 /" brandHref="/luca-style/" items={[{label:"部署首頁",href:"/luca-style/"}]}/></section><ProductSamples/><section aria-labelledby="component-form"><h2 id="component-form">試試實際操作</h2><p>本機示例，資料不會傳送或永久儲存。</p><DemoForm/></section>
     </>}
   </div>;
 }

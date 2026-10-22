@@ -85,3 +85,9 @@ test('component samples remain operable across suite mode and width combinations
   await page.getByLabel('聚焦欄位').focus();
   await expect(page.getByLabel('聚焦欄位')).toHaveCSS('outline-width','2px');
 });
+
+test('Navigation brand link defaults to root and follows brandHref when provided', async ({page}) => {
+  await page.goto('/components');
+  await expect(page.getByRole('navigation',{name:'範例導覽'}).locator('.luca-brand')).toHaveAttribute('href','/');
+  await expect(page.getByRole('navigation',{name:'子路徑導覽'}).locator('.luca-brand')).toHaveAttribute('href','/luca-style/');
+});

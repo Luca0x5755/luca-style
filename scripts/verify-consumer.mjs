@@ -34,6 +34,8 @@ try {
   browser=await chromium.launch();
   const page=await browser.newPage({colorScheme:'light'});
   await page.goto('http://127.0.0.1:4174');
+  // 自訂 brandHref 經公開匯入後須原樣出現在屬性中。
+  assert.equal(await page.getByRole('navigation',{name:'子路徑導覽'}).locator('.luca-brand').getAttribute('href'),'/luca-style/');
   await page.getByRole('button',{name:'完成操作'}).click();
   assert.match(await page.getByRole('status').innerText(),/已完成 1 次/);
   await page.getByLabel('風格套系').selectOption('vibrant');
