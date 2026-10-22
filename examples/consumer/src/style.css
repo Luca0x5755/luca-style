@@ -1,0 +1,1 @@
+* {box-sizing:border-box} body {margin:0} main {max-width:48rem;margin:auto;padding:var(--card-padding);display:grid;gap:var(--gap-section);font-family:var(--font-body)} h1 {font-size:var(--type-title-size);line-height:var(--type-title-line-height)} .mono {font-family:var(--font-data)} .domain-signal {--data-growth:#346A92;color:var(--data-growth)} footer {overflow-wrap:anywhere}

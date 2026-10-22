@@ -1,0 +1,33 @@
+{
+  "name": "luca-style",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "generate": "npm run build -w @luca-style/tokens",
+    "build": "npm run generate && npm run build -w @luca-style/react && npm run build -w @luca-style/showcase",
+    "dev": "npm run generate && npm run build -w @luca-style/react && npm run dev -w @luca-style/showcase",
+    "preview": "npm run preview -w @luca-style/showcase",
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test:consumer": "node scripts/verify-consumer.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.13.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4"
+  }
+}

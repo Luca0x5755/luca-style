@@ -1,0 +1,6 @@
+palette-selector/
+node_modules/
+dist/
+test-results/
+playwright-report/
+packages/*/LICENSE

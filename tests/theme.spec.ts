@@ -1,0 +1,113 @@
+import { test, expect } from '@playwright/test';
+
+test('document background resolves the theme before application assets load', async ({browser}) => {
+  for (const scenario of [
+    {system:'light',stored:'dark',expected:'dark'},
+    {system:'dark',stored:'light',expected:'light'},
+    {system:'dark',stored:null,expected:'dark'},
+    {system:'light',stored:null,expected:'light'},
+  ] as const) {
+    const context = await browser.newContext({colorScheme:scenario.system});
+    await context.addInitScript(value => {
+      if (value) localStorage.setItem('luca-style-mode',value);
+    },scenario.stored);
+    const page = await context.newPage();
+    await page.route('**/*',route => ['script','stylesheet'].includes(route.request().resourceType()) ? route.abort() : route.continue());
+    for (const path of ['/','/foundations','/templates/product']) {
+      await page.goto(path);
+      await expect(page.locator('#root')).toBeEmpty();
+      await expect(page.locator('html')).toHaveCSS('background-color',scenario.expected === 'dark' ? 'rgb(21, 26, 24)' : 'rgb(247, 247, 242)');
+      await expect(page.locator('html')).toHaveCSS('color-scheme',scenario.expected);
+    }
+    await context.close();
+  }
+});
+
+test('project accent override keeps metric text readable in both suites and modes', async ({page}) => {
+  await page.goto('/templates/product');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.getByLabel('檢視專案強調色覆寫').check();
+  for (const suite of ['vibrant','professional']) {
+    await page.getByLabel('風格套系').selectOption(suite);
+    for (const mode of ['dark','light']) {
+      await page.getByLabel('明暗模式').selectOption(mode);
+      const metric = page.getByRole('article',{name:'本月累計'});
+      const contrasts = await metric.evaluate(element => {
+        const luminance = (color:string) => {
+          const channels = color.match(/[\d.]+/g)!.slice(0,3).map(Number).map(value => {
+            const channel = value / 255;
+            return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+          });
+          return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+        };
+        const background = luminance(getComputedStyle(element).backgroundColor);
+        return [...element.querySelectorAll('small,h2,strong,p')].map(child => {
+          const foreground = luminance(getComputedStyle(child).color);
+          return (Math.max(background,foreground) + .05) / (Math.min(background,foreground) + .05);
+        });
+      });
+      for (const contrast of contrasts) expect(contrast,`${suite}/${mode} metric text contrast`).toBeGreaterThanOrEqual(4.5);
+    }
+  }
+  await page.screenshot({path:'test-results/accent-override-light.png',fullPage:true});
+  await page.getByLabel('風格套系').selectOption('vibrant');
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await page.screenshot({path:'test-results/accent-override-dark.png',fullPage:true});
+});
+test('mode follows live system changes and retains a manual preference', async ({page, context}) => {
+  await page.emulateMedia({colorScheme:'dark'});
+  await page.goto('/');
+  await expect(page.locator('[data-luca-theme]')).toHaveAttribute('data-mode','dark');
+  await expect(page.locator('html')).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await page.emulateMedia({colorScheme:'light'});
+  await expect(page.locator('[data-luca-theme]')).toHaveAttribute('data-mode','light');
+  await expect(page.locator('html')).toHaveCSS('background-color','rgb(247, 247, 242)');
+  await page.getByLabel('明暗模式').selectOption('dark');
+  const reopened = await context.newPage();
+  await reopened.goto('/');
+  await expect(reopened.getByLabel('明暗模式')).toHaveValue('dark');
+  await expect(reopened.locator('[data-luca-theme]')).toHaveAttribute('data-mode','dark');
+  await reopened.getByRole('navigation',{name:'主要導覽'}).getByRole('link',{name:'設計基礎',exact:true}).click();
+  await expect(reopened.locator('html')).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await reopened.getByLabel('明暗模式').selectOption('system');
+  await reopened.emulateMedia({colorScheme:'light'});
+  await expect(reopened.locator('[data-luca-theme]')).toHaveAttribute('data-mode','light');
+});
+
+test('four theme combinations expose approved colors, density and shape', async ({page}) => {
+  await page.goto('/');
+  for (const suite of ['vibrant','professional']) {
+    await page.getByLabel('風格套系').selectOption(suite);
+    for(const mode of ['light','dark']) {
+      await page.getByLabel('明暗模式').selectOption(mode);
+      const primary = page.getByRole('button',{name:'探索設計基礎 →'});
+      await expect(primary).toHaveCSS('background-color', suite === 'vibrant' ? mode === 'light' ? 'rgb(20, 127, 130)' : 'rgb(100, 194, 188)' : mode === 'light' ? 'rgb(98, 92, 131)' : 'rgb(171, 164, 215)');
+      await expect(primary).toHaveCSS('border-radius', suite === 'vibrant' ? '16px':'3px');
+      await expect(page.locator('aside')).toHaveCSS('padding',suite === 'vibrant' ? '24px':'20px');
+      await expect(page.getByRole('article',{name:'讓每一份進展都清楚'})).toHaveCSS('border-left-width',suite === 'vibrant' ? '1px':'3px');
+    }
+  }
+});
+
+test('project accent override preserves status colors and reduced motion cancels transitions', async ({page}) => {
+  await page.goto('/');
+  await page.getByLabel('明暗模式').selectOption('light');
+  await page.getByLabel('檢視專案強調色覆寫').check();
+  await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('background-color','rgb(154, 76, 50)');
+  for (const suite of ['vibrant','professional']) {
+    await page.getByLabel('風格套系').selectOption(suite);
+    for (const mode of ['light','dark']) {
+      await page.getByLabel('明暗模式').selectOption(mode);
+      const colors = suite === 'vibrant'
+        ? mode === 'light' ? ['rgb(35, 115, 84)','rgb(136, 96, 24)','rgb(178, 68, 69)'] : ['rgb(126, 212, 171)','rgb(234, 198, 120)','rgb(242, 156, 150)']
+        : mode === 'light' ? ['rgb(53, 104, 88)','rgb(128, 96, 31)','rgb(163, 75, 92)'] : ['rgb(147, 198, 178)','rgb(219, 194, 139)','rgb(221, 163, 178)'];
+      for (const [i,label] of ['成功 · 已儲存','警告 · 請確認','錯誤 · 請重試'].entries()) {
+        await expect(page.getByText(label,{exact:true})).toHaveCSS('color',colors[i]);
+      }
+    }
+  }
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('transition-duration','0.12s, 0.12s');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('transition-duration','0s');
+});

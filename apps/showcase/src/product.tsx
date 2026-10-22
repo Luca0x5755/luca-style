@@ -1,0 +1,21 @@
+import {useState,type FormEvent} from 'react';
+import {Button,TextField,Select,StatusMessage,ContentState,MetricCard,DataTable,type TableColumn} from '@luca-style/react';
+type Item={id:string;category?:string;name:string;date:string;value:string;direction:'positive'|'negative'};
+const initial:Item[]=[{id:'monthly',name:'每月規劃',date:'10/19',value:'+12,480.00',direction:'positive'},{id:'weekend',name:'週末活動',date:'10/24',value:'−8,250.50',direction:'negative'}];
+const columns:TableColumn<Item>[]=[{key:'name',heading:'項目',render:row=><>{row.name}{row.category && <small className="plan-category">{row.category}</small>}</>},{key:'date',heading:'日期',render:row=>row.date},{key:'value',heading:'數值',render:row=><span className={`data-value data-${row.direction}`}>{row.value}</span>}];
+export function Product(){
+ const [state,setState]=useState('success');
+ const [items,setItems]=useState(initial);
+ const [name,setName]=useState('');
+ const [category,setCategory]=useState('個人計畫');
+ const [submitted,setSubmitted]=useState(false);
+ const [created,setCreated]=useState(false);
+ function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setSubmitted(true);setCreated(false);if(!name.trim()){(event.currentTarget.elements.namedItem('planName') as HTMLInputElement).focus();return;}setItems(rows=>[...rows,{id:`plan-${rows.length}`,name:name.trim(),category,date:'新建立',value:'0.00',direction:'positive'}]);setCreated(true);setName('');setSubmitted(false);}
+ return <div className="product-page"><h1 className="page-title">把今天，安排得剛剛好。</h1><p>從摘要到細節，讓每一份資訊各就其位。</p>
+ <label className="sample-control">樣張狀態<select value={state} onChange={e=>setState(e.target.value)}><option value="success">Success · 正常內容</option><option value="loading">Loading · 載入中</option><option value="empty">Empty · 尚無資料</option><option value="error">Error · 載入失敗</option></select></label>
+ {state==='success' ? <section className="product-metrics" aria-label="摘要資訊"><MetricCard label="本月累計" value="128,640" eyebrow="MONTH TO DATE" detail="TWD · 資料更新於 09:30" highlight/><MetricCard label="進行中的計畫" value="08" eyebrow="IN PROGRESS" detail="項計畫 · 持續累積進展"/><MetricCard label="已完成項目" value="24" eyebrow="COMPLETED" detail="項目 · 每一步都清楚"/></section> : <ContentState state={state as 'loading'|'empty'|'error'} title={state==='loading'?'產品資料載入中':state==='empty'?'目前尚無產品資料':'產品資料載入失敗'} onRetry={()=>setState('success')}/>}
+ <div className="product-layout"><div className="product-main">{state==='success' && <section className="product-chart" aria-labelledby="weekly-title"><h2 id="weekly-title">本週進展</h2><p>每天一點累積，讓變化更容易看見。</p><div className="chart-bars" role="img" aria-label="本週進展：週一 40、週二 56、週三 32、週四 72、週五 50、週六 82、週日 64。"><div>{[40,56,32,72,50,82,64].map((value,i)=><div key={i}><span style={{height:`${value}%`}}/><small>{['一','二','三','四','五','六','日'][i]}</small></div>)}</div></div></section>}
+ <DataTable caption="近期項目" columns={columns} rows={state==='success'?items:[]} rowKey={row=>row.id}>{state!=='success' && <p>{state==='loading'?'正在載入項目…':state==='empty'?'尚無近期項目。':'項目暫時無法載入，請使用上方重試。'}</p>}</DataTable><p className="data-legend">資料方向：<span className="data-positive">＋ 增加</span> / <span className="data-negative">− 減少</span>。資料色由此範本另行定義，與成功、錯誤等操作結果無關。</p></div>
+ {state==='success' && <section className="product-plan"><h2>下一個小計畫</h2><p>從清楚的名稱開始，為重要的事情留出位置。</p><form aria-label="建立計畫" onSubmit={submit} noValidate><TextField name="planName" label="計畫名稱" value={name} onChange={e=>setName(e.target.value)} error={submitted&&!name.trim()?'請輸入計畫名稱。':undefined} helper="清楚的名稱，讓下一步更容易。"/><Select label="計畫分類" value={category} onChange={e=>setCategory(e.target.value)}><option>個人計畫</option><option>團隊活動</option></Select><Button type="submit">建立計畫</Button>{created&&<StatusMessage tone="success">計畫已建立，已加入近期項目。</StatusMessage>}<small>本機示例 · {category} · 不永久儲存。</small></form></section>}</div><p>介面組合示例，使用示意資料。</p></div>;
+}
+export function ProductSamples(){return <section aria-labelledby="display-components"><h2 id="display-components">導覽、指標與表格</h2><p>產品介面使用相同公開元件組合。</p><MetricCard label="本月累計" value="128,640" detail="TWD · 資料示例" highlight/><DataTable caption="表格示例" columns={columns} rows={initial} rowKey={row=>row.id}/><p><a href="/templates/product">檢視產品介面範本 →</a></p></section>;}

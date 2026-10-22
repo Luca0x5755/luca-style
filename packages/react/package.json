@@ -1,0 +1,33 @@
+{
+  "name": "@luca-style/react",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "fonts",
+    "loading"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./css": {
+      "types": "./dist/css.d.ts",
+      "default": "./dist/styles.css"
+    },
+    "./fonts.css": "./fonts/fonts.css",
+    "./licenses/*": "./fonts/*-OFL.txt"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "dependencies": {
+    "@luca-style/tokens": "0.1.0"
+  },
+  "scripts": {
+    "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",
+    "build": "tsc -p tsconfig.json && node -e \"const fs=require('node:fs');fs.copyFileSync('src/styles.css','dist/styles.css');fs.copyFileSync('src/css.d.ts','dist/css.d.ts')\""
+  }
+}

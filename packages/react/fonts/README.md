@@ -1,0 +1,1 @@
+Original unmodified fonts and SIL Open Font License texts from https://github.com/google/fonts/tree/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl . Inter and Noto Sans TC are variable fonts; IBM Plex Mono includes regular and semibold. Fonts are self-hosted; keep the corresponding OFL files when redistributing.
