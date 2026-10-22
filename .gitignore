@@ -5,3 +5,4 @@ test-results/
 playwright-report/
 packages/*/LICENSE
 dist-subpath/
+dist-pages/

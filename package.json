@@ -14,6 +14,7 @@
     "generate": "npm run build -w @luca-style/tokens",
     "build": "npm run generate && npm run build -w @luca-style/react && npm run build -w @luca-style/showcase",
     "dev": "npm run generate && npm run build -w @luca-style/react && npm run dev -w @luca-style/showcase",
+    "build:pages": "npm run build:pages -w @luca-style/showcase",
     "preview": "npm run preview -w @luca-style/showcase",
     "test": "playwright test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
