@@ -2,6 +2,7 @@ import {Editorial} from './editorial';
 import {Product} from './product';
 import {Components} from './components';
 import {Foundations} from './foundations';
+import {stripBase, withBase} from './routes';
 import '@luca-style/react/fonts.css';
 import { createRoot } from 'react-dom/client';
 import { useLayoutEffect, useState } from 'react';
@@ -21,12 +22,14 @@ function Content({suite,setSuite,override,setOverride}: {suite:StyleSuite; setSu
     document.documentElement.dataset.mode = resolvedMode;
   },[resolvedMode]);
   const suiteName = suite === 'vibrant' ? '精緻活力 · 潮汐' : '精緻專業 · 石墨紫';
-  const intro = window.location.pathname === '/templates/intro';
-  const product = window.location.pathname === '/templates/product';
-  const components = window.location.pathname === '/components';
-  const foundations = window.location.pathname === '/foundations';
+  // route 為去掉 base 的路由；導覽連結含 base，currentPath 需同為含 base 的路徑才能比對 aria-current。
+  const route = stripBase(window.location.pathname);
+  const intro = route === '/templates/intro';
+  const product = route === '/templates/product';
+  const components = route === '/components';
+  const foundations = route === '/foundations';
   return <div className="page">
-    <Navigation currentPath={window.location.pathname} items={[{label:"設計基礎",href:"/foundations"},{label:"共用元件",href:"/components"},{label:"產品範本",href:"/templates/product"},{label:"介紹範本",href:"/templates/intro"}]}/>
+    <Navigation currentPath={withBase(route)} brandHref={withBase('/')} items={[{label:"設計基礎",href:withBase("/foundations")},{label:"共用元件",href:withBase("/components")},{label:"產品範本",href:withBase("/templates/product")},{label:"介紹範本",href:withBase("/templates/intro")}]}/>
     <section className="theme-controls" aria-label="主題比較">
       <label>風格套系<select value={suite} onChange={e=>setSuite(e.target.value as StyleSuite)}><option value="vibrant">精緻活力 · 潮汐</option><option value="professional">精緻專業 · 石墨紫</option></select></label>
       <label>明暗模式<select value={mode} onChange={e=>setMode(e.target.value as ColorMode)}><option value="system">跟隨系統</option><option value="light">日間</option><option value="dark">暗黑</option></select></label>
