@@ -1,8 +1,9 @@
 import {Editorial} from './editorial';
+import {NotFound} from './not-found';
 import {Product} from './product';
 import {Components} from './components';
 import {Foundations} from './foundations';
-import {stripBase, withBase} from './routes';
+import {isKnownRoute, stripBase, withBase} from './routes';
 import '@luca-style/react/fonts.css';
 import { createRoot } from 'react-dom/client';
 import { useLayoutEffect, useState } from 'react';
@@ -28,6 +29,7 @@ function Content({suite,setSuite,override,setOverride}: {suite:StyleSuite; setSu
   const product = route === '/templates/product';
   const components = route === '/components';
   const foundations = route === '/foundations';
+  const notFound = !isKnownRoute(route);
   return <div className="page">
     <Navigation currentPath={withBase(route)} brandHref={withBase('/')} items={[{label:"設計基礎",href:withBase("/foundations")},{label:"共用元件",href:withBase("/components")},{label:"產品範本",href:withBase("/templates/product")},{label:"介紹範本",href:withBase("/templates/intro")}]}/>
     <section className="theme-controls" aria-label="主題比較">
@@ -35,8 +37,8 @@ function Content({suite,setSuite,override,setOverride}: {suite:StyleSuite; setSu
       <label>明暗模式<select value={mode} onChange={e=>setMode(e.target.value as ColorMode)}><option value="system">跟隨系統</option><option value="light">日間</option><option value="dark">暗黑</option></select></label>
     <label className="override-control"><span>專案強調色</span><span><input type="checkbox" checked={override} onChange={e=>setOverride(e.target.checked)}/>檢視專案強調色覆寫</span></label>
     </section><div className="status-preview" aria-label="操作狀態色對照"><span style={{color:'var(--success)'}}>成功 · 已儲存</span><span style={{color:'var(--warning)'}}>警告 · 請確認</span><span style={{color:'var(--error)'}}>錯誤 · 請重試</span></div><main>
-      <p className="eyebrow">{intro ? '/templates/intro' : product ? '/templates/product' : components ? '/components' : foundations ? '/foundations' : '/'} / {suiteName} / {resolvedMode === 'dark' ? '暗黑' : '日間'}</p>
-      {product ? <Product/> : components ? <Components/> : foundations ? <Foundations suite={suite}/> : <Editorial intro={intro} suite={suite}/>}
+      <p className="eyebrow">{notFound ? route : intro ? '/templates/intro' : product ? '/templates/product' : components ? '/components' : foundations ? '/foundations' : '/'} / {suiteName} / {resolvedMode === 'dark' ? '暗黑' : '日間'}</p>
+      {notFound ? <NotFound path={route}/> : product ? <Product/> : components ? <Components/> : foundations ? <Foundations suite={suite}/> : <Editorial intro={intro} suite={suite}/>}
     </main>
     <footer>Luca Style / {suiteName} · 字級提案 A</footer>
   </div>;

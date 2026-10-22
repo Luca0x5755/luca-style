@@ -64,3 +64,14 @@ test('in-page links stay inside the sub-path', async ({ page }) => {
   await page.getByRole('link', { name: '檢視產品介面範本 →' }).click();
   await expect(page).toHaveURL(new RegExp(`${base}/templates/product$`));
 });
+
+test('unknown sub-path route shows not-found and returns to the sub-path entry', async ({ page }) => {
+  await page.goto(`${base}/missing-page`);
+  await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
+  await expect(eyebrow(page)).toContainText('/missing-page');
+  const back = page.getByRole('link', { name: '返回設計系統入口', exact: true });
+  await expect(back).toHaveAttribute('href', `${base}/`);
+  await back.click();
+  await expect(page).toHaveURL(new RegExp(`${base}/$`));
+  await expect(page.getByRole('heading', { name: homeHeading })).toBeVisible();
+});

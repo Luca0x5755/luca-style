@@ -92,7 +92,8 @@ code { overflow-wrap:anywhere; }
 .editorial-statements section { min-width:0; }
 .editorial-statements small { display:block; color:var(--accent); margin-bottom:var(--space-3); }
 .editorial-explore > div { display:flex; flex-wrap:wrap; gap:var(--space-4); }
-.editorial-explore a,.intro-panel > a,.intro-close > a { display:inline-flex; align-items:center; min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--accent); border-radius:var(--radius-control); color:var(--accent); font-weight:500; text-decoration:none; }
+.editorial-explore a,.intro-panel > a,.intro-close > a,.not-found-action { display:inline-flex; align-items:center; min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--accent); border-radius:var(--radius-control); color:var(--accent); font-weight:500; text-decoration:none; }
+.not-found-action { background:var(--accent); color:var(--accent-ink); }
 .editorial-page a:focus-visible { outline:3px solid var(--text); outline-offset:3px; }
 .editorial-hero,.intro-detail { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--gap-section); align-items:start; }
 .intro-panel { background:var(--accent-soft); border-color:var(--accent); }
@@ -102,3 +103,6 @@ code { overflow-wrap:anywhere; }
 .intro-detail { scroll-margin-top:var(--space-6); }
 @media(max-width:1023px) { .editorial-hero,.intro-detail { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:599px) { .editorial-statements,.editorial-hero,.intro-detail { grid-template-columns:minmax(0,1fr); } .editorial-page aside { min-width:0; } }
+/* 請求路徑可能是不含空白的長字串，需允許在任意處換行以免水平溢出。 */
+.eyebrow,.not-found-page .description { overflow-wrap:anywhere; }
+.not-found-page .luca-content-state p:empty { display:none; }

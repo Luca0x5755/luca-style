@@ -11,3 +11,10 @@ export function stripBase(pathname: string): string {
   if (pathname === base) return '/';
   return pathname.startsWith(`${base}/`) ? pathname.slice(base.length) : pathname;
 }
+
+// 前端規格 §5.2 列出的路由；不在此表內的路徑顯示找不到頁面。
+const knownRoutes = new Set(['/', '/foundations', '/components', '/templates/product', '/templates/intro']);
+
+export function isKnownRoute(route: string): boolean {
+  return knownRoutes.has(route);
+}
