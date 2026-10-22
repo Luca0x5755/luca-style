@@ -6,9 +6,9 @@
 
 ## 交付索引
 
-- 開發、建置與驗證指令：[README](../../README.md)。
+- 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與 Pencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～14`。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～24`。
 - 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
@@ -36,7 +36,28 @@ PR-STYLE-12 — 共用元件涵蓋按鈕、表單、導覽、卡片、表格、�
 PR-STYLE-13 — 提供產品介面與介紹頁的桌面和手機範本，使新專案可依同一規則建立畫面。
 PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、.pen 元件庫及使用說明，讓後續專案可取得並沿用。
 
-承諾沿用已核可總規格的凍結 ID 與原文；無 retired 承諾。驗收證據見[交付驗證](../delivery-verification.md)。
+### 公開樣張與 README 承諾
+
+專案以 MIT 開源後，樣張需讓外部讀者不必 clone 即可瀏覽，README 需以開源讀者視角撰寫。以下承諾以最終實作為準。
+
+PR-STYLE-15 — 樣張部署於 `https://luca0x5755.github.io/luca-style/`；設計系統入口、設計基礎、共用元件、產品介面範本、介紹頁範本五個路由可經導覽切換並顯示對應頁面。
+PR-STYLE-16 — 在部署 base path 下直接開啟或重新整理五個路由任一深層網址，回應 HTTP 200 並顯示對應頁面。尾斜線 `/foundations/` 與 `/foundations` 視為同一路由；GitHub Pages 對無尾斜線的目錄網址會 301 到帶尾斜線的網址。
+PR-STYLE-17 — 部署 base path 下不存在的網址回應 HTTP 404，顯示找不到頁面（§5.3.6），並提供返回設計系統入口的主要行動。
+PR-STYLE-18 — 樣張內所有內部連結、導覽與品牌連結在部署 base path 下指向該 base path 內的路由；本機開發與預覽在 `/` 下的行為不變。`Navigation` 的 `currentPath` 與其 `href` 同為含 base 的路徑（樣張傳 `withBase(route)`），元件才能比對出目前頁。
+PR-STYLE-19 — push 到 `main` 後，build、typecheck、lint 與 Playwright 全部通過才部署 Pages；任一失敗則不更新線上樣張。工作流程為 `.github/workflows/pages.yml`，action 固定到 commit SHA。
+PR-STYLE-20 — `Navigation` 接受品牌連結 `brandHref`；未提供時品牌連結為 `/`，既有使用端不需修改。
+PR-STYLE-21 — README 依序包含：一句話介紹與截圖、快速開始、公開套件與文件導覽、開發與驗證、授權；附線上樣張連結，本機預覽稱為「本機預覽」。
+PR-STYLE-22 — README 快速開始包含 clone、`npm ci`、`npm run dev` 及不超過 10 行的最少使用程式碼（逐字節錄自 `examples/consumer`）；使用端安裝細節連至使用端接入文件，不在 README 重複。
+PR-STYLE-23 — 單一指令 `npm run screenshots` 可產生精緻活力、精緻專業各自日間、暗黑共 4 張樣張截圖於 `docs/images/`（vibrant-light、vibrant-dark、professional-light、professional-dark）；此指令不屬於 `npm test`，使用獨立 4177 port，`npm run verify:screenshots` 驗證產生結果穩定。
+PR-STYLE-24 — 前端規格路由表註明路徑相對於部署 base path（GitHub Pages 為 `/luca-style/`）；架構技術棧與交付結構記錄 Pages 部署方式。
+
+實作補充：
+
+- 部署輸出目錄為 `apps/showcase/dist-pages`（`npm run build:pages`，base 為 `/luca-style/`），內含每個路由的 `index.html` 與 `404.html`；一般 `npm run build` 的輸出不變。
+- 路由清單單一來源為 `apps/showcase/src/route-table.json`，應用路由與 `build:pages` 共用，測試比對兩者一致。
+- 承諾 PR-STYLE-15 的線上部分（網址實際回應 200）需要使用者 push 到 `main` 並把 repo Settings → Pages 的來源設為「GitHub Actions」，尚未線上驗證；見[交付驗證](../delivery-verification.md#公開樣張與-readme)。
+
+承諾沿用已核可總規格的凍結 ID 與原文（PR-STYLE-15 至 24 於公開樣張票新增，文字依最終實作補充）；無 retired 承諾。驗收證據見[交付驗證](../delivery-verification.md)。
 
 ### 交付邊界
 
@@ -61,12 +82,12 @@ PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、.pen 元�
 
 ## 規格章節
 
-- [架構 §3.1 技術棧與交付結構](../03_architecture_design.md#31-技術棧與交付結構能力設計系統)
+- [架構 §3.1 技術棧與交付結構](../03_architecture_design.md#31-技術棧與交付結構能力設計系統)，記錄 Pages 部署方式；對應 `PR-STYLE-19`、`PR-STYLE-24`。
 - [架構 §3.2 資料模型與所有權](../03_architecture_design.md#32-資料模型與所有權能力設計系統)
 - [架構 §3.3 套件與主題公開合約](../03_architecture_design.md#33-套件與主題公開合約能力設計系統)
 - [架構 §3.4 視覺規格與交付邊界](../03_architecture_design.md#34-視覺規格與交付邊界能力設計系統)
 - [前端 §5.1 字體與響應式字級](../05_frontend_spec.md#51-字體與響應式字級能力設計系統)，包含 §5.1.1 字體角色及 §5.1.2 響應式規則；對應 `PR-STYLE-08`、`PR-STYLE-09`。
-- [前端 §5.2 路由](../05_frontend_spec.md#52-路由能力設計系統)。
+- [前端 §5.2 路由](../05_frontend_spec.md#52-路由能力設計系統)；路徑相對於部署 base path，對應 `PR-STYLE-15` 至 `PR-STYLE-18`、`PR-STYLE-24`。
 - [前端 §5.3 頁面與狀態](../05_frontend_spec.md#53-頁面與狀態能力設計系統)，包含 §5.3.1 入口、§5.3.2 設計基礎、§5.3.3 共用元件、§5.3.4 產品介面範本、§5.3.5 介紹頁範本、§5.3.6 找不到頁面；對應 `PR-STYLE-12` 至 `PR-STYLE-14`。
 - [前端 §5.4 共用風格角色](../05_frontend_spec.md#54-共用風格角色能力設計系統)；對應 `PR-STYLE-01` 至 `PR-STYLE-07`、`PR-STYLE-09` 至 `PR-STYLE-11`。
 - [前端 §5.5 共用 Pencil 元件](../05_frontend_spec.md#55-共用-pencil-元件能力設計系統)，包含 §5.5.1 母版元件與檢視板、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。
