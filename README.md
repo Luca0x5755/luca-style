@@ -63,7 +63,7 @@ npm run build
 npm run preview
 ```
 
-本機預覽位於 http://127.0.0.1:4173。工作區依序建置 tokens、React、showcase。
+本機預覽位於 [http://127.0.0.1:4173](http://127.0.0.1:4173)。工作區依序建置 tokens、React、showcase。
 
 ```sh
 npx playwright install chromium
