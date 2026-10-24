@@ -1,0 +1,23 @@
+Status: Proposed
+
+# Split the design source by style suite and make OpenPencil `.fig` the source of truth
+
+The design source is two OpenPencil files, one per style suite: `docs/mockup/components-vibrant.fig` and `docs/mockup/components-professional.fig`. Each holds every page frame of its suite plus its own copy of the 22 component masters. The Pencil `components.pen` is deprecated and removed from the working tree once both files are verified; git history keeps it.
+
+This overturns the 2026-10-19 decision to keep all pages and masters in one `components.pen`.
+
+The single-file layout cannot be edited by agents any more. The migrated `.fig` holds about 11,500 nodes, and OpenPencil's MCP refuses atomic edits on any document over 10,000 nodes, counted across the whole document rather than per page. Splitting by suite gives about 5,800 nodes per file. A suite is the natural seam: ADR 0001 makes a project pick exactly one suite, so no project needs both files open at once.
+
+We considered:
+
+- **Keep one `.fig` and edit it by hand in the app.** Rejected: it forfeits agent editing, which was the reason for the migration.
+- **Share the masters through an OpenPencil library.** Rejected: consumers link to a library by revision and update manually, with no live sync, so it recreates the cross-file sync problem the 2026-10-19 decision avoided. It also depends on a manual publish step that agents cannot perform.
+- **Split by page.** Deferred, not rejected: it would leave more headroom for projects with many pages and will be studied separately.
+- **Keep `.pen` as a frozen archive.** Rejected: a stale copy invites accidental edits.
+
+Consequences:
+
+- The 22 masters exist twice. A change to a master must land in both files, and a script run through the offline `openpencil` CLI compares the two sets and runs as part of delivery verification.
+- Splitting is done offline with `openpencil eval`, because deleting thousands of nodes inside the running app crashes its renderer.
+- Documents that name `components.pen` or call it the single design file are updated in the same change that lands the split.
+- Visual QA stays a manual check, as before. Verification of the split is structural: frame names, node counts, text and fills match the original, with a spot check of two frames per page.
