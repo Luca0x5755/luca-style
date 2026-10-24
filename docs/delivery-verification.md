@@ -348,3 +348,148 @@ node --test scripts/design/build-theme-data.test.js                          # �
 | Home/Vibrant/Light/Tablet/Error | 3.2.0 | fill | #147F82 | 次要按鈕文字與邊框為深青綠 |
 | Intro/Vibrant/Light/Mobile/Loading | - | fill | #F7F7F2 | 淺米白底 |
 | Intro/Vibrant/Light/Mobile/Loading | 3.2.0 | fill | #147F82 | 返回入口按鈕邊框為深青綠 |
+
+## 套系設計檔的變數集合與模式（ISSUE-008）
+
+2026-10-24。`scripts/design/apply-variables.js` 讀 `docs/mockup/themes/variables.json`，用離線 `openpencil eval` 在兩個套系設計檔建立變數集合與模式（48 個變數）。`suite` 軸不建模式，每檔只取自己套系的值。
+
+### 建模
+
+Figma 的模式屬於集合，一個節點在每個集合只持有一個模式，所以每條軸一個集合：
+
+| 集合 | 模式 | 放什麼 | 變數數 |
+| --- | --- | --- | --- |
+| `Mode` | Light、Dark | 依明暗變化的變數（含 mode＋suite：套系固定後只剩 mode） | 19 |
+| `Device` | Desktop、Tablet、Mobile | 只依裝置變化的變數（`fs-hero`、`fs-title`、`fs-section`） | 3 |
+| `Base` | Default | 不隨明暗與裝置變化的常數，以及只依套系變化的變數（套系固定後是常數） | 26 |
+
+- 分類看兩個套系合併後的變化軸，所以兩個檔案的集合結構完全相同。
+- 目前沒有任何變數同時依 mode 與 device 變化；日後出現時，腳本以結束碼 1 拒絕並指出變數名稱，必須先把它拆成各依單軸的變數。
+- Done when 沒寫 `Base`：不依 device 變化的變數不放 `Device`，所以需要一個地方放常數。
+- opacity 類變數（`loading-*-opacity`）維持 `variables.json` 的 0–100 原值，型別 `FLOAT`，與 `resolved.json` 一致；ISSUE-009 綁定時若需要 0–1，由綁定端換算。
+- 節點數 5826 = 原本 5825 加一個空白的 `Internal Only Canvas` 頁：檔案一旦含變數，存檔時 OpenPencil 會建立它來存放變數，之後再存檔不會重複產生。`verify-split.js`、`check-masters.js`、`build-theme-data.js --check-fig` 在加入變數後仍全部通過。
+
+### 指令與結果
+
+```sh
+node scripts/design/apply-variables.js           # 套用；已是最新就不寫檔
+node scripts/design/apply-variables.js --check   # 唯讀：逐變數、逐 (mode, device) 組合與 variables.json 比對，並檢查節點數 < 10,000
+node scripts/design/apply-variables.js --list    # 唯讀：列出每個變數在每個模式的值
+node --test scripts/design/apply-variables.test.js
+```
+
+- 首次套用：兩檔各「新增 48、更新 0、移除 0」；重跑：兩檔皆「已是最新，不寫檔」（無重複的集合或變數）。
+- `--check`：兩檔「節點數 5826，變數與 variables.json 逐筆一致」。檢查邏輯獨立於分類：對 48 個變數、本套系的 3 個裝置×2 個明暗共 6 個組合，在檔內找到該變數並用模式名稱挑值，顏色以 `Math.round(x*255)` 轉回十六進位後與 JSON 比對（alpha 必須為 1），數值、字串、布林嚴格相等。
+- 測試：`node --test scripts/design/apply-variables.test.js` 11 項全過（在 `.fig` 暫存副本上套用，用 `openpencil eval` 讀回）。
+
+### MCP `set_fill` 驗證：未完成
+
+OpenPencil App 在這次執行中，`open_file` 對 `components-vibrant.fig` 的副本、`HEAD` 版本（沒有變數）的副本與原檔都回傳逾時（或 `ResourceCache cleanup failed`），等待超過 10 分鐘仍未出現在 `list_documents`；App 本身有回應（`list_collections` 對既有的小分頁正常）。因為連沒有變數的 `HEAD` 版本也打不開，這不是變數造成的，是 App 目前載入大檔失敗，所以無法完成 MCP `set_fill` 驗證。替代證據（不等同 MCP）：離線 `openpencil eval` 把套用變數後的 vibrant 副本中葉節點 `Footer divider`（RECTANGLE）填色改為紅色並另存，重新讀檔後填色已改且 48 個變數仍在。ISSUE-008 因此帶著這一項未驗就結案；ISSUE-009 的 Done when 有同一條（MCP `set_fill`），App 能載入大檔後在 ISSUE-009 或 ISSUE-010 一併補驗，兩檔都要驗。
+
+### 重新讀檔列出的值（`--list` 輸出）
+
+#### components-vibrant.fig（Vibrant）
+
+| 集合 | 變數 | 型別 | 各模式的值 |
+| --- | --- | --- | --- |
+| Mode | bg | COLOR | Light #F7F7F2；Dark #151A18 |
+| Mode | surface | COLOR | Light #FFFFFF；Dark #1D2420 |
+| Mode | surface-subtle | COLOR | Light #F1F3EE；Dark #252E28 |
+| Mode | text | COLOR | Light #24312A；Dark #EDF3ED |
+| Mode | muted | COLOR | Light #626F65；Dark #A5B5A8 |
+| Mode | border | COLOR | Light #DDE5DC；Dark #354139 |
+| Mode | accent | COLOR | Light #147F82；Dark #64C2BC |
+| Mode | accent-soft | COLOR | Light #E3F2F0；Dark #173637 |
+| Mode | accent-ink | COLOR | Light #FFFFFF；Dark #151A18 |
+| Mode | secondary | COLOR | Light #DF826D；Dark #E8A18B |
+| Mode | success | COLOR | Light #237354；Dark #7ED4AB |
+| Mode | warning | COLOR | Light #886018；Dark #EAC678 |
+| Mode | error | COLOR | Light #B24445；Dark #F29C96 |
+| Mode | card-highlight | COLOR | Light #E3F2F0；Dark #173637 |
+| Mode | control-border | COLOR | Light #7B8C80；Dark #65766B |
+| Mode | loading-tide-light-opacity | FLOAT | Light 100；Dark 0 |
+| Mode | loading-tide-dark-opacity | FLOAT | Light 0；Dark 100 |
+| Mode | loading-square-light-opacity | FLOAT | Light 0；Dark 0 |
+| Mode | loading-square-dark-opacity | FLOAT | Light 0；Dark 0 |
+| Device | fs-hero | FLOAT | Desktop 56；Tablet 44；Mobile 32 |
+| Device | fs-title | FLOAT | Desktop 32；Tablet 28；Mobile 24 |
+| Device | fs-section | FLOAT | Desktop 24；Tablet 22；Mobile 20 |
+| Base | font-zh | STRING | Default Noto Sans TC |
+| Base | font-en | STRING | Default Inter |
+| Base | font-data | STRING | Default IBM Plex Mono |
+| Base | radius-card | FLOAT | Default 20 |
+| Base | radius-control | FLOAT | Default 16 |
+| Base | border-width | FLOAT | Default 1 |
+| Base | card-padding | FLOAT | Default 24 |
+| Base | gap-section | FLOAT | Default 32 |
+| Base | fs-card | FLOAT | Default 18 |
+| Base | fs-body | FLOAT | Default 16 |
+| Base | fs-small | FLOAT | Default 14 |
+| Base | fs-label | FLOAT | Default 12 |
+| Base | elevation-enabled | BOOLEAN | Default true |
+| Base | metric-border-left | FLOAT | Default 1 |
+| Base | suite-label | STRING | Default 精緻活力 · 潮汐 |
+| Base | space-1 | FLOAT | Default 4 |
+| Base | space-2 | FLOAT | Default 8 |
+| Base | space-3 | FLOAT | Default 12 |
+| Base | space-4 | FLOAT | Default 16 |
+| Base | space-6 | FLOAT | Default 24 |
+| Base | space-8 | FLOAT | Default 32 |
+| Base | space-12 | FLOAT | Default 48 |
+| Base | space-16 | FLOAT | Default 64 |
+| Base | motion-feedback | FLOAT | Default 120 |
+| Base | motion-standard | FLOAT | Default 180 |
+| Base | motion-region | FLOAT | Default 240 |
+
+#### components-professional.fig（Professional）
+
+| 集合 | 變數 | 型別 | 各模式的值 |
+| --- | --- | --- | --- |
+| Mode | bg | COLOR | Light #F7F7F2；Dark #151A18 |
+| Mode | surface | COLOR | Light #FFFFFF；Dark #1D2420 |
+| Mode | surface-subtle | COLOR | Light #F1F3EE；Dark #252E28 |
+| Mode | text | COLOR | Light #24312A；Dark #EDF3ED |
+| Mode | muted | COLOR | Light #626F65；Dark #A5B5A8 |
+| Mode | border | COLOR | Light #DDE5DC；Dark #354139 |
+| Mode | accent | COLOR | Light #625C83；Dark #ABA4D7 |
+| Mode | accent-soft | COLOR | Light #EEEDF4；Dark #2D2A3B |
+| Mode | accent-ink | COLOR | Light #FFFFFF；Dark #151A18 |
+| Mode | secondary | COLOR | Light #6799B9；Dark #8BBDD8 |
+| Mode | success | COLOR | Light #356858；Dark #93C6B2 |
+| Mode | warning | COLOR | Light #80601F；Dark #DBC28B |
+| Mode | error | COLOR | Light #A34B5C；Dark #DDA3B2 |
+| Mode | card-highlight | COLOR | Light #FFFFFF；Dark #1D2420 |
+| Mode | control-border | COLOR | Light #7B8C80；Dark #65766B |
+| Mode | loading-tide-light-opacity | FLOAT | Light 0；Dark 0 |
+| Mode | loading-tide-dark-opacity | FLOAT | Light 0；Dark 0 |
+| Mode | loading-square-light-opacity | FLOAT | Light 100；Dark 0 |
+| Mode | loading-square-dark-opacity | FLOAT | Light 0；Dark 100 |
+| Device | fs-hero | FLOAT | Desktop 56；Tablet 44；Mobile 32 |
+| Device | fs-title | FLOAT | Desktop 32；Tablet 28；Mobile 24 |
+| Device | fs-section | FLOAT | Desktop 24；Tablet 22；Mobile 20 |
+| Base | font-zh | STRING | Default Noto Sans TC |
+| Base | font-en | STRING | Default Inter |
+| Base | font-data | STRING | Default IBM Plex Mono |
+| Base | radius-card | FLOAT | Default 3 |
+| Base | radius-control | FLOAT | Default 3 |
+| Base | border-width | FLOAT | Default 1.5 |
+| Base | card-padding | FLOAT | Default 20 |
+| Base | gap-section | FLOAT | Default 24 |
+| Base | fs-card | FLOAT | Default 18 |
+| Base | fs-body | FLOAT | Default 16 |
+| Base | fs-small | FLOAT | Default 14 |
+| Base | fs-label | FLOAT | Default 12 |
+| Base | elevation-enabled | BOOLEAN | Default false |
+| Base | metric-border-left | FLOAT | Default 3 |
+| Base | suite-label | STRING | Default 精緻專業 · 石墨紫 |
+| Base | space-1 | FLOAT | Default 4 |
+| Base | space-2 | FLOAT | Default 8 |
+| Base | space-3 | FLOAT | Default 12 |
+| Base | space-4 | FLOAT | Default 16 |
+| Base | space-6 | FLOAT | Default 24 |
+| Base | space-8 | FLOAT | Default 32 |
+| Base | space-12 | FLOAT | Default 48 |
+| Base | space-16 | FLOAT | Default 64 |
+| Base | motion-feedback | FLOAT | Default 120 |
+| Base | motion-standard | FLOAT | Default 180 |
+| Base | motion-region | FLOAT | Default 240 |
