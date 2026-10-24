@@ -36,7 +36,7 @@ import '@luca-style/react/css';
   </ThemeProvider>;
 ```
 
-封裝、安裝、公開 API、字體授權與 Pencil 同步見[使用端接入文件](docs/consumer-guide.md)。
+封裝、安裝、公開 API、字體授權與 OpenPencil 同步見[使用端接入文件](docs/consumer-guide.md)。
 
 ## 公開套件與文件導覽
 
@@ -49,7 +49,7 @@ import '@luca-style/react/css';
 | 在其他專案安裝與套用 | [使用端接入](docs/consumer-guide.md) |
 | 讓其他專案的代理執行接入 | [跨專案套用提示詞](docs/adoption-prompt.md)，內附精緻活力與精緻專業的輸入範例 |
 | 了解設計系統的承諾與範圍 | [設計系統能力規格](docs/capabilities/design-system.md) |
-| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為 `docs/mockup/components.pen` |
+| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為套系設計檔 `docs/mockup/components-vibrant.fig`（精緻活力）與 `docs/mockup/components-professional.fig`（精緻專業），專案只需開所選套系的那一個 |
 | 查架構與部署方式 | [架構設計](docs/03_architecture_design.md) |
 | 查驗收證據與限制 | [交付驗證](docs/delivery-verification.md) |
 | 查領域術語 | [術語表](GLOSSARY.md) |

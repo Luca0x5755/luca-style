@@ -9,14 +9,14 @@
 | 套件管理 | npm workspaces | [決策紀錄](decision-log.md) |
 | 設計變數 | 單一結構化來源，產生 CSS 與供程式使用的資料 | [決策紀錄](decision-log.md) |
 | 樣張網站 | 引用正式套件，展示元件、雙風格、明暗模式及頁面範本 | [決策紀錄](decision-log.md) |
-| 設計資產 | .pen 元件庫與程式共用變數及元件命名，人工同步並核對 | [決策紀錄](decision-log.md) |
+| 設計資產 | 套系設計檔（OpenPencil .fig）與程式共用變數及元件命名，人工同步並核對 | [決策紀錄](decision-log.md) |
 
 | 目錄 | 責任 |
 | --- | --- |
 | `packages/tokens/` | 設計變數來源、產生器與輸出 |
 | `packages/react/` | 共用 React 元件與主題控制 |
 | `apps/showcase/` | 使用說明、元件樣張及產品介面與介紹頁範本 |
-| `docs/mockup/` | .pen 元件庫 |
+| `docs/mockup/` | 套系設計檔（`components-vibrant.fig`、`components-professional.fig`） |
 
 | 部署 | 方式 |
 | --- | --- |
@@ -58,6 +58,6 @@ type ColorMode = "system" | "light" | "dark";
 
 前端規格定義電腦、平板與手機的字級角色、行高、字重、間距、元件狀態及版面響應規則。套系間以色彩、密度與元件外形形成差異，共用字體角色與元件行為。
 
-設計變數的程式輸出與 CSS 由同一來源產生；.pen 元件庫的對應關係由人工同步及核對維持。範本涵蓋產品介面與介紹頁的桌面、手機呈現。
+設計變數的程式輸出與 CSS 由同一來源產生；套系設計檔的對應關係由人工同步及核對維持；兩檔各帶一份相同的 22 個母版，以 `scripts/design/check-masters.js` 比對。範本涵蓋產品介面與介紹頁的桌面、手機呈現。
 
 能力對照見 [設計系統](capabilities/design-system.md)。

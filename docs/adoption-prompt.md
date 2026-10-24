@@ -24,7 +24,7 @@
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
    - packages/tokens/src/tokens.json：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 Pencil 工具開啟 docs/mockup/components.pen；左側是活力，右側是專業。透過工具讀取 .pen，工具不可用時明確記錄尚未完成 mockup 比對。
+3. 需要核對視覺設計時，使用 OpenPencil 工具開啟所選套系的設計檔：活力為 docs/mockup/components-vibrant.fig，專業為 docs/mockup/components-professional.fig，一次只需開一個。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】

@@ -4,7 +4,7 @@ import {withBase} from './routes';
 
 type SampleState = 'success' | 'loading' | 'empty' | 'error';
 
-// 四態文案與 components.pen 的 NotFound/* frame 一致；以標題呈現整句，說明留空。
+// 四態文案與套系設計檔（components-vibrant.fig、components-professional.fig）的 NotFound/* frame 一致；以標題呈現整句，說明留空。
 const stateTitles = {
   loading: '正在確認這個網址對應的頁面。',
   empty: '這個網址沒有可顯示的內容，可以先回到設計系統入口。',
