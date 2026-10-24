@@ -20,6 +20,14 @@ _避免_：縮小文字到難以閱讀、以密度取代清楚的資訊層次。
 一個風格套系對應的 `.fig` 檔，含該套系全部頁面 frame，以及一份與另一套系內容相同的母版副本；目前有 `components-vibrant.fig` 與 `components-professional.fig`。設計稿正本是這兩個檔案，不是 `.pen`。
 _避免_：唯一設計檔、單檔元件庫、components.pen。
 
+**畫布頁**：
+套系設計檔內的一個 OpenPencil page（App 左側頁籤）。同一產品頁面的全部 frame 放在名稱相同的畫布頁；母版、元件檢視板、目錄與標題放在 `Library guide`。畫布頁只用來分組 frame，不改變 frame 名稱，也不是另一份設計檔。
+_避免_：把畫布頁叫「頁面」（那是產品頁面）、把它當成拆檔（拆檔是 ADR 0003 延後的另一件事）。
+
+**頁面**：
+樣張與範本中的一個產品畫面群，例如 Home、Foundations、Components、Product、Intro、NotFound；在設計檔裡以「頁面 frame」呈現，frame 名稱第一段就是頁名。
+_避免_：用來指 OpenPencil 的 page（請用「畫布頁」）。
+
 **明暗模式**：
 同一風格套系下的日間與暗黑呈現。首次跟隨裝置設定，使用者手動選擇後記住該選擇。
 _避免_：把明暗模式當成另一套風格套系。

@@ -28,3 +28,4 @@
 2026-10-19 — 所有頁面與母版集中於 components.pen，頁面直接引用同檔母版元件；避免跨檔實例無法連動時，必須逐檔同步母版副本。
 2026-10-19 — 日間次要文字由 #6B796F 加深至 #626F65，修正暖白及柔和強調表面的文字對比；輸入區與選單另設 control-border，提升控制邊界辨識。
 2026-10-24 — 設計稿正本改為依套系拆分的兩個 OpenPencil .fig 套系設計檔，推翻 2026-10-19 集中於單一 components.pen 的決定，因單檔節點數超過 MCP 可編輯上限；見 ADR 0003。
+2026-10-24 — 套系設計檔內依產品頁面開畫布頁（Library guide、Home、Foundations、Components、Product、Intro、NotFound），Light 與 Dark、各裝置同頁，frame 名稱不變，驗收檢查名稱第一段等於畫布頁名；因單頁 176 個 frame 使 OpenPencil 常當掉。拆檔仍延後；每頁節點上限待複本驗證後再定。
