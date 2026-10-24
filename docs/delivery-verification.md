@@ -703,3 +703,14 @@ node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test
 - **基準改為 JSON：** `verify-split.js` 原本以 `components.fig` 為基準。刪除它之前，先把 302 個 frame 的名稱、節點數與文字雜湊存成 `docs/mockup/themes/baseline.json`（來源是提交 `ebe6c61` 的 `components.fig`），`verify-split.js` 改讀它；改讀前後的驗收結果相同（套系 frame 300、共用 2、明暗成對 150 組、全部一致）。
 - **已刪除：** `docs/mockup/components.fig`、`docs/mockup/components.pen`。兩者都能從提交歷史取回：`components.pen` 在本提交的前一個提交仍存在。`split-by-suite.js` 與 `extract-pen-themes.pen.js` 因此無法重跑，檔頭已註明，只留作做法與 Windows 修補的紀錄。
 - **ADR 0003** 改為 `Accepted`；`PR-FILE-01～14` 移入 `docs/capabilities/design-system.md`（PR-FILE-04 改成對 `baseline.json` 比對，並新增 PR-FILE-14 版面檢查）。
+
+## 依產品頁面分畫布頁（PR-FILE-15）
+
+2026-10-24。兩個套系設計檔原本把 176 個頂層 frame 全放在 `Library guide` 一個畫布頁，OpenPencil 常當掉；改為依產品頁面分頁。
+
+- **指令：** `node scripts/design/paginate-fig.js`（分頁，已是最新不寫檔）、`--check`（唯讀）。規則在 `scripts/design/pages.js`，`verify-split.js` 共用同一份。
+- **結果（兩檔相同）：** 搬移 144 個 frame、新增 6 個畫布頁。`Library guide` 32 個 frame／482 節點，Home 24／674，Foundations 24／1,114，Components 24／1,406，Product 24／926，Intro 24／740，NotFound 24／482；合計 5,824 節點，與分頁前相同。711 個實例全部仍連得到母版。
+- **驗收：** `verify-split.js`（跨畫布頁，新增 `[畫布頁]` 檢查）、`verify-themes.js`、`check-masters.js`、`apply-bindings.js --check`、`apply-variables.js --check`、`build-theme-data.js --check-fig`、`relayout-fig.js --check` 都通過。
+- **未驗證，也沒有改善的證據：** 在 App 裡開啟分頁複本後切換畫布頁，使用者回報仍出現 `Uncaught RuntimeError: table index is out of bounds`（29 次）與 `ResourceCache cleanup failed`。使用者判斷這是 OpenPencil 本身的問題、對方修復中，仍要求分頁。所以分頁**不保證**減少當機，也沒有在 App 內做過前後對照；本節只證明檔案結構與內容沒有被分頁弄壞。
+- **節點數：** `apply-variables.js --check` 與 `apply-bindings.js --check` 回報的文件節點數從 5826 變成 5832，因為文件節點把每個畫布頁也算進去（2 頁變 8 頁，頁內節點仍是 5,824）；上文 ISSUE-009、010 兩節的 5826 是分頁前的數字。
+- **取捨：** 每頁節點數上限暫不設；10,000 節點的 MCP 上限仍是整份文件合計，分頁不影響。

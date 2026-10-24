@@ -30,10 +30,9 @@ export const mutate = (src, dst, code) => {
   return dst;
 };
 
-// 片段共用前置：取得頁面、依名稱找 frame、依索引路徑找節點。
+// 片段共用前置：依名稱找 frame（跨所有畫布頁）、依索引路徑找節點。
 export const PRELUDE = `
-const page = figma.root.children[0]
-const frameOf = (name) => page.children.find((f) => f.name === name)
+const frameOf = (name) => figma.root.children.flatMap((p) => p.children).find((f) => f.name === name)
 const at = (f, p) => (p === '-' ? f : p.split('.').reduce((n, i) => n.children[+i], f))
 const rgb = (h) => ({ r: parseInt(h.slice(1, 3), 16) / 255, g: parseInt(h.slice(3, 5), 16) / 255, b: parseInt(h.slice(5, 7), 16) / 255, a: 1 })
 `;

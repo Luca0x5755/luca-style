@@ -310,12 +310,12 @@ const finish = ({ problems, summary }) => {
 
 // 在 openpencil 內執行：回傳頁面最上層每個節點的節點數、名稱序列雜湊與「路徑:類型」清單。
 // 路徑規則與 .pen 端相同：根為 -，其下以各層子節點的 0 起算索引相連。
-const FIG_PAGE = 'Library guide';
 const figScript = String.raw`
 const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36) }
-const page = figma.root.children.find((p) => p.name === ${JSON.stringify(FIG_PAGE)})
-if (!page) return { error: '找不到頁面' }
-return { nodes: page.children.map((f) => {
+// 頂層節點散在各畫布頁；攤平後依名稱排序，讓結果不受畫布頁順序影響。
+const tops = figma.root.children.flatMap((p) => p.children).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+if (!tops.length) return { error: '設計檔內沒有任何頂層節點' }
+return { nodes: tops.map((f) => {
   const names = [], paths = []
   const walk = (n, path) => { names.push(n.name); paths.push(path + ':' + n.type); if (n.children) n.children.forEach((c, i) => walk(c, path === '-' ? String(i) : path + '.' + i)) }
   walk(f, '-')

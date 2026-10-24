@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與 OpenPencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～24` 與 `PR-FILE-01～14`（套系設計檔）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～24` 與 `PR-FILE-01～15`（套系設計檔）。
 - 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
@@ -63,6 +63,7 @@ PR-FILE-10 — 每個套系設計檔含該套系用到的全部主題變數，�
 PR-FILE-11 — 每個頁面 frame 的模式與其名稱相符，節點的填色、描邊、字型、字級、間距、內距、圓角綁定到與 `.pen` 相同的變數；母版內的綁定同樣保留。
 PR-FILE-12 — 每個頁面 frame 解析後的值與 `.pen` 在同一主題下解析後的基準 `resolved.json` 一致；驗收腳本在任何不一致時回報非零結束碼並列出差異。
 PR-FILE-13 — 結構驗收在同一頁面群組的 Light 與 Dark frame 顏色分布完全相同時失敗，使明暗模式遺失無法再被忽略。
+PR-FILE-15 — 兩個套系設計檔把 frame 依產品頁面分在不同畫布頁：`Library guide`（母版、元件檢視板、目錄、標題）加 Home、Foundations、Components、Product、Intro、NotFound；同一產品頁面的 Light 與 Dark、各裝置在同一畫布頁，frame 名稱不變。`paginate-fig.js --check` 與結構驗收在 frame 不在名稱指定的畫布頁、或實例連不到母版時回報非零結束碼。
 PR-FILE-14 — 兩個套系設計檔內沒有 NaN 行高、自動排版內相鄰節點重疊或子節點超出父 frame；`relayout-fig.js --check` 與結構驗收在任何一項大於 0 時回報非零結束碼。
 
 實作補充：

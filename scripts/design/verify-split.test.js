@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, copyFileSync } from 'node:fs';
 import { run, mutate, tempDir, PRELUDE, vibrantFig, professionalFig } from './test-helpers.js';
 
 const exec = (vibrant = vibrantFig, professional = professionalFig) =>
@@ -70,4 +70,34 @@ return 1`);
   const r = exec(copy);
   assert.equal(r.code, 1, r.out);
   assert.match(r.out, /\[節點數\] Home\/Vibrant\/Light\/Desktop\/Success/);
+});
+
+// 畫布頁檢查：複本先用 paginate-fig.js 分頁，再故意搬錯，不依賴進版控的檔案是否已分頁。
+const paginated = (prefix) => {
+  const dir = tempDir(prefix);
+  const copies = { vibrant: join(dir, 'v.fig'), professional: join(dir, 'p.fig') };
+  copyFileSync(vibrantFig, copies.vibrant);
+  copyFileSync(professionalFig, copies.professional);
+  const r = run('paginate-fig.js', { PAGINATE_VIBRANT: copies.vibrant, PAGINATE_PROFESSIONAL: copies.professional });
+  assert.equal(r.code, 0, r.out);
+  return copies;
+};
+
+test('已分頁的兩檔通過：frame 分散在各畫布頁，仍與基準一致', () => {
+  const c = paginated('vs-paged-');
+  const r = exec(c.vibrant, c.professional);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /全部一致/);
+});
+
+test('一個 frame 被搬到錯的畫布頁 → 失敗，指出 frame 與兩個畫布頁', () => {
+  const c = paginated('vs-misplaced-');
+  const bad = mutate(c.vibrant, join(tempDir('vs-misplaced2-'), 'v.fig'), `
+const home = figma.root.children.find((p) => p.name === 'Home')
+const product = figma.root.children.find((p) => p.name === 'Product')
+product.appendChild(home.children.find((f) => f.name === 'Home/Vibrant/Light/Desktop/Success'))
+return 1`);
+  const r = exec(bad, c.professional);
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /\[畫布頁\] Home\/Vibrant\/Light\/Desktop\/Success：vibrant 在「Product」，應在「Home」/);
 });

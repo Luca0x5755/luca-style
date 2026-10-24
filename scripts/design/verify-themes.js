@@ -36,7 +36,8 @@ const CLASSES = ['填色', '描邊', '字型', '字級', '間距', '內距', '�
 const evalScript = (entries) => String.raw`
 const entries = ${JSON.stringify(entries)}
 const TOL = 1 / 255 + 1e-9
-const page = figma.root.children[0]
+// 頂層節點散在各畫布頁，統一攤平後依名稱找。
+const tops = figma.root.children.flatMap((p) => p.children)
 const counts = {}
 const diffs = []
 let skipped = 0
@@ -50,7 +51,7 @@ let truncated = false
 const add = (frame, path, prop, want, got) => { if (diffs.length < 5000) diffs.push({ frame, path, prop, want: String(want), got: String(got) }); else truncated = true }
 
 for (const e of entries) {
-  const frame = page.children.find((f) => f.name === e.frame)
+  const frame = tops.find((f) => f.name === e.frame)
   if (!frame) { add(e.frame, '-', '(frame)', '存在', '設計檔內沒有這個 frame'); continue }
   for (const n of e.nodes) {
     const node = at(frame, n.path)

@@ -136,7 +136,8 @@ const evalOn = (file, code, extraArgs = []) => {
 const RUN_SCRIPT = (plan, apply) => String.raw`
 const plan = ${JSON.stringify(plan)}
 const apply = ${apply}
-const page = figma.root.children[0]
+// 頂層節點散在各畫布頁，統一攤平後依名稱找。
+const tops = figma.root.children.flatMap((p) => p.children)
 const vars = figma.getLocalVariables()
 const cols = figma.getLocalVariableCollections()
 const colByName = Object.fromEntries(cols.map((c) => [c.name, c]))
@@ -182,7 +183,7 @@ const wantMode = (collection, modeName) => {
 }
 
 for (const entry of plan) {
-  const frame = page.children.find((f) => f.name === entry.name)
+  const frame = tops.find((f) => f.name === entry.name)
   if (!frame) { note('[缺少] ' + entry.name + '：設計檔內沒有這個 frame'); continue }
   const gf = figma.graph.getNode(frame.id)
   const wanted = {}

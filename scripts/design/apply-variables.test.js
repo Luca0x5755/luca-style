@@ -188,7 +188,7 @@ test('--check 輸出節點數，達到上限時失敗', () => {
   t.run();
   // 基準 5825 個節點，加上寫入變數後 .fig 多出的一個空白 Internal Only Canvas 頁（存放變數用）。
   const ok = t.run(['--check']);
-  assert.match(ok.out, /節點數 5826/);
+  assert.match(ok.out, /節點數 5832/);
   const over = t.run(['--check'], { APPLY_VARIABLES_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
   assert.match(over.out, /節點數/);

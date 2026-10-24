@@ -204,6 +204,6 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 
 ### 5.5.4 畫面核對（能力：設計系統）
 
-兩個套系設計檔各含一份 22 個母版元件，合計 12 張元件檢視板及 288 張頁面 frame（各套系一半）。以頁名前綴搜尋即可定位，例如 `Product/Professional/Dark/Mobile/Error`。
+兩個套系設計檔各含一份 22 個母版元件，合計 12 張元件檢視板及 288 張頁面 frame（各套系一半）。以頁名前綴搜尋即可定位，例如 `Product/Professional/Dark/Mobile/Error`；frame 依產品頁面分在同名畫布頁（母版與檢視板在 `Library guide`），見 PR-FILE-15。
 
 頁面矩陣核對 suite、mode、device、state 組合的完整性與唯一性。截圖檢視涵蓋六頁的桌面、手機、平板及載入、空白、錯誤狀態樣本；檢查文字換行、主要操作、表格、表單及頁尾。設計稿檢視屬於設計驗證；React 瀏覽器與使用端驗證另見[交付驗證](delivery-verification.md)。

@@ -66,7 +66,7 @@ const evalOn = (file, code, extra = []) =>
 // 把副本弄回「尚未綁定」：解除指定節點的綁定並把儲存值改錯，用來製造要修的差異。
 const tamper = (file, frameName, path) =>
   evalOn(file, `
-const f = figma.root.children[0].children.find((x) => x.name === ${JSON.stringify(frameName)})
+const f = figma.root.children.flatMap((p) => p.children).find((x) => x.name === ${JSON.stringify(frameName)})
 const at = (f, p) => (p === '-' ? f : p.split('.').reduce((n, i) => n.children[+i], f))
 const node = at(f, ${JSON.stringify(path)})
 for (const k of Object.keys(figma.graph.getNode(node.id).boundVariables)) figma.unbindVariable(node.id, k)
@@ -78,7 +78,7 @@ const probe = (file, frameName, path) =>
   JSON.parse(evalOn(file, `
 const names = Object.fromEntries(figma.getLocalVariables().map((v) => [v.id, v.name]))
 const colName = Object.fromEntries(figma.getLocalVariableCollections().map((c) => [c.id, { name: c.name, modes: Object.fromEntries(c.modes.map((m) => [m.modeId, m.name])) }]))
-const f = figma.root.children[0].children.find((x) => x.name === ${JSON.stringify(frameName)})
+const f = figma.root.children.flatMap((p) => p.children).find((x) => x.name === ${JSON.stringify(frameName)})
 const at = (f, p) => (p === '-' ? f : p.split('.').reduce((n, i) => n.children[+i], f))
 const node = at(f, ${JSON.stringify(path)})
 const g = figma.graph.getNode(node.id)
@@ -175,10 +175,10 @@ test('--check 在已套用時結束碼 0；儲存值被改壞時結束碼 1 並�
 test('--check 輸出節點數，達到上限時失敗', () => {
   const t = setup();
   t.run();
-  assert.match(t.run(['--check']).out, /節點數 5826/);
+  assert.match(t.run(['--check']).out, /節點數 5832/);
   const over = t.run(['--check'], { APPLY_BINDINGS_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
-  assert.match(over.out, /節點數 5826 已達上限 100/);
+  assert.match(over.out, /節點數 5832 已達上限 100/);
 });
 
 test('資料檔缺漏時以結束碼 1 或 2 拒絕，不改檔', () => {

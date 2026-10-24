@@ -28,6 +28,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHECK_SNIPPET } from './layout-snippets.js';
+import { GUIDE_PAGE, IGNORED_PAGES, pageOf } from './pages.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const mockup = join(root, 'docs/mockup');
@@ -41,7 +42,6 @@ const paths = {
 
 // 基準的 frame 數；基準檔有合法增減時需同步修改。
 const EXPECTED_FRAMES = 302;
-const PAGE = 'Library guide';
 // 無套系的共用 frame：兩檔各留一份，內容須與原檔一致，不受「不得同時出現」限制。
 const SHARED = new Set(['Library guide', '00 / Canvas directory']);
 // 與 split-by-suite.js 相同的套系判定（兩處規則須同步修改；刻意不共用，讓驗收獨立於切檔邏輯）：<頁>/Professional/...、Professional/...、Professional ?/...。
@@ -53,12 +53,14 @@ const suiteOf = (name) => {
 };
 
 // 文字與顏色分布只比 32 位元雜湊加長度，用途是抓誤改，不防蓄意碰撞。
-// 在 openpencil 內執行的腳本：回傳頁面最上層每個 FRAME 的摘要（節點數與文字／填色雜湊）。
+// 在 openpencil 內執行的腳本：回傳所有畫布頁最上層每個 FRAME 的摘要（所在畫布頁、節點數與文字／填色雜湊）。
 const evalScript = `
 const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(16) + ':' + s.length }
-const page = figma.root.children.find((p) => p.name === ${JSON.stringify(PAGE)})
-if (!page) return { error: '找不到頁面 ' + ${JSON.stringify(PAGE)} }
-const frames = page.children.filter((n) => n.type === 'FRAME').map((f) => {
+if (!figma.root.children.some((p) => p.name === ${JSON.stringify(GUIDE_PAGE)})) return { error: '找不到畫布頁 ' + ${JSON.stringify(GUIDE_PAGE)} }
+const IGNORED = ${JSON.stringify(IGNORED_PAGES)}
+const tops = []
+for (const pg of figma.root.children) if (!IGNORED.includes(pg.name)) for (const n of pg.children) if (n.type === 'FRAME') tops.push({ page: pg.name, f: n })
+const frames = tops.map(({ page, f }) => {
   const all = [f].concat(f.findAll(() => true))
   const texts = all.filter((n) => n.type === 'TEXT').map((n) => n.characters)
   // 顏色分布：填色與描邊的顏色（十六進位）出現次數，依色碼排序後串成字串再雜湊。
@@ -66,7 +68,7 @@ const frames = page.children.filter((n) => n.type === 'FRAME').map((f) => {
   const dist = {}
   for (const n of all) for (const p of [].concat(n.fills || [], n.strokes || [])) if (p && p.color) dist[hex(p.color)] = (dist[hex(p.color)] || 0) + 1
   const colors = hash(Object.keys(dist).sort().map((k) => k + 'x' + dist[k]).join(','))
-  return { name: f.name, nodes: all.length, texts: hash(JSON.stringify(texts)), colors }
+  return { name: f.name, page, nodes: all.length, texts: hash(JSON.stringify(texts)), colors }
 })
 return { frames }
 `;
@@ -129,6 +131,14 @@ for (const [where, frames] of [['vibrant', vibrant], ['professional', profession
 }
 if (source.length !== EXPECTED_FRAMES) {
   diffs.push(`[基準] 預期 ${EXPECTED_FRAMES} 個 frame，實得 ${source.length}`);
+}
+
+// 每個 frame 必須在規則指定的畫布頁（規則見 pages.js）。
+for (const [where, frames] of [['vibrant', vibrant], ['professional', professional]]) {
+  for (const { name, page } of frames) {
+    const expected = pageOf(name, 'FRAME');
+    if (page !== expected) diffs.push(`[畫布頁] ${name}：${where} 在「${page}」，應在「${expected}」`);
+  }
 }
 
 const compare = (name, base, actual, where) => {
@@ -197,7 +207,7 @@ for (const [where, file] of [['vibrant', paths.vibrant], ['professional', paths.
   if (r.outOfBounds > 0) diffs.push(`[版面] ${where}：${r.outOfBounds} 個子節點超出父 frame`);
 }
 
-console.log(`頁面：${PAGE}`);
+console.log(`畫布頁：${[...new Set([...vibrant, ...professional].map((f) => f.page))].join("、")}`);
 console.log(`基準 frame：${source.length}`);
 console.log(`vibrant frame：${vibrant.length}`);
 console.log(`professional frame：${professional.length}`);
