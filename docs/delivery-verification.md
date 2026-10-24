@@ -493,3 +493,58 @@ OpenPencil App 在這次執行中，`open_file` 對 `components-vibrant.fig` 的
 | Base | motion-feedback | FLOAT | Default 120 |
 | Base | motion-standard | FLOAT | Default 180 |
 | Base | motion-region | FLOAT | Default 240 |
+
+## 變數綁定與 frame 模式（ISSUE-009）
+
+2026-10-24。`scripts/design/apply-bindings.js` 依 `docs/mockup/themes/bindings.json` 把變數綁到兩個套系設計檔的節點，並依 frame 名稱設定模式。`.fig` 與 `.pen` 的節點以 frame 名稱加索引路徑對應（見上方「節點對應規則」）。
+
+```sh
+node scripts/design/apply-bindings.js           # 套用；已一致就不寫檔，可重跑
+node scripts/design/apply-bindings.js --check   # 唯讀：逐筆比對綁定、儲存值、frame 模式，並檢查節點數 < 10,000
+node --test scripts/design/apply-bindings.test.js
+```
+
+### 做了什麼
+
+- 每個檔案 175 個 frame／母版（22 母版＋各自套系與共用的頁面 frame）、10,648 筆綁定，全部綁定並把儲存值覆蓋為該 frame 模式下的變數值。兩檔都是 5,826 個節點。
+- 屬性對應：fill → `fills/0/color`、stroke → `strokes/0/color`、strokeWidth → `strokeWeight`、strokeWidth.left → `borderLeftWeight`、fontFamily、fontSize、cornerRadius、gap → `itemSpacing`、padding → 四個 `padding*` 欄位。實例內的子節點也逐一綁定；離線 API 不會把母版的綁定同步到實例，所以不依賴繼承。
+- 頁面 frame 的 `Mode`（Light／Dark）與 `Device`（Desktop／Tablet／Mobile）依名稱設定，名稱沒寫的軸、母版與 Library guide 不設。
+- 增補 `docs/mockup/themes/strokes.json`：`.fig` 轉換丟掉了全部描邊（0 個節點有 strokes），而 bindings.json 有 957 筆 stroke 綁定。腳本先補上一條 INSIDE 描邊再綁色。粗細取自 strokeWidth 綁定；只綁 `strokeWidth.left` 時其餘三邊為 1；其他不均勻粗細（只有下邊、固定 2 或 3）由 strokes.json 提供，沒列出的為 1。strokes.json 由 Pencil 在 `resolveInstances`＋`resolveVariables` 下擷取（`extract-pen-themes.pen.js` 片段 5，12 個本體、305 個 frame），無法由 `.pen` 刪除後重現。
+
+### 無法照字面綁定、或與工單描述不同的地方
+
+- **opacity（`fill[i].opacity`，4 個變數）**：openpencil 沒有「填色透明度」的綁定欄位，只有整個節點的 `opacity`，而且被限制在 0–1，不是 0–100，所以不綁定。變數維持 0–100 的 FLOAT，腳本把第 i 個填色的儲存 opacity 設為「變數值 ÷ 100」（Dark：1 號填色為 1，其餘 0）。這 4×45 筆是只設儲存值、沒有綁定。
+- **effect.enabled**：沒有 boolean 效果的綁定欄位（只有 `visible`），同樣只設儲存值（效果 `visible`＝變數值）。43 筆。
+- **strokeWidth.left**：綁定 `borderLeftWeight`。
+- **懸空綁定**：`.fig` 轉換留下指向已不存在變數的 `fills[0]`、`fontFamily` 綁定（兩檔各 4,890＋3,092 筆），讓離線寫檔直接報 `Missing bound variable`。腳本在記憶體中先清掉再綁；重新讀檔確認兩檔的 boundVariables 與外掛資料中都已沒有指向不存在變數的項目（0 筆），測試也以此斷言。
+- **Professional 檔裡的母版**：resolved.json 的母版與兩個共用項目（`00 / Canvas directory`）以 Vibrant／Light 預設解析；Professional 檔的這些項目取本套系的值（59 筆與 resolved.json 不同，全是這類，例如 C/Button/Primary 的填色是 #625C83）。腳本啟動時先確認「頁面 frame 與 resolved.json 逐筆相同」（21,058 筆），其餘 238 筆改用 variables.json 的本套系值。
+
+### 對 resolved.json 的比對
+
+獨立於腳本的一次比對（`openpencil eval` 逐一讀回每個綁定屬性的儲存值，與 resolved.json 比，兩檔各 10,648 筆）：Vibrant 10,425 筆相同、0 筆不同；Professional 10,366 筆相同、59 筆不同（即上段的母版／共用項目，值是 Professional 的、resolved.json 是 Vibrant 預設的）。其餘 223 筆（兩檔各）讀不到：`strokeWidth.left` 43 筆（讀回 API 的限制）、四個 fill opacity 共 180 筆（以第二段 openpencil 讀回確認 Dark／Light 的 `fills[i].opacity` 為 0 或 1，另有 `--check` 逐筆比對）；這 223 筆我沒有用第二套獨立程式逐筆比，是由 `--check` 比對。
+
+### 兩張驗收圖
+
+```sh
+# frame id 先用 openpencil eval 以名稱查得：Home/Vibrant/Light/Desktop/Success = 0:158、Dark = 0:332
+openpencil export docs/mockup/components-vibrant.fig --node 0:158 -o <暫存區>/home-vibrant-light-desktop-success.png
+openpencil export docs/mockup/components-vibrant.fig --node 0:332 -o <暫存區>/home-vibrant-dark-desktop-success.png
+```
+
+圖放在 `test-results/` 之外（`npm test` 會清空它），不進版控。左上角像素：Dark #151A18、Light #F7F7F2；導覽列 Dark #1D2420、Light #FFFFFF；主按鈕 Dark #64C2BC、Light #147F82，與 variables.json 相同。
+
+目視：Dark 圖的頁面底色、導覽列、卡片、按鈕與文字都是深色主題（近黑綠底、淺色字、淺青綠按鈕與邊框）；Light 圖維持淺米白底、深字、深青綠按鈕。**但兩張圖的版面都有重疊**：標題「為您的下一個專案，建立一致的起點。」變成 56px 大字，與麵包屑、說明文字及按鈕疊在一起；「繼續探索」標題壓在按鈕上，卡片內部也有疊字。原因是各 frame 的節點已改成 56／24 的字級與 24 的內距，但離線寫檔不會重算自動版面（文字高度、frame 高度與子節點位置仍是舊值）。這是版面重算問題，不是顏色問題。我試過在記憶體中重設一次字級觸發重算，圖仍有同樣疊字，檔案裡 frame 與文字的 y 與高度也未更新。重新開檔後 OpenPencil App 是否重算，我沒有驗證。ISSUE-010 驗證主題還原時請一併留意。
+
+### MCP 驗證（重新開檔後）
+
+兩個 `.fig` 寫完後，`close_file`（unsaved: discard）關掉過期的 tab-1、tab-2，再 `open_file` 兩檔（這次直接成功，tab-3 vibrant、tab-4 professional）。
+
+- `node_bindings` 對 `0:332`（Home/Vibrant/Dark/Desktop/Success）：vibrant 回 `fills/0/color`＝1807162738:3、`itemSpacing`＝1807162738:36；professional 回 1799595978:3、:36（各檔自己的變數 id）。
+- `set_fill` 對葉節點 `0:187`（Footer divider，RECTANGLE）設成 #FF0000：兩檔都回傳成功；隨即 `undo`（兩檔都 applied），未呼叫 `save_file`。`get_node` 讀回 vibrant 的 0:187 填色為 #DDE5DC，且仍綁定 `border`。
+- 因此 ISSUE-008 留下的「MCP `set_fill` 未驗證」在此補上，兩檔都已驗證。
+
+### 其他腳本在綁定後的結果
+
+- `check-masters.js`：**不再通過**。兩檔的母版現在各用本套系的值（顏色、圓角、內距等），本來就不會相同（共 220 項差異，涉及 21 個單元，全是主題屬性）。這個檢查的前提「兩檔的母版相同」在變數與模式存在後要改成「去掉主題屬性後相同」，屬 ISSUE-010 的主題還原驗證範圍，這張票不改它。
+- `verify-split.js`：結構（frame 名稱、節點數、文字）仍一致；填色部分共 302 項差異（頁面 frame 與 `components.fig` 基準的填色不同）：Dark 與 Professional 的 frame 現在是它們該有的顏色，基準是預設主題的攤平值。同樣屬 ISSUE-010。
+- `apply-variables.js --check`：兩檔通過；`build-theme-data.js --check-fig`：通過（9,984 條路徑）。

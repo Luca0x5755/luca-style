@@ -123,3 +123,31 @@ for (const [label, pred, expand] of [['unexpanded-frames', r => !r, false], ['un
 // ===== 片段 4：抽樣截圖（人工比對 resolved.json 與畫面）=====
 // 換成要抽樣的 frame id（id 可用片段 2 開頭的 FR 清單取得）。
 TakeScreenshot(['VkzD3', 'PvygW', 'AyT0s', 'deK0R', 'SmqZz']);
+
+// ===== 片段 5：擷取不均勻的描邊粗細（結果整理成 docs/mockup/themes/strokes.json）=====
+// .fig 轉換丟掉了所有描邊，ISSUE-009 重建描邊時需要粗細。均勻的 1、border-width 變數（1／1.5）與
+// metric-border-left 變數（1,1,1,3）由變數或預設 1 決定，這裡只列其餘的節點：
+// 只有下邊（0,0,1,0）、固定 2 或 3。輸出是「本體 → frame 名稱清單」，把相同本體的名稱合併成 groups。
+const tops5 = [];
+Get(document, (n, c) => { if (c.depth === 0) tops5.push([n.id, n.name]); c.skipChildren(); });
+const spec5 = w => (w === undefined ? 1 : typeof w === 'number' ? w : [w.top || 0, w.right || 0, w.bottom || 0, w.left || 0].join(','));
+const bodies5 = new Map();
+for (const [id, name] of tops5) {
+  const st = [];
+  const items = [];
+  Get(id, (x, c) => {
+    st[c.depth] = c.index;
+    if (x.stroke) {
+      const s = spec5(x.strokeWidth);
+      if (s !== 1 && s !== 1.5 && s !== '1,1,1,3') items.push((c.depth === 0 ? '-' : st.slice(1, c.depth + 1).join('.')) + '=' + s);
+    }
+  }, { resolveInstances: true, resolveVariables: true });
+  if (items.length) {
+    const b = items.join(' ');
+    if (!bodies5.has(b)) bodies5.set(b, []);
+    bodies5.get(b).push(name);
+  }
+}
+let i5 = 0;
+for (const [b, names] of bodies5) { Print('#' + i5 + ' ' + names.length + ' ' + b); Print('  ' + names.join(' | ')); i5++; }
+// 預期 12 個本體、共 305 個 frame（5 個母版＋300 個頁面 frame）。
