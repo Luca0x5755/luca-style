@@ -1,0 +1,2 @@
+# 主題資料的位元組數記在 docs/delivery-verification.md，並由腳本比對；不做換行轉換。
+docs/mockup/themes/* -text

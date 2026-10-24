@@ -1,0 +1,1516 @@
+{
+ "axes": {
+  "mode": [
+   "Light",
+   "Dark"
+  ],
+  "suite": [
+   "Vibrant",
+   "Professional"
+  ],
+  "device": [
+   "Desktop",
+   "Tablet",
+   "Mobile"
+  ]
+ },
+ "count": 48,
+ "variables": [
+  {
+   "name": "bg",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#F7F7F2",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#151A18",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#F7F7F2",
+    "Light/Vibrant/Tablet": "#F7F7F2",
+    "Light/Vibrant/Mobile": "#F7F7F2",
+    "Light/Professional/Desktop": "#F7F7F2",
+    "Light/Professional/Tablet": "#F7F7F2",
+    "Light/Professional/Mobile": "#F7F7F2",
+    "Dark/Vibrant/Desktop": "#151A18",
+    "Dark/Vibrant/Tablet": "#151A18",
+    "Dark/Vibrant/Mobile": "#151A18",
+    "Dark/Professional/Desktop": "#151A18",
+    "Dark/Professional/Tablet": "#151A18",
+    "Dark/Professional/Mobile": "#151A18"
+   }
+  },
+  {
+   "name": "surface",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#FFFFFF",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#1D2420",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#FFFFFF",
+    "Light/Vibrant/Tablet": "#FFFFFF",
+    "Light/Vibrant/Mobile": "#FFFFFF",
+    "Light/Professional/Desktop": "#FFFFFF",
+    "Light/Professional/Tablet": "#FFFFFF",
+    "Light/Professional/Mobile": "#FFFFFF",
+    "Dark/Vibrant/Desktop": "#1D2420",
+    "Dark/Vibrant/Tablet": "#1D2420",
+    "Dark/Vibrant/Mobile": "#1D2420",
+    "Dark/Professional/Desktop": "#1D2420",
+    "Dark/Professional/Tablet": "#1D2420",
+    "Dark/Professional/Mobile": "#1D2420"
+   }
+  },
+  {
+   "name": "surface-subtle",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#F1F3EE",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#252E28",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#F1F3EE",
+    "Light/Vibrant/Tablet": "#F1F3EE",
+    "Light/Vibrant/Mobile": "#F1F3EE",
+    "Light/Professional/Desktop": "#F1F3EE",
+    "Light/Professional/Tablet": "#F1F3EE",
+    "Light/Professional/Mobile": "#F1F3EE",
+    "Dark/Vibrant/Desktop": "#252E28",
+    "Dark/Vibrant/Tablet": "#252E28",
+    "Dark/Vibrant/Mobile": "#252E28",
+    "Dark/Professional/Desktop": "#252E28",
+    "Dark/Professional/Tablet": "#252E28",
+    "Dark/Professional/Mobile": "#252E28"
+   }
+  },
+  {
+   "name": "text",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#24312A",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#EDF3ED",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#24312A",
+    "Light/Vibrant/Tablet": "#24312A",
+    "Light/Vibrant/Mobile": "#24312A",
+    "Light/Professional/Desktop": "#24312A",
+    "Light/Professional/Tablet": "#24312A",
+    "Light/Professional/Mobile": "#24312A",
+    "Dark/Vibrant/Desktop": "#EDF3ED",
+    "Dark/Vibrant/Tablet": "#EDF3ED",
+    "Dark/Vibrant/Mobile": "#EDF3ED",
+    "Dark/Professional/Desktop": "#EDF3ED",
+    "Dark/Professional/Tablet": "#EDF3ED",
+    "Dark/Professional/Mobile": "#EDF3ED"
+   }
+  },
+  {
+   "name": "muted",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#626F65",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#A5B5A8",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#626F65",
+    "Light/Vibrant/Tablet": "#626F65",
+    "Light/Vibrant/Mobile": "#626F65",
+    "Light/Professional/Desktop": "#626F65",
+    "Light/Professional/Tablet": "#626F65",
+    "Light/Professional/Mobile": "#626F65",
+    "Dark/Vibrant/Desktop": "#A5B5A8",
+    "Dark/Vibrant/Tablet": "#A5B5A8",
+    "Dark/Vibrant/Mobile": "#A5B5A8",
+    "Dark/Professional/Desktop": "#A5B5A8",
+    "Dark/Professional/Tablet": "#A5B5A8",
+    "Dark/Professional/Mobile": "#A5B5A8"
+   }
+  },
+  {
+   "name": "border",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#DDE5DC",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#354139",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#DDE5DC",
+    "Light/Vibrant/Tablet": "#DDE5DC",
+    "Light/Vibrant/Mobile": "#DDE5DC",
+    "Light/Professional/Desktop": "#DDE5DC",
+    "Light/Professional/Tablet": "#DDE5DC",
+    "Light/Professional/Mobile": "#DDE5DC",
+    "Dark/Vibrant/Desktop": "#354139",
+    "Dark/Vibrant/Tablet": "#354139",
+    "Dark/Vibrant/Mobile": "#354139",
+    "Dark/Professional/Desktop": "#354139",
+    "Dark/Professional/Tablet": "#354139",
+    "Dark/Professional/Mobile": "#354139"
+   }
+  },
+  {
+   "name": "accent",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#147F82",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#64C2BC",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#625C83",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#ABA4D7",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#147F82",
+    "Light/Vibrant/Tablet": "#147F82",
+    "Light/Vibrant/Mobile": "#147F82",
+    "Light/Professional/Desktop": "#625C83",
+    "Light/Professional/Tablet": "#625C83",
+    "Light/Professional/Mobile": "#625C83",
+    "Dark/Vibrant/Desktop": "#64C2BC",
+    "Dark/Vibrant/Tablet": "#64C2BC",
+    "Dark/Vibrant/Mobile": "#64C2BC",
+    "Dark/Professional/Desktop": "#ABA4D7",
+    "Dark/Professional/Tablet": "#ABA4D7",
+    "Dark/Professional/Mobile": "#ABA4D7"
+   }
+  },
+  {
+   "name": "accent-soft",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#E3F2F0",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#173637",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#EEEDF4",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#2D2A3B",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#E3F2F0",
+    "Light/Vibrant/Tablet": "#E3F2F0",
+    "Light/Vibrant/Mobile": "#E3F2F0",
+    "Light/Professional/Desktop": "#EEEDF4",
+    "Light/Professional/Tablet": "#EEEDF4",
+    "Light/Professional/Mobile": "#EEEDF4",
+    "Dark/Vibrant/Desktop": "#173637",
+    "Dark/Vibrant/Tablet": "#173637",
+    "Dark/Vibrant/Mobile": "#173637",
+    "Dark/Professional/Desktop": "#2D2A3B",
+    "Dark/Professional/Tablet": "#2D2A3B",
+    "Dark/Professional/Mobile": "#2D2A3B"
+   }
+  },
+  {
+   "name": "accent-ink",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#FFFFFF",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#151A18",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#FFFFFF",
+    "Light/Vibrant/Tablet": "#FFFFFF",
+    "Light/Vibrant/Mobile": "#FFFFFF",
+    "Light/Professional/Desktop": "#FFFFFF",
+    "Light/Professional/Tablet": "#FFFFFF",
+    "Light/Professional/Mobile": "#FFFFFF",
+    "Dark/Vibrant/Desktop": "#151A18",
+    "Dark/Vibrant/Tablet": "#151A18",
+    "Dark/Vibrant/Mobile": "#151A18",
+    "Dark/Professional/Desktop": "#151A18",
+    "Dark/Professional/Tablet": "#151A18",
+    "Dark/Professional/Mobile": "#151A18"
+   }
+  },
+  {
+   "name": "secondary",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#DF826D",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#E8A18B",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#6799B9",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#8BBDD8",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#DF826D",
+    "Light/Vibrant/Tablet": "#DF826D",
+    "Light/Vibrant/Mobile": "#DF826D",
+    "Light/Professional/Desktop": "#6799B9",
+    "Light/Professional/Tablet": "#6799B9",
+    "Light/Professional/Mobile": "#6799B9",
+    "Dark/Vibrant/Desktop": "#E8A18B",
+    "Dark/Vibrant/Tablet": "#E8A18B",
+    "Dark/Vibrant/Mobile": "#E8A18B",
+    "Dark/Professional/Desktop": "#8BBDD8",
+    "Dark/Professional/Tablet": "#8BBDD8",
+    "Dark/Professional/Mobile": "#8BBDD8"
+   }
+  },
+  {
+   "name": "success",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#237354",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#7ED4AB",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#356858",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#93C6B2",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#237354",
+    "Light/Vibrant/Tablet": "#237354",
+    "Light/Vibrant/Mobile": "#237354",
+    "Light/Professional/Desktop": "#356858",
+    "Light/Professional/Tablet": "#356858",
+    "Light/Professional/Mobile": "#356858",
+    "Dark/Vibrant/Desktop": "#7ED4AB",
+    "Dark/Vibrant/Tablet": "#7ED4AB",
+    "Dark/Vibrant/Mobile": "#7ED4AB",
+    "Dark/Professional/Desktop": "#93C6B2",
+    "Dark/Professional/Tablet": "#93C6B2",
+    "Dark/Professional/Mobile": "#93C6B2"
+   }
+  },
+  {
+   "name": "warning",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#886018",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#EAC678",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#80601F",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#DBC28B",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#886018",
+    "Light/Vibrant/Tablet": "#886018",
+    "Light/Vibrant/Mobile": "#886018",
+    "Light/Professional/Desktop": "#80601F",
+    "Light/Professional/Tablet": "#80601F",
+    "Light/Professional/Mobile": "#80601F",
+    "Dark/Vibrant/Desktop": "#EAC678",
+    "Dark/Vibrant/Tablet": "#EAC678",
+    "Dark/Vibrant/Mobile": "#EAC678",
+    "Dark/Professional/Desktop": "#DBC28B",
+    "Dark/Professional/Tablet": "#DBC28B",
+    "Dark/Professional/Mobile": "#DBC28B"
+   }
+  },
+  {
+   "name": "error",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#B24445",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#F29C96",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#A34B5C",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#DDA3B2",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#B24445",
+    "Light/Vibrant/Tablet": "#B24445",
+    "Light/Vibrant/Mobile": "#B24445",
+    "Light/Professional/Desktop": "#A34B5C",
+    "Light/Professional/Tablet": "#A34B5C",
+    "Light/Professional/Mobile": "#A34B5C",
+    "Dark/Vibrant/Desktop": "#F29C96",
+    "Dark/Vibrant/Tablet": "#F29C96",
+    "Dark/Vibrant/Mobile": "#F29C96",
+    "Dark/Professional/Desktop": "#DDA3B2",
+    "Dark/Professional/Tablet": "#DDA3B2",
+    "Dark/Professional/Mobile": "#DDA3B2"
+   }
+  },
+  {
+   "name": "font-zh",
+   "type": "string",
+   "definition": "Noto Sans TC",
+   "values": {
+    "Light/Vibrant/Desktop": "Noto Sans TC",
+    "Light/Vibrant/Tablet": "Noto Sans TC",
+    "Light/Vibrant/Mobile": "Noto Sans TC",
+    "Light/Professional/Desktop": "Noto Sans TC",
+    "Light/Professional/Tablet": "Noto Sans TC",
+    "Light/Professional/Mobile": "Noto Sans TC",
+    "Dark/Vibrant/Desktop": "Noto Sans TC",
+    "Dark/Vibrant/Tablet": "Noto Sans TC",
+    "Dark/Vibrant/Mobile": "Noto Sans TC",
+    "Dark/Professional/Desktop": "Noto Sans TC",
+    "Dark/Professional/Tablet": "Noto Sans TC",
+    "Dark/Professional/Mobile": "Noto Sans TC"
+   }
+  },
+  {
+   "name": "font-en",
+   "type": "string",
+   "definition": "Inter",
+   "values": {
+    "Light/Vibrant/Desktop": "Inter",
+    "Light/Vibrant/Tablet": "Inter",
+    "Light/Vibrant/Mobile": "Inter",
+    "Light/Professional/Desktop": "Inter",
+    "Light/Professional/Tablet": "Inter",
+    "Light/Professional/Mobile": "Inter",
+    "Dark/Vibrant/Desktop": "Inter",
+    "Dark/Vibrant/Tablet": "Inter",
+    "Dark/Vibrant/Mobile": "Inter",
+    "Dark/Professional/Desktop": "Inter",
+    "Dark/Professional/Tablet": "Inter",
+    "Dark/Professional/Mobile": "Inter"
+   }
+  },
+  {
+   "name": "font-data",
+   "type": "string",
+   "definition": "IBM Plex Mono",
+   "values": {
+    "Light/Vibrant/Desktop": "IBM Plex Mono",
+    "Light/Vibrant/Tablet": "IBM Plex Mono",
+    "Light/Vibrant/Mobile": "IBM Plex Mono",
+    "Light/Professional/Desktop": "IBM Plex Mono",
+    "Light/Professional/Tablet": "IBM Plex Mono",
+    "Light/Professional/Mobile": "IBM Plex Mono",
+    "Dark/Vibrant/Desktop": "IBM Plex Mono",
+    "Dark/Vibrant/Tablet": "IBM Plex Mono",
+    "Dark/Vibrant/Mobile": "IBM Plex Mono",
+    "Dark/Professional/Desktop": "IBM Plex Mono",
+    "Dark/Professional/Tablet": "IBM Plex Mono",
+    "Dark/Professional/Mobile": "IBM Plex Mono"
+   }
+  },
+  {
+   "name": "radius-card",
+   "type": "number",
+   "definition": [
+    {
+     "value": 20,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 3,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 20,
+    "Light/Vibrant/Tablet": 20,
+    "Light/Vibrant/Mobile": 20,
+    "Light/Professional/Desktop": 3,
+    "Light/Professional/Tablet": 3,
+    "Light/Professional/Mobile": 3,
+    "Dark/Vibrant/Desktop": 20,
+    "Dark/Vibrant/Tablet": 20,
+    "Dark/Vibrant/Mobile": 20,
+    "Dark/Professional/Desktop": 3,
+    "Dark/Professional/Tablet": 3,
+    "Dark/Professional/Mobile": 3
+   }
+  },
+  {
+   "name": "radius-control",
+   "type": "number",
+   "definition": [
+    {
+     "value": 16,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 3,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 16,
+    "Light/Vibrant/Tablet": 16,
+    "Light/Vibrant/Mobile": 16,
+    "Light/Professional/Desktop": 3,
+    "Light/Professional/Tablet": 3,
+    "Light/Professional/Mobile": 3,
+    "Dark/Vibrant/Desktop": 16,
+    "Dark/Vibrant/Tablet": 16,
+    "Dark/Vibrant/Mobile": 16,
+    "Dark/Professional/Desktop": 3,
+    "Dark/Professional/Tablet": 3,
+    "Dark/Professional/Mobile": 3
+   }
+  },
+  {
+   "name": "border-width",
+   "type": "number",
+   "definition": [
+    {
+     "value": 1,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 1.5,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 1,
+    "Light/Vibrant/Tablet": 1,
+    "Light/Vibrant/Mobile": 1,
+    "Light/Professional/Desktop": 1.5,
+    "Light/Professional/Tablet": 1.5,
+    "Light/Professional/Mobile": 1.5,
+    "Dark/Vibrant/Desktop": 1,
+    "Dark/Vibrant/Tablet": 1,
+    "Dark/Vibrant/Mobile": 1,
+    "Dark/Professional/Desktop": 1.5,
+    "Dark/Professional/Tablet": 1.5,
+    "Dark/Professional/Mobile": 1.5
+   }
+  },
+  {
+   "name": "card-padding",
+   "type": "number",
+   "definition": [
+    {
+     "value": 24,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 20,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 24,
+    "Light/Vibrant/Tablet": 24,
+    "Light/Vibrant/Mobile": 24,
+    "Light/Professional/Desktop": 20,
+    "Light/Professional/Tablet": 20,
+    "Light/Professional/Mobile": 20,
+    "Dark/Vibrant/Desktop": 24,
+    "Dark/Vibrant/Tablet": 24,
+    "Dark/Vibrant/Mobile": 24,
+    "Dark/Professional/Desktop": 20,
+    "Dark/Professional/Tablet": 20,
+    "Dark/Professional/Mobile": 20
+   }
+  },
+  {
+   "name": "gap-section",
+   "type": "number",
+   "definition": [
+    {
+     "value": 32,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 24,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 32,
+    "Light/Vibrant/Tablet": 32,
+    "Light/Vibrant/Mobile": 32,
+    "Light/Professional/Desktop": 24,
+    "Light/Professional/Tablet": 24,
+    "Light/Professional/Mobile": 24,
+    "Dark/Vibrant/Desktop": 32,
+    "Dark/Vibrant/Tablet": 32,
+    "Dark/Vibrant/Mobile": 32,
+    "Dark/Professional/Desktop": 24,
+    "Dark/Professional/Tablet": 24,
+    "Dark/Professional/Mobile": 24
+   }
+  },
+  {
+   "name": "fs-hero",
+   "type": "number",
+   "definition": [
+    {
+     "value": 56,
+     "theme": {
+      "device": "Desktop"
+     }
+    },
+    {
+     "value": 44,
+     "theme": {
+      "device": "Tablet"
+     }
+    },
+    {
+     "value": 32,
+     "theme": {
+      "device": "Mobile"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 56,
+    "Light/Vibrant/Tablet": 44,
+    "Light/Vibrant/Mobile": 32,
+    "Light/Professional/Desktop": 56,
+    "Light/Professional/Tablet": 44,
+    "Light/Professional/Mobile": 32,
+    "Dark/Vibrant/Desktop": 56,
+    "Dark/Vibrant/Tablet": 44,
+    "Dark/Vibrant/Mobile": 32,
+    "Dark/Professional/Desktop": 56,
+    "Dark/Professional/Tablet": 44,
+    "Dark/Professional/Mobile": 32
+   }
+  },
+  {
+   "name": "fs-title",
+   "type": "number",
+   "definition": [
+    {
+     "value": 32,
+     "theme": {
+      "device": "Desktop"
+     }
+    },
+    {
+     "value": 28,
+     "theme": {
+      "device": "Tablet"
+     }
+    },
+    {
+     "value": 24,
+     "theme": {
+      "device": "Mobile"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 32,
+    "Light/Vibrant/Tablet": 28,
+    "Light/Vibrant/Mobile": 24,
+    "Light/Professional/Desktop": 32,
+    "Light/Professional/Tablet": 28,
+    "Light/Professional/Mobile": 24,
+    "Dark/Vibrant/Desktop": 32,
+    "Dark/Vibrant/Tablet": 28,
+    "Dark/Vibrant/Mobile": 24,
+    "Dark/Professional/Desktop": 32,
+    "Dark/Professional/Tablet": 28,
+    "Dark/Professional/Mobile": 24
+   }
+  },
+  {
+   "name": "fs-section",
+   "type": "number",
+   "definition": [
+    {
+     "value": 24,
+     "theme": {
+      "device": "Desktop"
+     }
+    },
+    {
+     "value": 22,
+     "theme": {
+      "device": "Tablet"
+     }
+    },
+    {
+     "value": 20,
+     "theme": {
+      "device": "Mobile"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 24,
+    "Light/Vibrant/Tablet": 22,
+    "Light/Vibrant/Mobile": 20,
+    "Light/Professional/Desktop": 24,
+    "Light/Professional/Tablet": 22,
+    "Light/Professional/Mobile": 20,
+    "Dark/Vibrant/Desktop": 24,
+    "Dark/Vibrant/Tablet": 22,
+    "Dark/Vibrant/Mobile": 20,
+    "Dark/Professional/Desktop": 24,
+    "Dark/Professional/Tablet": 22,
+    "Dark/Professional/Mobile": 20
+   }
+  },
+  {
+   "name": "fs-card",
+   "type": "number",
+   "definition": 18,
+   "values": {
+    "Light/Vibrant/Desktop": 18,
+    "Light/Vibrant/Tablet": 18,
+    "Light/Vibrant/Mobile": 18,
+    "Light/Professional/Desktop": 18,
+    "Light/Professional/Tablet": 18,
+    "Light/Professional/Mobile": 18,
+    "Dark/Vibrant/Desktop": 18,
+    "Dark/Vibrant/Tablet": 18,
+    "Dark/Vibrant/Mobile": 18,
+    "Dark/Professional/Desktop": 18,
+    "Dark/Professional/Tablet": 18,
+    "Dark/Professional/Mobile": 18
+   }
+  },
+  {
+   "name": "fs-body",
+   "type": "number",
+   "definition": 16,
+   "values": {
+    "Light/Vibrant/Desktop": 16,
+    "Light/Vibrant/Tablet": 16,
+    "Light/Vibrant/Mobile": 16,
+    "Light/Professional/Desktop": 16,
+    "Light/Professional/Tablet": 16,
+    "Light/Professional/Mobile": 16,
+    "Dark/Vibrant/Desktop": 16,
+    "Dark/Vibrant/Tablet": 16,
+    "Dark/Vibrant/Mobile": 16,
+    "Dark/Professional/Desktop": 16,
+    "Dark/Professional/Tablet": 16,
+    "Dark/Professional/Mobile": 16
+   }
+  },
+  {
+   "name": "fs-small",
+   "type": "number",
+   "definition": 14,
+   "values": {
+    "Light/Vibrant/Desktop": 14,
+    "Light/Vibrant/Tablet": 14,
+    "Light/Vibrant/Mobile": 14,
+    "Light/Professional/Desktop": 14,
+    "Light/Professional/Tablet": 14,
+    "Light/Professional/Mobile": 14,
+    "Dark/Vibrant/Desktop": 14,
+    "Dark/Vibrant/Tablet": 14,
+    "Dark/Vibrant/Mobile": 14,
+    "Dark/Professional/Desktop": 14,
+    "Dark/Professional/Tablet": 14,
+    "Dark/Professional/Mobile": 14
+   }
+  },
+  {
+   "name": "fs-label",
+   "type": "number",
+   "definition": 12,
+   "values": {
+    "Light/Vibrant/Desktop": 12,
+    "Light/Vibrant/Tablet": 12,
+    "Light/Vibrant/Mobile": 12,
+    "Light/Professional/Desktop": 12,
+    "Light/Professional/Tablet": 12,
+    "Light/Professional/Mobile": 12,
+    "Dark/Vibrant/Desktop": 12,
+    "Dark/Vibrant/Tablet": 12,
+    "Dark/Vibrant/Mobile": 12,
+    "Dark/Professional/Desktop": 12,
+    "Dark/Professional/Tablet": 12,
+    "Dark/Professional/Mobile": 12
+   }
+  },
+  {
+   "name": "card-highlight",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#E3F2F0",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#173637",
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": "#FFFFFF",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#1D2420",
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#E3F2F0",
+    "Light/Vibrant/Tablet": "#E3F2F0",
+    "Light/Vibrant/Mobile": "#E3F2F0",
+    "Light/Professional/Desktop": "#FFFFFF",
+    "Light/Professional/Tablet": "#FFFFFF",
+    "Light/Professional/Mobile": "#FFFFFF",
+    "Dark/Vibrant/Desktop": "#173637",
+    "Dark/Vibrant/Tablet": "#173637",
+    "Dark/Vibrant/Mobile": "#173637",
+    "Dark/Professional/Desktop": "#1D2420",
+    "Dark/Professional/Tablet": "#1D2420",
+    "Dark/Professional/Mobile": "#1D2420"
+   }
+  },
+  {
+   "name": "elevation-enabled",
+   "type": "boolean",
+   "definition": [
+    {
+     "value": true,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": false,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": true,
+    "Light/Vibrant/Tablet": true,
+    "Light/Vibrant/Mobile": true,
+    "Light/Professional/Desktop": false,
+    "Light/Professional/Tablet": false,
+    "Light/Professional/Mobile": false,
+    "Dark/Vibrant/Desktop": true,
+    "Dark/Vibrant/Tablet": true,
+    "Dark/Vibrant/Mobile": true,
+    "Dark/Professional/Desktop": false,
+    "Dark/Professional/Tablet": false,
+    "Dark/Professional/Mobile": false
+   }
+  },
+  {
+   "name": "metric-border-left",
+   "type": "number",
+   "definition": [
+    {
+     "value": 1,
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": 3,
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 1,
+    "Light/Vibrant/Tablet": 1,
+    "Light/Vibrant/Mobile": 1,
+    "Light/Professional/Desktop": 3,
+    "Light/Professional/Tablet": 3,
+    "Light/Professional/Mobile": 3,
+    "Dark/Vibrant/Desktop": 1,
+    "Dark/Vibrant/Tablet": 1,
+    "Dark/Vibrant/Mobile": 1,
+    "Dark/Professional/Desktop": 3,
+    "Dark/Professional/Tablet": 3,
+    "Dark/Professional/Mobile": 3
+   }
+  },
+  {
+   "name": "suite-label",
+   "type": "string",
+   "definition": [
+    {
+     "value": "精緻活力 · 潮汐",
+     "theme": {
+      "suite": "Vibrant"
+     }
+    },
+    {
+     "value": "精緻專業 · 石墨紫",
+     "theme": {
+      "suite": "Professional"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "精緻活力 · 潮汐",
+    "Light/Vibrant/Tablet": "精緻活力 · 潮汐",
+    "Light/Vibrant/Mobile": "精緻活力 · 潮汐",
+    "Light/Professional/Desktop": "精緻專業 · 石墨紫",
+    "Light/Professional/Tablet": "精緻專業 · 石墨紫",
+    "Light/Professional/Mobile": "精緻專業 · 石墨紫",
+    "Dark/Vibrant/Desktop": "精緻活力 · 潮汐",
+    "Dark/Vibrant/Tablet": "精緻活力 · 潮汐",
+    "Dark/Vibrant/Mobile": "精緻活力 · 潮汐",
+    "Dark/Professional/Desktop": "精緻專業 · 石墨紫",
+    "Dark/Professional/Tablet": "精緻專業 · 石墨紫",
+    "Dark/Professional/Mobile": "精緻專業 · 石墨紫"
+   }
+  },
+  {
+   "name": "space-1",
+   "type": "number",
+   "definition": 4,
+   "values": {
+    "Light/Vibrant/Desktop": 4,
+    "Light/Vibrant/Tablet": 4,
+    "Light/Vibrant/Mobile": 4,
+    "Light/Professional/Desktop": 4,
+    "Light/Professional/Tablet": 4,
+    "Light/Professional/Mobile": 4,
+    "Dark/Vibrant/Desktop": 4,
+    "Dark/Vibrant/Tablet": 4,
+    "Dark/Vibrant/Mobile": 4,
+    "Dark/Professional/Desktop": 4,
+    "Dark/Professional/Tablet": 4,
+    "Dark/Professional/Mobile": 4
+   }
+  },
+  {
+   "name": "space-2",
+   "type": "number",
+   "definition": 8,
+   "values": {
+    "Light/Vibrant/Desktop": 8,
+    "Light/Vibrant/Tablet": 8,
+    "Light/Vibrant/Mobile": 8,
+    "Light/Professional/Desktop": 8,
+    "Light/Professional/Tablet": 8,
+    "Light/Professional/Mobile": 8,
+    "Dark/Vibrant/Desktop": 8,
+    "Dark/Vibrant/Tablet": 8,
+    "Dark/Vibrant/Mobile": 8,
+    "Dark/Professional/Desktop": 8,
+    "Dark/Professional/Tablet": 8,
+    "Dark/Professional/Mobile": 8
+   }
+  },
+  {
+   "name": "space-3",
+   "type": "number",
+   "definition": 12,
+   "values": {
+    "Light/Vibrant/Desktop": 12,
+    "Light/Vibrant/Tablet": 12,
+    "Light/Vibrant/Mobile": 12,
+    "Light/Professional/Desktop": 12,
+    "Light/Professional/Tablet": 12,
+    "Light/Professional/Mobile": 12,
+    "Dark/Vibrant/Desktop": 12,
+    "Dark/Vibrant/Tablet": 12,
+    "Dark/Vibrant/Mobile": 12,
+    "Dark/Professional/Desktop": 12,
+    "Dark/Professional/Tablet": 12,
+    "Dark/Professional/Mobile": 12
+   }
+  },
+  {
+   "name": "space-4",
+   "type": "number",
+   "definition": 16,
+   "values": {
+    "Light/Vibrant/Desktop": 16,
+    "Light/Vibrant/Tablet": 16,
+    "Light/Vibrant/Mobile": 16,
+    "Light/Professional/Desktop": 16,
+    "Light/Professional/Tablet": 16,
+    "Light/Professional/Mobile": 16,
+    "Dark/Vibrant/Desktop": 16,
+    "Dark/Vibrant/Tablet": 16,
+    "Dark/Vibrant/Mobile": 16,
+    "Dark/Professional/Desktop": 16,
+    "Dark/Professional/Tablet": 16,
+    "Dark/Professional/Mobile": 16
+   }
+  },
+  {
+   "name": "space-6",
+   "type": "number",
+   "definition": 24,
+   "values": {
+    "Light/Vibrant/Desktop": 24,
+    "Light/Vibrant/Tablet": 24,
+    "Light/Vibrant/Mobile": 24,
+    "Light/Professional/Desktop": 24,
+    "Light/Professional/Tablet": 24,
+    "Light/Professional/Mobile": 24,
+    "Dark/Vibrant/Desktop": 24,
+    "Dark/Vibrant/Tablet": 24,
+    "Dark/Vibrant/Mobile": 24,
+    "Dark/Professional/Desktop": 24,
+    "Dark/Professional/Tablet": 24,
+    "Dark/Professional/Mobile": 24
+   }
+  },
+  {
+   "name": "space-8",
+   "type": "number",
+   "definition": 32,
+   "values": {
+    "Light/Vibrant/Desktop": 32,
+    "Light/Vibrant/Tablet": 32,
+    "Light/Vibrant/Mobile": 32,
+    "Light/Professional/Desktop": 32,
+    "Light/Professional/Tablet": 32,
+    "Light/Professional/Mobile": 32,
+    "Dark/Vibrant/Desktop": 32,
+    "Dark/Vibrant/Tablet": 32,
+    "Dark/Vibrant/Mobile": 32,
+    "Dark/Professional/Desktop": 32,
+    "Dark/Professional/Tablet": 32,
+    "Dark/Professional/Mobile": 32
+   }
+  },
+  {
+   "name": "space-12",
+   "type": "number",
+   "definition": 48,
+   "values": {
+    "Light/Vibrant/Desktop": 48,
+    "Light/Vibrant/Tablet": 48,
+    "Light/Vibrant/Mobile": 48,
+    "Light/Professional/Desktop": 48,
+    "Light/Professional/Tablet": 48,
+    "Light/Professional/Mobile": 48,
+    "Dark/Vibrant/Desktop": 48,
+    "Dark/Vibrant/Tablet": 48,
+    "Dark/Vibrant/Mobile": 48,
+    "Dark/Professional/Desktop": 48,
+    "Dark/Professional/Tablet": 48,
+    "Dark/Professional/Mobile": 48
+   }
+  },
+  {
+   "name": "space-16",
+   "type": "number",
+   "definition": 64,
+   "values": {
+    "Light/Vibrant/Desktop": 64,
+    "Light/Vibrant/Tablet": 64,
+    "Light/Vibrant/Mobile": 64,
+    "Light/Professional/Desktop": 64,
+    "Light/Professional/Tablet": 64,
+    "Light/Professional/Mobile": 64,
+    "Dark/Vibrant/Desktop": 64,
+    "Dark/Vibrant/Tablet": 64,
+    "Dark/Vibrant/Mobile": 64,
+    "Dark/Professional/Desktop": 64,
+    "Dark/Professional/Tablet": 64,
+    "Dark/Professional/Mobile": 64
+   }
+  },
+  {
+   "name": "motion-feedback",
+   "type": "number",
+   "definition": 120,
+   "values": {
+    "Light/Vibrant/Desktop": 120,
+    "Light/Vibrant/Tablet": 120,
+    "Light/Vibrant/Mobile": 120,
+    "Light/Professional/Desktop": 120,
+    "Light/Professional/Tablet": 120,
+    "Light/Professional/Mobile": 120,
+    "Dark/Vibrant/Desktop": 120,
+    "Dark/Vibrant/Tablet": 120,
+    "Dark/Vibrant/Mobile": 120,
+    "Dark/Professional/Desktop": 120,
+    "Dark/Professional/Tablet": 120,
+    "Dark/Professional/Mobile": 120
+   }
+  },
+  {
+   "name": "motion-standard",
+   "type": "number",
+   "definition": 180,
+   "values": {
+    "Light/Vibrant/Desktop": 180,
+    "Light/Vibrant/Tablet": 180,
+    "Light/Vibrant/Mobile": 180,
+    "Light/Professional/Desktop": 180,
+    "Light/Professional/Tablet": 180,
+    "Light/Professional/Mobile": 180,
+    "Dark/Vibrant/Desktop": 180,
+    "Dark/Vibrant/Tablet": 180,
+    "Dark/Vibrant/Mobile": 180,
+    "Dark/Professional/Desktop": 180,
+    "Dark/Professional/Tablet": 180,
+    "Dark/Professional/Mobile": 180
+   }
+  },
+  {
+   "name": "motion-region",
+   "type": "number",
+   "definition": 240,
+   "values": {
+    "Light/Vibrant/Desktop": 240,
+    "Light/Vibrant/Tablet": 240,
+    "Light/Vibrant/Mobile": 240,
+    "Light/Professional/Desktop": 240,
+    "Light/Professional/Tablet": 240,
+    "Light/Professional/Mobile": 240,
+    "Dark/Vibrant/Desktop": 240,
+    "Dark/Vibrant/Tablet": 240,
+    "Dark/Vibrant/Mobile": 240,
+    "Dark/Professional/Desktop": 240,
+    "Dark/Professional/Tablet": 240,
+    "Dark/Professional/Mobile": 240
+   }
+  },
+  {
+   "name": "control-border",
+   "type": "color",
+   "definition": [
+    {
+     "value": "#7B8C80",
+     "theme": {
+      "mode": "Light"
+     }
+    },
+    {
+     "value": "#65766B",
+     "theme": {
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": "#7B8C80",
+    "Light/Vibrant/Tablet": "#7B8C80",
+    "Light/Vibrant/Mobile": "#7B8C80",
+    "Light/Professional/Desktop": "#7B8C80",
+    "Light/Professional/Tablet": "#7B8C80",
+    "Light/Professional/Mobile": "#7B8C80",
+    "Dark/Vibrant/Desktop": "#65766B",
+    "Dark/Vibrant/Tablet": "#65766B",
+    "Dark/Vibrant/Mobile": "#65766B",
+    "Dark/Professional/Desktop": "#65766B",
+    "Dark/Professional/Tablet": "#65766B",
+    "Dark/Professional/Mobile": "#65766B"
+   }
+  },
+  {
+   "name": "loading-tide-light-opacity",
+   "type": "number",
+   "definition": [
+    {
+     "value": 100,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 100,
+    "Light/Vibrant/Tablet": 100,
+    "Light/Vibrant/Mobile": 100,
+    "Light/Professional/Desktop": 0,
+    "Light/Professional/Tablet": 0,
+    "Light/Professional/Mobile": 0,
+    "Dark/Vibrant/Desktop": 0,
+    "Dark/Vibrant/Tablet": 0,
+    "Dark/Vibrant/Mobile": 0,
+    "Dark/Professional/Desktop": 0,
+    "Dark/Professional/Tablet": 0,
+    "Dark/Professional/Mobile": 0
+   }
+  },
+  {
+   "name": "loading-tide-dark-opacity",
+   "type": "number",
+   "definition": [
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 100,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 0,
+    "Light/Vibrant/Tablet": 0,
+    "Light/Vibrant/Mobile": 0,
+    "Light/Professional/Desktop": 0,
+    "Light/Professional/Tablet": 0,
+    "Light/Professional/Mobile": 0,
+    "Dark/Vibrant/Desktop": 100,
+    "Dark/Vibrant/Tablet": 100,
+    "Dark/Vibrant/Mobile": 100,
+    "Dark/Professional/Desktop": 0,
+    "Dark/Professional/Tablet": 0,
+    "Dark/Professional/Mobile": 0
+   }
+  },
+  {
+   "name": "loading-square-light-opacity",
+   "type": "number",
+   "definition": [
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": 100,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 0,
+    "Light/Vibrant/Tablet": 0,
+    "Light/Vibrant/Mobile": 0,
+    "Light/Professional/Desktop": 100,
+    "Light/Professional/Tablet": 100,
+    "Light/Professional/Mobile": 100,
+    "Dark/Vibrant/Desktop": 0,
+    "Dark/Vibrant/Tablet": 0,
+    "Dark/Vibrant/Mobile": 0,
+    "Dark/Professional/Desktop": 0,
+    "Dark/Professional/Tablet": 0,
+    "Dark/Professional/Mobile": 0
+   }
+  },
+  {
+   "name": "loading-square-dark-opacity",
+   "type": "number",
+   "definition": [
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Vibrant",
+      "mode": "Dark"
+     }
+    },
+    {
+     "value": 0,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Light"
+     }
+    },
+    {
+     "value": 100,
+     "theme": {
+      "suite": "Professional",
+      "mode": "Dark"
+     }
+    }
+   ],
+   "values": {
+    "Light/Vibrant/Desktop": 0,
+    "Light/Vibrant/Tablet": 0,
+    "Light/Vibrant/Mobile": 0,
+    "Light/Professional/Desktop": 0,
+    "Light/Professional/Tablet": 0,
+    "Light/Professional/Mobile": 0,
+    "Dark/Vibrant/Desktop": 0,
+    "Dark/Vibrant/Tablet": 0,
+    "Dark/Vibrant/Mobile": 0,
+    "Dark/Professional/Desktop": 100,
+    "Dark/Professional/Tablet": 100,
+    "Dark/Professional/Mobile": 100
+   }
+  }
+ ]
+}

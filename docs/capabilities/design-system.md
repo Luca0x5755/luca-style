@@ -2,13 +2,13 @@
 
 ## 範圍
 
-跨專案共用精緻活力、精緻專業兩套風格的設計變數、React 元件、明暗模式、樣張、頁面範本與 .pen 元件庫。
+跨專案共用精緻活力、精緻專業兩套風格的設計變數、React 元件、明暗模式、樣張、頁面範本與套系設計檔（OpenPencil .fig 元件庫）。
 
 ## 交付索引
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
-- 套件安裝、公開 API、主題覆寫、字體授權與 Pencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～24`。
+- 套件安裝、公開 API、主題覆寫、字體授權與 OpenPencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～24` 與 `PR-FILE-01～15`（套系設計檔）。
 - 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
@@ -18,7 +18,7 @@
 - 兩種風格套系：精緻活力、精緻專業；每個專案選一套。
 - 每套包含日間與暗黑模式、預設色票、元件外形與資訊密度。
 - 共用的字體角色、語意狀態色、設計變數、React 元件及使用規範。
-- 產品介面和介紹頁的桌面、手機範本，以及可瀏覽樣張與 .pen 元件庫。
+- 產品介面和介紹頁的桌面、手機範本，以及可瀏覽樣張與套系設計檔（`components-vibrant.fig`、`components-professional.fig`，OpenPencil .fig 元件庫）。
 - 既有 mockup 作為參考案例：活動、社群類產品對應精緻活力；金融、資料監控類產品對應精緻專業。
 
 PR-STYLE-01 — 新專案可選擇精緻活力或精緻專業作為整站基準；同一專案的頁面可調整密度，但維持所選風格套系。
@@ -34,7 +34,7 @@ PR-STYLE-10 — 元件外形採 B「個性鮮明」；精緻活力的容器圓�
 PR-STYLE-11 — 動態效果短而克制；使用者啟用減少動態設定時，介面相應減少動畫。
 PR-STYLE-12 — 共用元件涵蓋按鈕、表單、導覽、卡片、表格、狀態提示與載入、空白、錯誤狀態，並展示兩套風格及兩種明暗模式。
 PR-STYLE-13 — 提供產品介面與介紹頁的桌面和手機範本，使新專案可依同一規則建立畫面。
-PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、.pen 元件庫及使用說明，讓後續專案可取得並沿用。
+PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、套系設計檔（OpenPencil .fig 元件庫）及使用說明，讓後續專案可取得並沿用。
 
 ### 公開樣張與 README 承諾
 
@@ -50,6 +50,21 @@ PR-STYLE-21 — README 依序包含：一句話介紹與截圖、快速開始、
 PR-STYLE-22 — README 快速開始包含 clone、`npm ci`、`npm run dev` 及不超過 10 行的最少使用程式碼（逐字節錄自 `examples/consumer`）；使用端安裝細節連至使用端接入文件，不在 README 重複。
 PR-STYLE-23 — 單一指令 `npm run screenshots` 可產生精緻活力、精緻專業各自日間、暗黑共 4 張樣張截圖於 `docs/images/`（vibrant-light、vibrant-dark、professional-light、professional-dark）；此指令不屬於 `npm test`，使用獨立 4177 port，`npm run verify:screenshots` 驗證產生結果穩定。
 PR-STYLE-24 — 前端規格路由表註明路徑相對於部署 base path（GitHub Pages 為 `/luca-style/`）；架構技術棧與交付結構記錄 Pages 部署方式。
+PR-FILE-01 — `components-vibrant.fig` 含原設計稿全部精緻活力的頁面 frame 與元件檢視板，節點數低於 10,000，且能以 OpenPencil MCP 編輯並自動儲存。
+PR-FILE-02 — `components-professional.fig` 含原設計稿全部精緻專業的頁面 frame 與元件檢視板，節點數低於 10,000，且能以 OpenPencil MCP 編輯並自動儲存。
+PR-FILE-03 — 兩個套系設計檔的頁面 frame 合計，涵蓋原設計稿 302 個 frame 的全部名稱，沒有遺失，也沒有任何一個套系的 frame 出現在另一個套系設計檔。
+PR-FILE-04 — 每個頁面 frame 的節點數與文字內容，與拆檔前的單檔基準（`docs/mockup/themes/baseline.json`）一致；顏色不與基準比，改由 PR-FILE-12 驗收。結構驗收腳本在不一致時回報非零結束碼並列出差異。
+PR-FILE-05 — 兩個套系設計檔的 22 個母版內容相同；比對腳本在任何差異時回報非零結束碼並列出母版名稱。
+PR-FILE-06 — `docs/delivery-verification.md` 記錄母版比對與結構驗收的執行指令與結果，並記錄人眼抽查結果。
+PR-FILE-07 — 專案文件與程式註解不再把 `components.pen` 或「唯一設計檔」當作設計稿，改指向兩個套系設計檔。
+PR-FILE-08 — 工作樹中不存在 `docs/mockup/components.fig` 與 `docs/mockup/components.pen`；驗收所需的基準以 `docs/mockup/themes/` 下的 JSON 保存。
+PR-FILE-09 — ADR 0003 的狀態為 `Accepted`。
+PR-FILE-10 — 每個套系設計檔含該套系用到的全部主題變數，型別與每個模式（Light／Dark、Desktop／Tablet／Mobile）的值與 `.pen` 一致。
+PR-FILE-11 — 每個頁面 frame 的模式與其名稱相符，節點的填色、描邊、字型、字級、間距、內距、圓角綁定到與 `.pen` 相同的變數；母版內的綁定同樣保留。
+PR-FILE-12 — 每個頁面 frame 解析後的值與 `.pen` 在同一主題下解析後的基準 `resolved.json` 一致；驗收腳本在任何不一致時回報非零結束碼並列出差異。
+PR-FILE-13 — 結構驗收在同一頁面群組的 Light 與 Dark frame 顏色分布完全相同時失敗，使明暗模式遺失無法再被忽略。
+PR-FILE-15 — 兩個套系設計檔把 frame 依產品頁面分在不同畫布頁：`Library guide`（母版、元件檢視板、目錄、標題）加 Home、Foundations、Components、Product、Intro、NotFound；同一產品頁面的 Light 與 Dark、各裝置在同一畫布頁，frame 名稱不變。`paginate-fig.js --check` 與結構驗收在 frame 不在名稱指定的畫布頁、或實例連不到母版時回報非零結束碼。
+PR-FILE-14 — 兩個套系設計檔內沒有 NaN 行高、自動排版內相鄰節點重疊或子節點超出父 frame；`relayout-fig.js --check` 與結構驗收在任何一項大於 0 時回報非零結束碼。
 
 實作補充：
 
@@ -90,4 +105,4 @@ PR-STYLE-24 — 前端規格路由表註明路徑相對於部署 base path（Git
 - [前端 §5.2 路由](../05_frontend_spec.md#52-路由能力設計系統)；路徑相對於部署 base path，對應 `PR-STYLE-15` 至 `PR-STYLE-18`、`PR-STYLE-24`。
 - [前端 §5.3 頁面與狀態](../05_frontend_spec.md#53-頁面與狀態能力設計系統)，包含 §5.3.1 入口、§5.3.2 設計基礎、§5.3.3 共用元件、§5.3.4 產品介面範本、§5.3.5 介紹頁範本、§5.3.6 找不到頁面；對應 `PR-STYLE-12` 至 `PR-STYLE-14`。
 - [前端 §5.4 共用風格角色](../05_frontend_spec.md#54-共用風格角色能力設計系統)；對應 `PR-STYLE-01` 至 `PR-STYLE-07`、`PR-STYLE-09` 至 `PR-STYLE-11`。
-- [前端 §5.5 共用 Pencil 元件](../05_frontend_spec.md#55-共用-pencil-元件能力設計系統)，包含 §5.5.1 母版元件與檢視板、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。
+- [前端 §5.5 共用 OpenPencil 元件](../05_frontend_spec.md#55-共用-openpencil-元件能力設計系統)，包含 §5.5.1 母版元件與檢視板、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。

@@ -54,11 +54,11 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 
 Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/react/licenses/inter?url'`；另有 `notosanstc`、`ibmplexmono`。部署時保留建置產物中的字體與授權資產；不要只複製 CSS。
 
-## Pencil 與程式同步
+## OpenPencil 與程式同步
 
-唯一設計檔 `docs/mockup/components.pen`；左側 Vibrant／精緻活力，右側 Professional／精緻專業。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
+設計稿是兩個以 OpenPencil 編輯的套系設計檔：`docs/mockup/components-vibrant.fig`（Vibrant／精緻活力）與 `docs/mockup/components-professional.fig`（Professional／精緻專業）。一個專案只選一套風格，因此只需開所選套系的那個檔案。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
 
-| Pencil 名稱 | 程式公開對應 |
+| 設計稿名稱 | 程式公開對應 |
 | --- | --- |
 | suite／mode | Provider suite、useTheme mode |
 | accent、success、radius-card 等角色 | 同名 CSS custom property（加 `--`）；公開 data JSON 同名 key |
@@ -67,7 +67,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 | C/Select、C/Checkbox、C/Status/*、C/State/* | Select、Checkbox、StatusMessage、ContentState |
 | C/Card/Metric、C/Table、C/Nav/* | MetricCard、DataTable、Navigation |
 
-人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 Pencil 工具同步相同角色與母版；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與 pen。元件命名對應不是自動同步或像素保證。
+人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 OpenPencil 工具同步相同角色與母版（兩個套系設計檔各帶一份相同的母版，兩邊都要改，本 repo 以 `scripts/design/check-masters.js` 比對）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與套系設計檔。元件命名對應不是自動同步或像素保證。
 
 ## 內容載入動畫
 
