@@ -271,3 +271,80 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 
 使用者發現 Vibrant 暗黑產品範本的本月累計卡片在覆寫後使用淺底配亮字。原覆寫只有日間色票；新增 ThemeProvider 明暗成對 accent 輸入，showcase 隨實際模式選色，保留單一色票 API。日間柔和底同步調亮，避免次要文字低於 4.5:1。新增 theme.spec 回歸測試，逐一檢查雙套系雙模式的卡片標籤、標題、數值與說明之 computed 色彩對比。舊建置重現暗黑 1.80:1；修正後四組均達 4.5:1。build、typecheck、lint 通過，theme.spec 4 passed，暗黑截圖已目視檢查。這是色彩回歸驗證，未新增 mockup 像素差異比對。
 
+
+## 主題資料擷取（ISSUE-007）
+
+2026-10-24，基底 `607c1a7`。`.pen` 的變數在轉成 `.fig` 時被攤平成預設主題（Vibrant／Light）的固定顏色；`.pen` 刪除前（ISSUE-006）把它唯一保有的主題資料存成 JSON，供 ISSUE-008／009 建立變數與綁定、ISSUE-010 比對。
+
+輸出（皆在 `docs/mockup/themes/`）：
+
+- `variables.json`：48 個變數的型別、原始定義，以及在 12 個主題組合（mode × suite × device，鍵為 `Light/Vibrant/Desktop` 這種格式）下的值。
+- `bindings.json`：每個頁面 frame 的每個被綁定屬性：frame 名稱、節點索引路徑、節點類型、屬性、變數名稱；母版另存在 `masters`。
+- `resolved.json`：每個頁面 frame 在自己的主題下，每個被綁定屬性解析後的實際值；母版以預設主題（Vibrant／Light／Desktop）解析。opacity 類變數保留原值 0–100，不做 Pencil 內部的 0–1 正規化。
+- `extract-raw.txt`、`variables-raw.txt`：從 Pencil 抽出的原始文字，是上面三份 JSON 的唯一輸入。
+
+### 檔案大小與筆數
+
+「筆數」：variables.json 為變數數；bindings.json 與 resolved.json 為展開後的綁定總數（頁面 frame 20,846＋母版 212）。三份都遠低於 5 MB，所以維持單檔，不分套系。
+
+| 檔案 | bytes | 筆數 |
+| --- | --- | --- |
+| variables.json | 34718 | 48 |
+| bindings.json | 906116 | 21058 |
+| resolved.json | 765053 | 21058 |
+
+涵蓋範圍：304 個頂層項目（302 個頁面 frame 加兩個頂層標題文字）與 22 個母版；展開後共 11,444 個頁面節點、94 個母版節點。未展開時 `.pen` 內的 `$` 引用為頁面 7,930 筆、母版 207 筆（工單寫的「約 7,500」是估計；母版內的引用在每個實例裡會再展開一次，所以展開後的筆數較多）。逐類型筆數：fill（frame 2,091、text 6,122、icon 839、rectangle 624）、stroke 1,883、strokeWidth 451、fontFamily 6,122、fontSize 508、gap 288、padding 170、cornerRadius 1,434、effect.enabled 85、strokeWidth.left 85、fill 的四個 opacity 各 89；完整表見腳本 `--check` 的獨立計數。
+
+### 重做步驟
+
+1. 開啟 Pencil 並載入 `docs/mockup/components.pen`（加密檔，只能經由 pencil MCP 的 `execute` 存取，不可修改）。
+2. 依 `scripts/design/extract-pen-themes.pen.js` 的片段 1 印出變數，存成 `docs/mockup/themes/variables-raw.txt`。
+3. 依片段 2 印出綁定（Pencil 不能寫檔，輸出經對話複製成文字檔；太長就調大 `START` 分批，前 `START` 個 frame 只重放不輸出，編號才會一致），存成 `extract-raw.txt` 的主體。末行應為 `BAD total 0 … frames 304 masters 22`；0 代表離線推導的值與 Pencil `resolveVariables` 的結果逐筆相同。
+4. 依片段 3 取得四行 `#independent-count`，連同 `#pencil-resolve-check mismatches=0 frames=304 masters=22` 放在 `extract-raw.txt` 最前面。
+5. 執行：
+
+```sh
+node scripts/design/build-theme-data.js              # 建置三份 JSON
+node scripts/design/build-theme-data.js --check      # 內部一致性、型別、逐類型獨立計數、5 MB 上限
+node scripts/design/build-theme-data.js --check-fig  # 與兩個 .fig 比對節點數、名稱序列、路徑與類型（約 8 秒）
+node scripts/design/build-theme-data.js --check-doc  # 本節的大小、筆數與抽樣表
+node --test scripts/design/build-theme-data.test.js                          # 腳本自己的行為測試
+```
+
+### 節點對應規則
+
+`.pen` 的頁面節點是未展開的實例，`.fig` 是展開後的。對 `.pen` 的 frame 呼叫 `Get(id, visitor, { resolveInstances: true })` 得到的展開樹，與 `.fig` 同名 frame 的深度優先順序、節點數與節點名稱完全相同。索引路徑因此定義為：根節點記為 `-`，其下每層用子節點的 0 起算索引以 `.` 相連，兩邊共用。`--check-fig` 對全部 304 個頂層項目與 22 個母版逐一確認：節點數相等、名稱序列雜湊相等、每個綁定路徑在 `.fig` 存在且節點類型相容（文字對 TEXT、矩形對 RECTANGLE、frame 對 FRAME／INSTANCE、圖示不可是 TEXT），並反向確認 `.fig` 內每個非母版頂層節點都在抽取結果裡；共檢查 9,984 條綁定路徑，全部一致。
+
+頁面 frame 的主題由名稱推出（名稱沒寫的軸取 Light／Vibrant／Desktop；`Mobile components` 與 `Tablet typography` 兩個頁名帶裝置）。這與 `.pen` 的實際 `theme` 屬性一致：所有實例節點的 `theme` 都等於所屬頁面 frame（0 個例外）；Library guide、兩個頂層標題文字與母版沒有 `theme`，以預設主題解析。
+
+### Pencil 與 Pencil 之外的限制
+
+- Pencil 解析後的輸出會省略預設值：opacity 100、`effect.enabled` 為 true、四邊相同的 strokeWidth。比對時對這三類做了明確的等價處理，其他屬性是逐值比對。
+- `resolved.json` 的值由 `variables.json` 加主題推導；與 Pencil 的 `resolveVariables` 結果一致這件事，是在 Pencil 內對 304 個頁面項目與 22 個母版逐筆比對得到的（BAD total 0），該結果記在 `extract-raw.txt` 檔頭。`.pen` 刪除後這項比對無法重跑，只能用片段 2 重現當時的做法。
+
+### 抽樣核對（5 個 Dark、5 個 Light）
+
+每個 frame 取兩列：頁面背景（路徑 `-`）與一個帶強調色的節點。「resolved.json 值」由 `--check-doc` 與 `resolved.json` 逐列比對；「Pencil 畫面所見」是人工用 `TakeScreenshot` 目視 10 張截圖的結果，這一欄腳本無法驗證。結果：Dark 的底色皆為近黑綠、Light 為淺米白；Vibrant 的強調色在 Dark 為淺青綠、Light 為深青綠，Professional 在 Dark 為淡紫、Light 為灰紫；Vibrant 圓角明顯、Professional 圓角極小；全部與 `resolved.json` 一致。
+
+| frame | 路徑 | 屬性 | resolved.json 值 | Pencil 畫面所見 |
+| --- | --- | --- | --- | --- |
+| NotFound/Vibrant/Dark/Mobile/Success | - | fill | #151A18 | 近黑綠底 |
+| NotFound/Vibrant/Dark/Mobile/Success | 3.0.0 | fill | #64C2BC | 按鈕為淺青綠、圓角明顯 |
+| NotFound/Professional/Dark/Desktop/Success | - | fill | #151A18 | 近黑綠底 |
+| NotFound/Professional/Dark/Desktop/Success | 3.0.0 | fill | #ABA4D7 | 按鈕為淡紫、圓角極小 |
+| Home/Professional/Dark/Tablet/Empty | - | fill | #151A18 | 近黑綠底 |
+| Home/Professional/Dark/Tablet/Empty | 3.2.0 | fill | #ABA4D7 | 次要按鈕文字與邊框為淡紫 |
+| Home/Vibrant/Dark/Mobile/Error | - | fill | #151A18 | 近黑綠底 |
+| Home/Vibrant/Dark/Mobile/Error | 3.2.0 | fill | #64C2BC | 次要按鈕文字與邊框為淺青綠 |
+| Intro/Professional/Dark/Mobile/Loading | - | fill | #151A18 | 近黑綠底 |
+| Intro/Professional/Dark/Mobile/Loading | 3.2.0 | fill | #ABA4D7 | 返回入口按鈕邊框為淡紫 |
+| NotFound/Vibrant/Light/Mobile/Success | - | fill | #F7F7F2 | 淺米白底 |
+| NotFound/Vibrant/Light/Mobile/Success | 3.0.0 | fill | #147F82 | 按鈕為深青綠、圓角明顯 |
+| NotFound/Professional/Light/Tablet/Success | - | fill | #F7F7F2 | 淺米白底 |
+| NotFound/Professional/Light/Tablet/Success | 3.0.0 | fill | #625C83 | 按鈕為灰紫、圓角極小 |
+| Home/Professional/Light/Mobile/Empty | - | fill | #F7F7F2 | 淺米白底 |
+| Home/Professional/Light/Mobile/Empty | 3.2.0 | fill | #625C83 | 次要按鈕文字與邊框為灰紫 |
+| Home/Vibrant/Light/Tablet/Error | - | fill | #F7F7F2 | 淺米白底 |
+| Home/Vibrant/Light/Tablet/Error | 3.2.0 | fill | #147F82 | 次要按鈕文字與邊框為深青綠 |
+| Intro/Vibrant/Light/Mobile/Loading | - | fill | #F7F7F2 | 淺米白底 |
+| Intro/Vibrant/Light/Mobile/Loading | 3.2.0 | fill | #147F82 | 返回入口按鈕邊框為深青綠 |
