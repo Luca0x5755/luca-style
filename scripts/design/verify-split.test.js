@@ -47,6 +47,7 @@ test('丟失主題的歷史檔（ISSUE-005 的 vibrant，沒有變數）→ 失�
   const r = exec(old);
   assert.equal(r.code, 1, r.out);
   assert.match(r.out, /\[明暗相同\]/);
+  assert.match(r.out, /\[版面\] vibrant：\d+ 個文字的行高是 NaN/);
 });
 
 test('結構性改動（文字被改）仍然失敗', () => {

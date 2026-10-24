@@ -13,6 +13,8 @@
 //   - 明暗模式：同一個設計檔內，名稱只差 Light／Dark 的兩個 frame（同一頁面群組），顏色分布不得完全相同
 //     （顏色分布＝frame 本身與全部後代的填色、描邊顏色，各色出現次數）。完全相同代表明暗模式遺失
 //     （.pen 轉 .fig 後的狀態）；有任何一組相同就回報非零結束碼。這是保險絲，不是保真比對，保真見 verify-themes.js。
+//   - 版面：兩個設計檔內不得有 NaN 行高、自動排版內相鄰節點重疊、子節點超出父 frame（檢查邏輯見 layout-snippets.js，
+//     修正見 relayout-fig.js）。這是數值檢查，不等於畫面看起來正確。
 // 母版（COMPONENT）與頂層 TEXT 不在本腳本範圍（母版比對見 ISSUE-004）。不做逐像素比對。
 //
 // 全程以離線、唯讀的 `openpencil eval` 讀檔（不加 -o / -w），不經過 OpenPencil App。
@@ -23,6 +25,7 @@
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CHECK_SNIPPET } from './layout-snippets.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const mockup = join(root, 'docs/mockup');
@@ -78,6 +81,19 @@ const readFrames = (label, file) => {
     return result.frames;
   } catch (error) {
     console.log(`[讀取] ${label}：${String(error.message).split('\n')[0]}`);
+    process.exit(2);
+  }
+};
+
+// 版面檢查：回傳 { nan, overlaps, outOfBounds, examples }。
+const readLayout = (label, file) => {
+  try {
+    const out = execFileSync('openpencil', ['eval', `"${file}"`, '--stdin'], {
+      cwd: mockup, input: CHECK_SNIPPET, encoding: 'utf8', shell: true, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024,
+    });
+    return JSON.parse(out.replace(/\x1b\[[0-9;]*m/g, '').trim());
+  } catch (error) {
+    console.log(`[讀取] ${label} 版面：${String(error.message).split('\n')[0]}`);
     process.exit(2);
   }
 };
@@ -161,6 +177,13 @@ for (const [where, frames] of [['vibrant', vibrant], ['professional', profession
     lightDarkPairs++;
     if (g.Light.colors === g.Dark.colors) diffs.push(`[明暗相同] ${key}：${where} 的 Light 與 Dark 顏色分布完全相同（明暗模式遺失）`);
   }
+}
+
+for (const [where, file] of [['vibrant', paths.vibrant], ['professional', paths.professional]]) {
+  const r = readLayout(where, file);
+  if (r.nan > 0) diffs.push(`[版面] ${where}：${r.nan} 個文字的行高是 NaN`);
+  if (r.overlaps > 0) diffs.push(`[版面] ${where}：${r.overlaps} 組相鄰節點重疊（${r.examples.join('；')}）`);
+  if (r.outOfBounds > 0) diffs.push(`[版面] ${where}：${r.outOfBounds} 個子節點超出父 frame`);
 }
 
 console.log(`頁面：${PAGE}`);

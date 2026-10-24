@@ -668,3 +668,27 @@ openpencil export docs/mockup/components-vibrant.fig --node 0:2731 -o <暫存區
 
 - `npm run typecheck`、`npm run lint` 通過；`npm test`（Playwright）72 passed。
 - `apply-variables.js --check`：兩檔節點數 5826、變數逐筆一致；`apply-bindings.js --check`：兩檔 175 個 frame／母版、10648 筆綁定全部一致；`build-theme-data.js --check-fig`：9984 條路徑全部一致。三者結束碼皆為 0。兩個套系設計檔仍是 5826 個節點，本票沒有修改任何 `.fig`。
+
+## 版面修正與重疊檢查
+
+2026-10-24，基底 `b388372`，修正提交 `9a2b46e`。ISSUE-009 把正確的字級、間距寫回節點，但離線存檔不保存重算的版面，轉檔時算出的舊版面（行高 `NaN`、標題高度 2px）就留在檔案裡，開啟後大標題、麵包屑、說明與按鈕互相重疊。
+
+| 腳本 | 做什麼 |
+| --- | --- |
+| `scripts/design/relayout-fig.js`（新） | 修正兩個設計檔：`NaN` 行高改 `AUTO`、含換行的文字逐段量測後改固定高度、重算自動排版並把座標與高度明確寫入。`--check` 為唯讀檢查 |
+| `scripts/design/layout-snippets.js`（新） | 檢查與修正的 `openpencil eval` 片段，供上面兩支與 `verify-split.js` 共用 |
+| `scripts/design/verify-split.js`（改） | 新增 `[版面]`：`NaN` 行高、相鄰節點重疊、子節點超出父 frame 任何一項大於 0 就失敗 |
+
+```sh
+node scripts/design/relayout-fig.js --check
+node scripts/design/relayout-fig.js
+node scripts/design/verify-split.js
+node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test.js
+```
+
+- 修正前（`b388372`，Vibrant）：3,700 組相鄰節點中 318 組重疊、346 個子節點超出父 frame、254 個 `NaN` 行高。修正後三項皆為 0；Professional 修正後同樣為 0。
+- 修正後 `verify-themes.js`、`apply-variables.js --check`、`check-masters.js`、`verify-split.js` 都通過，綁定沒有被寫入動作弄丟。
+- 證明會失敗：`relayout-fig.test.js` 把 `b388372` 的兩個檔複製到暫存區，`--check` 回報 `NaN 行高 254`、重疊大於 0 且結束碼 1；修正後通過；再修正一次回報「已是最新，不寫檔」。`verify-split.test.js` 的舊檔案例新增斷言 `[版面] vibrant：… NaN`。
+- 人眼：只看過 `Home/Vibrant/Light/Desktop/Success` 與 `Dark` 的離線匯出圖，標題、麵包屑、說明、按鈕與卡片不重疊。其他 frame 與 Professional 只有數值檢查，沒有看圖。
+- 已知取捨：行高用 `AUTO`（`.pen` 原值取不到）、69 個多行文字改為固定高度、匯出圖底部 `Footer` 文字沒有畫出來（座標與可見性正常，原因未查）。
+- 檢查只涵蓋「同一自動排版 frame 內相鄰子節點」，不含非自動排版的絕對定位節點，也不是像素比對。
