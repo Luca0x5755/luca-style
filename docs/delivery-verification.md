@@ -1,5 +1,11 @@
 # 設計系統交付驗證
 
+## Windows 上執行 openpencil 的本機修補
+
+`scripts/design/` 的腳本都以離線 `openpencil eval` 讀寫設計檔。Windows 上 openpencil 需要兩處本機修補，否則會出現 `ENOENT D:\C:\Users\...\canvaskit.wasm`：在全域 npm 目錄 `@open-pencil/cli/node_modules/@open-pencil/core/dist/` 下的 `io/formats/raster/headless.js` 與 `canvaskit.js`，以 `fileURLToPath` 取代直接使用 `URL.pathname`。重新安裝套件會還原修補，需再套用一次。
+
+離線處理是刻意的：在 App 內大量刪除節點會讓 WebAssembly 渲染器損壞並使 App 當機。切檔用的一次性腳本 `split-by-suite.js` 已隨來源 `components.fig` 刪除，提交 `ebe6c61` 找得回。
+
 ## 驗證範圍與重現
 
 2026-10-20，ISSUE-009 第 1 輪，基底 `01e3c18`。執行環境為 Windows、Node.js 22.17.0、npm 11.4.2、npm workspaces、Playwright Chromium。先保留 4173（showcase）及 4174（repo 外 consumer）供驗證使用，不同程序不共用服務。

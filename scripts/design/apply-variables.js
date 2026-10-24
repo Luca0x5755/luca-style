@@ -7,7 +7,7 @@
 //   node scripts/design/apply-variables.js --list    唯讀列出每個變數在每個模式的值（逐行：集合 | 變數 | 型別 | 模式 | 值）
 // 結束碼：0 一致；1 有差異或 variables.json 無法建模（逐行列出）；2 讀檔或 openpencil 執行失敗。
 //
-// 建模（見 docs/issues/ISSUE-008 的「建模決策」；Figma 的模式屬於集合，一個節點在每個集合只持有一個模式）：
+// 建模（見 docs/delivery-verification.md〈套系設計檔的變數集合與模式（ISSUE-008）〉的「建模」；Figma 的模式屬於集合，一個節點在每個集合只持有一個模式）：
 //   Mode   集合：Light、Dark。放依明暗變化的變數。
 //   Device 集合：Desktop、Tablet、Mobile。只放依裝置變化的變數。
 //   Base   集合：單一模式 Default。放不隨明暗與裝置變化的變數（常數，以及只依套系變化的變數）。
@@ -18,7 +18,7 @@
 // opacity 類變數維持 variables.json 的 0–100 原值，與 resolved.json 一致；綁定端若需要 0–1 自行換算。
 //
 // 全程以離線 `openpencil eval` 讀寫檔案，不經過 OpenPencil App。
-// Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+// Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
 // 測試用環境變數：APPLY_VARIABLES_JSON、APPLY_VARIABLES_VIBRANT、APPLY_VARIABLES_PROFESSIONAL、
 //   APPLY_VARIABLES_NODE_LIMIT（節點數上限，預設 10000）。

@@ -33,7 +33,7 @@
 //   strokeWidth.left 的儲存值讀回 API 讀不到，這個屬性只比綁定的變數名稱。
 //
 // 全程以離線、唯讀的 `openpencil eval` 讀檔（不加 -o / -w），不經過 OpenPencil App。
-// Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+// Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
 // 測試用：可用環境變數覆寫路徑，指向故意改壞的副本：
 //   CHECK_MASTERS_VIBRANT / CHECK_MASTERS_PROFESSIONAL / CHECK_MASTERS_THEMES（themes 資料夾）

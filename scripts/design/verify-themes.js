@@ -14,7 +14,7 @@
 // 浮點容忍：顏色每個通道、數值皆容忍 1/255 以內（存檔重讀會有約 1e-8 的誤差）。
 // 沒有綁定欄位、只比儲存值的：effect.enabled（效果 visible）與 fill[i].opacity（變數值 ÷ 100）。
 // 讀不回、所以不比的：strokeWidth.left（單邊描邊粗細，讀回 API 取不到），只計數並在輸出列出筆數。
-// 不做逐像素比對。Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+// 不做逐像素比對。Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
 // 測試用環境變數：VERIFY_THEMES_VIBRANT、VERIFY_THEMES_PROFESSIONAL、VERIFY_THEMES_DIR。
 import { execFileSync } from 'node:child_process';

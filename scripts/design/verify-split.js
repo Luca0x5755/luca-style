@@ -19,7 +19,7 @@
 // 母版（COMPONENT）與頂層 TEXT 不在本腳本範圍（母版比對見 ISSUE-004）。不做逐像素比對。
 //
 // 全程以離線、唯讀的 `openpencil eval` 讀檔（不加 -o / -w），不經過 OpenPencil App。
-// Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+// Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
 // 測試用：可用環境變數覆寫路徑，指向故意改壞的副本：
 //   VERIFY_SPLIT_SOURCE / VERIFY_SPLIT_VIBRANT / VERIFY_SPLIT_PROFESSIONAL
@@ -44,7 +44,7 @@ const paths = {
 const EXPECTED_FRAMES = 302;
 // 無套系的共用 frame：兩檔各留一份，內容須與原檔一致，不受「不得同時出現」限制。
 const SHARED = new Set(['Library guide', '00 / Canvas directory']);
-// 與 split-by-suite.js 相同的套系判定（兩處規則須同步修改；刻意不共用，讓驗收獨立於切檔邏輯）：<頁>/Professional/...、Professional/...、Professional ?/...。
+// 套系判定（沿用已刪除的切檔腳本 split-by-suite.js 的規則，提交 ebe6c61 找得回）：<頁>/Professional/...、Professional/...、Professional ?/...。
 const suiteOf = (name) => {
   for (const suite of ['Vibrant', 'Professional']) {
     if (new RegExp('^(?:[^/]+/)?' + suite + '(?: ?/|/)').test(name)) return suite;
@@ -207,7 +207,7 @@ for (const [where, file] of [['vibrant', paths.vibrant], ['professional', paths.
   if (r.outOfBounds > 0) diffs.push(`[版面] ${where}：${r.outOfBounds} 個子節點超出父 frame`);
 }
 
-console.log(`畫布頁：${[...new Set([...vibrant, ...professional].map((f) => f.page))].join("、")}`);
+console.log(`畫布頁：${[...new Set([...vibrant, ...professional].map((f) => f.page))].join('、')}`);
 console.log(`基準 frame：${source.length}`);
 console.log(`vibrant frame：${vibrant.length}`);
 console.log(`professional frame：${professional.length}`);

@@ -26,7 +26,7 @@
 // 懸空綁定：轉換留下指向已不存在變數的綁定（fills[0]、fontFamily），離線寫檔時基準版本無法序列化這些節點，
 //   所以套用前先在記憶體中清掉；套用後檔案內不再有懸空綁定（測試以真實檔斷言 0 筆）。
 //
-// 全程以離線 `openpencil eval` 讀寫檔案，不經過 OpenPencil App。Windows 修補事項見 split-by-suite.js 檔頭。
+// 全程以離線 `openpencil eval` 讀寫檔案，不經過 OpenPencil App。Windows 修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
 // 測試用環境變數：APPLY_BINDINGS_VIBRANT、APPLY_BINDINGS_PROFESSIONAL、APPLY_BINDINGS_DIR、
 //   APPLY_BINDINGS_NODE_LIMIT（節點數上限，預設 10000）。

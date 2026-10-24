@@ -10,7 +10,7 @@
 // 只搬移，不改任何節點內容與 frame 名稱。一次只處理一個檔案；
 // 執行前請先在 OpenPencil App 關閉這兩個檔案（unsaved: discard），避免 App 回寫。
 //
-// 全程以離線 `openpencil eval` 讀寫檔案。Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+// 全程以離線 `openpencil eval` 讀寫檔案。Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 // 測試用環境變數：PAGINATE_VIBRANT、PAGINATE_PROFESSIONAL。
 import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
