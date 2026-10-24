@@ -611,3 +611,26 @@ node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test
 - **未驗證，也沒有改善的證據：** 在 App 裡開啟分頁複本後切換畫布頁，使用者回報仍出現 `Uncaught RuntimeError: table index is out of bounds`（29 次）與 `ResourceCache cleanup failed`。使用者判斷這是 OpenPencil 本身的問題、對方修復中，仍要求分頁。所以分頁**不保證**減少當機，也沒有在 App 內做過前後對照；本節只證明檔案結構與內容沒有被分頁弄壞。
 - **節點數：** `apply-variables.js --check` 與 `apply-bindings.js --check` 回報的文件節點數從 5826 變成 5832，因為文件節點把每個畫布頁也算進去（2 頁變 8 頁，頁內節點仍是 5,824）；上文 ISSUE-009、010 兩節的 5826 是分頁前的數字。
 - **取捨：** 每頁節點數上限暫不設；10,000 節點的 MCP 上限仍是整份文件合計，分頁不影響。
+
+## 以 Mode 切換取代 Dark 頁面 frame 的試驗（ISSUE-001）
+
+2026-10-24，基底 `4e9b563`。問題：頁面 frame 拿掉 Mode 固定後，能否由畫布頁的 Mode 切換顯示 Light 與 Dark，讓每頁不必再畫 Dark 那一份。**結論：目前不能直接取代，這次試驗沒有支持全面改。** 只試 Vibrant 一個 frame，沒有試 Professional、其他頁面與 Tablet、Mobile。正式的兩個 `.fig` 與規格沒有修改。
+
+**做法**：複製 `components-vibrant.fig` 到 `test-results/probe/t1.fig`（git 忽略），以離線 `openpencil eval` 的 `figma.graph.updateNode(id, { variableModes })` 把 `Home/Vibrant/Light/Desktop/Success` 的 `variableModes` 由 `{Mode: Light, Device: Desktop}` 改為 `{Device: Desktop}`。`clearExplicitVariableModeForCollection` 不存在，直接指定 `explicitVariableModes` 被忽略（沒有 setter）。
+
+**離線結果**：存檔後重讀，該 frame 只剩 Device 固定；節點 5,832、實例 711、連不到母版 0、其他 Light 與 Dark frame 的 Mode 固定都不變。
+
+**App 結果**（使用者在 App 畫布頁把 Mode 切到 Dark，我讀值）：
+- 被拿掉固定的 frame 整體變深色，標題與一般文字也轉淺色，切換本身有作用；母版（沒有固定模式）也確認會跟著切換。
+- **但 Style preview 裡的 `C/Card/Metric instance` 背景仍是淺色（`#e3f2f0`），而 `Metric value` 文字轉成淺色，數字 `128,640` 幾乎看不見**。對照原本的 Dark frame，同一張卡片背景是 `#173637`、數字是 `#edf3ed`。代表這張卡片的顏色沒有跟著 Mode 變，與 Dark frame 並不相同；原因（實例覆寫或節點沒有綁定變數）沒有查。這是這次唯一確認的畫面差異，沒有逐節點比對其他區塊。
+- **原本固定為 Dark 的 `Home/Vibrant/Dark/Desktop/Success`，在使用者切換後顯示為淺色**。原因未查，可能與畫布頁 Mode 和 frame 固定的互動有關，沒有證據。
+- MCP `get_node`：`fills` 是節點存的值，不隨 Mode 變（拿掉固定的 frame 仍是 `#F7F7F2`）；`boundVariables.resolvedValue` 一律是 Light 預設值，連固定為 Dark 的 frame 也是。所以 MCP 讀值無法用來驗證切換結果。
+- MCP `export_image`：兩次回 `memory access out of bounds`（maxEdge 900、600），沒有圖。不確定是否與拿掉固定有關。
+- 使用者切換後 App 重新整理分頁（`tab-5` 變 `tab-2`），原因未查。
+
+**若要全面改，需要先解決的事**
+- 找出並修正「切到 Dark 沒有跟著變」的節點（例如上述 Metric 卡片），再逐頁確認，否則 Dark 畫面會與現有 Dark frame 不同。
+- 釐清固定為 Dark 的 frame 在畫布頁 Mode 為 Dark 時顯示淺色的原因。
+- 驗證匯出與讀值在拿掉固定後是否正常；目前匯出本身會失敗。
+- 之後要改的文件與腳本：規格 §5.3 的 48 張矩陣、PR-FILE-04 與 `baseline.json`（302 個 frame）、`verify-split.js` 的 Light/Dark 顏色分布檢查、`verify-themes.js`、`apply-bindings.js` 的 frame 模式。
+- 本試驗**沒有**證明可行，也沒有證明不可行；比對只有一個 frame 的目視與數個讀值。
