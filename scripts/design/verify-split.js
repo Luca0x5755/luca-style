@@ -1,0 +1,152 @@
+// 結構驗收：以原檔 docs/mockup/components.fig 為基準，檢查兩個套系設計檔。
+//   docs/mockup/components-vibrant.fig      精緻活力
+//   docs/mockup/components-professional.fig 精緻專業
+// 用法：node scripts/design/verify-split.js
+// 結束碼：0 全部一致；1 結構不一致（逐行列出差異）；2 讀檔失敗。
+//
+// 比對內容（逐個頁面 frame，與原檔同名 frame 比）：
+//   - 名稱：兩檔合計涵蓋原檔全部 frame；套系 frame 不得同時出現在兩檔，也不得出現在不屬於它的套系檔。
+//   - 節點數：frame 本身加上所有層級的後代。
+//   - 文字：所有後代 TEXT 節點的 characters，依樹序逐字比對。
+//   - 填色：frame 本身與所有後代依樹序的 fills。
+// 母版（COMPONENT）與頂層 TEXT 不在本腳本範圍（母版比對見 ISSUE-004）。不做逐像素比對。
+//
+// 全程以離線、唯讀的 `openpencil eval` 讀檔（不加 -o / -w），不經過 OpenPencil App。
+// Windows 的 openpencil 本機修補事項見 split-by-suite.js 檔頭。
+//
+// 測試用：可用環境變數覆寫路徑，指向故意改壞的副本：
+//   VERIFY_SPLIT_SOURCE / VERIFY_SPLIT_VIBRANT / VERIFY_SPLIT_PROFESSIONAL
+import { execFileSync } from 'node:child_process';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const mockup = join(root, 'docs/mockup');
+const pick = (envName, file) => resolve(process.env[envName] || join(mockup, file));
+
+const paths = {
+  source: pick('VERIFY_SPLIT_SOURCE', 'components.fig'),
+  vibrant: pick('VERIFY_SPLIT_VIBRANT', 'components-vibrant.fig'),
+  professional: pick('VERIFY_SPLIT_PROFESSIONAL', 'components-professional.fig'),
+};
+
+// 基準檔 components.fig 目前的 frame 數；基準檔有合法增減時需同步修改。
+const EXPECTED_FRAMES = 302;
+const PAGE = 'Library guide';
+// 無套系的共用 frame：兩檔各留一份，內容須與原檔一致，不受「不得同時出現」限制。
+const SHARED = new Set(['Library guide', '00 / Canvas directory']);
+// 與 split-by-suite.js 相同的套系判定（兩處規則須同步修改；刻意不共用，讓驗收獨立於切檔邏輯）：<頁>/Professional/...、Professional/...、Professional ?/...。
+const suiteOf = (name) => {
+  for (const suite of ['Vibrant', 'Professional']) {
+    if (new RegExp('^(?:[^/]+/)?' + suite + '(?: ?/|/)').test(name)) return suite;
+  }
+  return null;
+};
+
+// 文字與填色只比 32 位元雜湊加長度，用途是抓誤改，不防蓄意碰撞。
+// 在 openpencil 內執行的腳本：回傳頁面最上層每個 FRAME 的摘要（節點數與文字／填色雜湊）。
+const evalScript = `
+const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(16) + ':' + s.length }
+const page = figma.root.children.find((p) => p.name === ${JSON.stringify(PAGE)})
+if (!page) return { error: '找不到頁面 ' + ${JSON.stringify(PAGE)} }
+const frames = page.children.filter((n) => n.type === 'FRAME').map((f) => {
+  const all = [f].concat(f.findAll(() => true))
+  const texts = all.filter((n) => n.type === 'TEXT').map((n) => n.characters)
+  const fills = all.map((n) => JSON.stringify(n.fills))
+  return { name: f.name, nodes: all.length, texts: hash(JSON.stringify(texts)), fills: hash(JSON.stringify(fills)) }
+})
+return { frames }
+`;
+
+const readFrames = (label, file) => {
+  try {
+    // shell: true 是為了在 Windows 上執行 openpencil.cmd；cwd 在專案內以便套用本機設定。
+    const out = execFileSync('openpencil', ['eval', `"${file}"`, '--stdin'], {
+      cwd: mockup, input: evalScript, encoding: 'utf8', shell: true, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024,
+    });
+    // eval 結果為 JSON；去除可能的終端色碼後解析。
+    const result = JSON.parse(out.replace(/\x1b\[[0-9;]*m/g, '').trim());
+    if (result.error) throw new Error(result.error);
+    return result.frames;
+  } catch (error) {
+    console.log(`[讀取] ${label}：${String(error.message).split('\n')[0]}`);
+    process.exit(2);
+  }
+};
+
+const source = readFrames('基準', paths.source);
+const vibrant = readFrames('vibrant', paths.vibrant);
+const professional = readFrames('professional', paths.professional);
+
+const diffs = [];
+const byName = (frames) => new Map(frames.map((f) => [f.name, f]));
+const src = byName(source);
+const files = { vibrant: byName(vibrant), professional: byName(professional) };
+
+if (src.size !== source.length) diffs.push('[基準] 基準檔內有同名 frame，名稱必須唯一');
+// 設計檔內若有同名 frame，Map 會覆蓋而漏檢，先列出。
+for (const [where, frames] of [['vibrant', vibrant], ['professional', professional]]) {
+  const seen = new Set();
+  for (const { name } of frames) {
+    if (seen.has(name)) diffs.push(`[重複] ${name}：${where} 內有同名 frame`);
+    seen.add(name);
+  }
+}
+if (source.length !== EXPECTED_FRAMES) {
+  diffs.push(`[基準] 預期 ${EXPECTED_FRAMES} 個 frame，實得 ${source.length}`);
+}
+
+const compare = (name, base, actual, where) => {
+  if (base.nodes !== actual.nodes) diffs.push(`[節點數] ${name}：${where} 為 ${actual.nodes}，基準為 ${base.nodes}`);
+  if (base.texts !== actual.texts) diffs.push(`[文字] ${name}：${where} 的文字內容與基準不同`);
+  if (base.fills !== actual.fills) diffs.push(`[填色] ${name}：${where} 的填色與基準不同`);
+};
+
+for (const base of source) {
+  const name = base.name;
+  const inV = files.vibrant.get(name);
+  const inP = files.professional.get(name);
+  if (SHARED.has(name)) {
+    for (const [where, hit] of [['vibrant', inV], ['professional', inP]]) {
+      if (!hit) diffs.push(`[共用缺失] ${name}：${where} 沒有這個共用 frame`);
+      else compare(name, base, hit, where);
+    }
+    continue;
+  }
+  if (!inV && !inP) {
+    diffs.push(`[遺失] ${name}：兩個設計檔都沒有`);
+    continue;
+  }
+  if (inV && inP) diffs.push(`[重複] ${name}：同時出現在 vibrant 與 professional`);
+  const suite = suiteOf(name);
+  const owner = suite === 'Vibrant' ? 'vibrant' : suite === 'Professional' ? 'professional' : null;
+  if (!owner) {
+    diffs.push(`[基準] ${name}：無法判定所屬套系`);
+    continue;
+  }
+  const other = owner === 'vibrant' ? 'professional' : 'vibrant';
+  if (files[other].has(name) && !(inV && inP)) diffs.push(`[重複] ${name}：出現在不屬於它的 ${other}`);
+  const hit = files[owner].get(name);
+  if (hit) compare(name, base, hit, owner);
+  else diffs.push(`[遺失] ${name}：所屬的 ${owner} 設計檔沒有`);
+}
+
+// 設計檔有、基準沒有的 frame。
+for (const [where, map] of Object.entries(files)) {
+  for (const name of map.keys()) {
+    if (!src.has(name)) diffs.push(`[多餘] ${name}：${where} 有這個 frame，基準沒有`);
+  }
+}
+
+console.log(`頁面：${PAGE}`);
+console.log(`基準 frame：${source.length}`);
+console.log(`vibrant frame：${vibrant.length}`);
+console.log(`professional frame：${professional.length}`);
+console.log(`共用 frame：${source.filter((f) => SHARED.has(f.name)).length}`);
+console.log(`套系 frame：${source.filter((f) => !SHARED.has(f.name)).length}`);
+if (diffs.length > 0) {
+  console.log(diffs.join('\n'));
+  console.log(`共 ${diffs.length} 項差異`);
+  process.exit(1);
+}
+console.log('全部一致');
