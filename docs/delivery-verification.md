@@ -545,6 +545,126 @@ openpencil export docs/mockup/components-vibrant.fig --node 0:332 -o <暫存區>
 
 ### 其他腳本在綁定後的結果
 
-- `check-masters.js`：**不再通過**。兩檔的母版現在各用本套系的值（顏色、圓角、內距等），本來就不會相同（共 220 項差異，涉及 21 個單元，全是主題屬性）。這個檢查的前提「兩檔的母版相同」在變數與模式存在後要改成「去掉主題屬性後相同」，屬 ISSUE-010 的主題還原驗證範圍，這張票不改它。
-- `verify-split.js`：結構（frame 名稱、節點數、文字）仍一致；填色部分共 302 項差異（頁面 frame 與 `components.fig` 基準的填色不同）：Dark 與 Professional 的 frame 現在是它們該有的顏色，基準是預設主題的攤平值。同樣屬 ISSUE-010。
+- `check-masters.js`：當時**不再通過**（220 項差異，全是主題屬性）；已在 ISSUE-010 改寫並重新通過，見「主題保真驗收（ISSUE-010）」。
+- `verify-split.js`：當時填色部分有 302 項差異（基準是預設主題的攤平值）；已在 ISSUE-010 改成不再與基準比填色，見「主題保真驗收（ISSUE-010）」。
 - `apply-variables.js --check`：兩檔通過；`build-theme-data.js --check-fig`：通過（9,984 條路徑）。
+
+## 主題保真驗收（ISSUE-010）
+
+2026-10-24，基底 `6e368cc`。補上先前結構驗收抓不到的缺口：基準 `components.fig` 本身已丟失主題，所以明暗模式遺失不會被發現。三支腳本分工如下，全程離線唯讀的 `openpencil eval`，不經過 OpenPencil App，不做逐像素比對。
+
+| 腳本 | 驗什麼 | 基準 |
+| --- | --- | --- |
+| `scripts/design/verify-themes.js`（新） | 每個頁面 frame、母版、共用項目解析後的值：填色、描邊色、字型、字級、間距、內距、圓角（另加描邊粗細） | `docs/mockup/themes/resolved.json` |
+| `scripts/design/verify-split.js`（改） | frame 名稱、節點數、文字仍與 `components.fig` 比；填色不再與它比；新增 Light 與 Dark 顏色分布不得相同 | `components.fig`（結構）、設計檔自身（明暗） |
+| `scripts/design/check-masters.js`（改） | 兩檔母版與共用項目結構相同，套系專屬值由各自的變數解釋 | 兩檔互比＋`variables.json` |
+
+```sh
+node scripts/design/verify-themes.js
+node scripts/design/verify-split.js
+node scripts/design/check-masters.js
+node --test scripts/design/verify-themes.test.js scripts/design/verify-split.test.js scripts/design/check-masters.test.js
+```
+
+三支腳本對已提交的兩個設計檔結束碼都是 0（驗證結果見各節）。
+
+### verify-themes.js
+
+- 取值：`figma.graph.resolve{Color,Number,String}VariableForNode(節點, 綁定的變數)`，所以用的是節點在其 frame 模式下的解析值。基準有值的屬性，檔案裡必須綁變數（綁定被移除、儲存值還在也失敗）；節點上的儲存值也必須等於基準。
+- 浮點容忍：顏色每個通道與數值皆 1/255 以內。差 1/255 的測試通過，差 2/255 失敗。
+- 輸出：每個檔案逐類印出比對筆數與不比對筆數；不一致時逐行 `[差異] frame 節點 路徑 屬性：期望 …，實際 …`，結束碼 1。
+- 只比儲存值（沒有綁定欄位）：`effect.enabled`（效果 `visible`）與 `fill[i].opacity`（變數值 0–100，儲存值為 ÷100）。
+- 不比對：`strokeWidth.left`（每檔 43 筆）。讀回 API 取不到單邊描邊粗細，這 43 筆的值沒有被任何腳本驗證，只有 `apply-bindings.js --check` 對綁定關係的檢查與 `check-masters.js` 的綁定變數名稱比對涵蓋到綁定本身。
+- Professional 檔裡的母版與共用項目：`resolved.json` 的這些條目是以 Vibrant／Light／Desktop 解析的（Professional 檔有 59 筆本來就不同，是預期差異）。期望值不直接沿用，而是用 `bindings.json` 的變數名稱加 `variables.json` 的 Professional 值推導（`scripts/design/theme-expected.js`），並對 Vibrant 條目逐筆檢查「推導值＝`resolved.json`」，不同就失敗，所以推導本身沒有被隱性放寬。沒有白名單。
+
+已提交的兩檔結果（約 9 秒）：
+
+```text
+Vibrant：175 個 frame／母版，比對 10863 筆
+  填色：4890  描邊：957  字型：3092  字級：254  間距：144  內距：344  圓角：730  描邊粗細：229
+  僅儲存值：fill[i].opacity：180  effect.enabled：43   不比對（strokeWidth.left）：43
+  全部一致
+Professional：筆數相同，全部一致
+exit=0
+```
+
+實際輸出每類一行。
+
+### 證明它會失敗
+
+用 `openpencil eval 原檔 --stdin -o 副本` 在暫存區產生故意改壞的副本（`scripts/design/test-helpers.js` 的 `mutate`），以環境變數指向副本。以下都是 `verify-themes.test.js` 的案例，輸出取自斷言的字面值：
+
+| 副本 | 改法 | 結果 |
+| --- | --- | --- |
+| Dark frame 設回 Light | `Home/Vibrant/Dark/Desktop/Success` 的 `Mode` 設為 Light | exit=1：`[差異] Home/Vibrant/Dark/Desktop/Success 節點 - fill：期望 #151A18，實際 #F7F7F2` |
+| 變數值被改 | `bg` 的 Light 值 #F7F7F2 → #F7F7F4 | exit=1：`[差異] Home/Vibrant/Light/Desktop/Success 節點 - fill：期望 #F7F7F2，實際 #F7F7F4` |
+| 變數值差 1/255 | `bg` 的 Light 值 → #F7F7F3 | exit=0（在容忍內） |
+| 綁定被移除 | Dark frame 根節點解除 `fills/0/color` 綁定 | exit=1：`[差異] Home/Vibrant/Dark/Desktop/Success 節點 - fill：期望 #151A18，實際 未綁定變數（fills/0/color）` |
+| Professional 母版值被換成 Vibrant | Professional 檔 `accent` 的 Light 值改成 #147F82 | exit=1：`[差異] C/Button/Primary 節點 - fill：期望 #625C83，實際 #147F82`（證明母版期望的是 Professional 值） |
+
+### verify-split.js
+
+- 填色不再與 `components.fig` 比：它的顏色是丟失主題後的預設主題攤平值，Dark 與 Professional 的 frame 本來就與它不同（ISSUE-009 後曾有 302 項差異）。顏色改由 `verify-themes.js` 對 `resolved.json` 驗收。名稱、節點數、文字仍與基準比。
+- 新增：同一個設計檔內，名稱只差 `Light`／`Dark` 的兩個 frame 為一組（兩檔共 150 組），顏色分布（frame 與全部後代的填色、描邊顏色，各色出現次數）完全相同就回報 `[明暗相同]`、結束碼 1。
+- 已提交的兩檔：exit=0，輸出 `明暗成對：150 組`、`全部一致`（約 14 秒）。
+- 證明會失敗（`verify-split.test.js`）：
+  - 副本把 `Home/Vibrant/Dark/Desktop/Success` 的 `Mode` 設回 Light（離線存檔會把有綁定的值重新解析成該模式的值，所以存成 Light 的顏色）→ exit=1：`[明暗相同] Home/Vibrant/*/Desktop/Success：vibrant 的 Light 與 Dark 顏色分布完全相同（明暗模式遺失）`。
+  - 目前損失內容的真實狀態：`git show 5124b60:docs/mockup/components-vibrant.fig`（加入變數前、Light 與 Dark 同色）→ exit=1，出現 `[明暗相同]`。
+  - 文字被改的副本 → exit=1：`[文字] Home/Vibrant/Light/Desktop/Success`。
+- 與工單字面的差異：工單寫「移除變數後的副本」。單純刪除變數與綁定而不動儲存色，Dark frame 的儲存色還在，這支腳本不會失敗（那種情況由 `verify-themes.js` 的「未綁定」抓到）；所以這裡用「顏色被攤平」的兩種副本（模式設回 Light、加入變數之前的歷史檔）證明它會失敗。
+
+### check-masters.js
+
+ISSUE-009 後兩檔母版各用自己套系的值，原本的逐值全等會報 220 項差異。改為：
+
+1. 有綁定的屬性：比對綁定的變數名稱（每個節點的綁定表兩檔必須相同），並驗證每檔「儲存值＝自己這個檔案裡該變數的解析值」，不比兩檔的儲存值是否相等。
+2. 沒有綁定欄位的 `fill[i].opacity`、`effect.enabled`：每檔的儲存值必須等於 `theme-expected.js` 推導的該套系值（Professional 的 C/State/Loading、C/Card/Metric 因此與 Vibrant 不同）。
+3. 其餘屬性（名稱、型別、結構、文字、未綁定的屬性、子節點數量）照舊逐值全等。
+4. x／y／寬／高：一個單元內任一節點的版面相關值（內距、間距、描邊粗細、字級、字型名）兩檔不同時，該單元的幾何由這些值決定，不直接比。8 個單元屬於此類（C/Status/Success、C/Status/Warning、C/Status/Error、C/State/Loading、C/State/Empty、C/State/Error、C/Card/Metric、C/Table），輸出會列名；其餘 18 個單元仍嚴格比對幾何。
+
+第 4 點是刻意的取捨：放寬這 8 個單元的幾何比對，換來不必在檢查裡重做 auto-layout。各變數本身的值是否正確由 `apply-variables.js --check` 與 `verify-themes.js` 負責。已提交的兩檔：exit=0（母版 22 對 22，約 12 秒）。
+
+證明沒有被放寬成永遠通過（`check-masters.test.js`，都只改 Professional 檔的母版）：文字被改 → exit=1（`的 characters 不同`）；母版多一個子節點 → exit=1；母版被改名 → exit=1；未綁定的 `opacity` 被改 → exit=1；`cornerRadius` 綁定被移除 → exit=1（`的 bound 不同`）；`fills/0/color` 改綁到 `text` 變數 → exit=1（`的 bound 不同`）；`C/State/Loading` 的 `fill[2].opacity` 改成錯值 → exit=1（`[值與變數不符]`）。
+
+沒有測到的分支：「綁定屬性的儲存值被手改成不等於變數值」。離線存檔時，OpenPencil 會把有綁定的值重新解析成變數值（把填色或圓角改成別的值再存檔，讀回仍是變數值），所以無法用 `.fig` 副本製造這種狀態；該分支的程式碼存在，但沒有測試涵蓋。
+
+### 匯出圖（人眼抽查）
+
+圖用離線 `openpencil export` 匯出，放在 repo 外（`npm test` 會清空 `test-results/`），不進版控：
+
+```sh
+openpencil export docs/mockup/components-vibrant.fig --node 0:158 -o <暫存區>/vibrant-home-light-desktop.png
+openpencil export docs/mockup/components-vibrant.fig --node 0:332 -o <暫存區>/vibrant-home-dark-desktop.png
+openpencil export docs/mockup/components-vibrant.fig --node 0:2701 -o <暫存區>/vibrant-notfound-light-mobile.png
+openpencil export docs/mockup/components-vibrant.fig --node 0:2731 -o <暫存區>/vibrant-notfound-dark-mobile.png
+# Professional 同樣四個 id，檔案換成 components-professional.fig
+```
+
+暫存區：`C:\Users\x1596\AppData\Local\Temp\claude\D--luca-style\13b0e5d5-15e9-44d3-a5df-9bd459ab55c1\scratchpad\img\`（兩檔的 frame id 相同）。
+
+| 套系 | 模式 | frame | 圖檔 |
+| --- | --- | --- | --- |
+| Vibrant | Light | Home/Vibrant/Light/Desktop/Success（0:158） | vibrant-home-light-desktop.png |
+| Vibrant | Dark | Home/Vibrant/Dark/Desktop/Success（0:332） | vibrant-home-dark-desktop.png |
+| Vibrant | Light | NotFound/Vibrant/Light/Mobile/Success（0:2701） | vibrant-notfound-light-mobile.png |
+| Vibrant | Dark | NotFound/Vibrant/Dark/Mobile/Success（0:2731） | vibrant-notfound-dark-mobile.png |
+| Professional | Light | Home/Professional/Light/Desktop/Success（0:158） | professional-home-light-desktop.png |
+| Professional | Dark | Home/Professional/Dark/Desktop/Success（0:332） | professional-home-dark-desktop.png |
+| Professional | Light | NotFound/Professional/Light/Mobile/Success（0:2701） | professional-notfound-light-mobile.png |
+| Professional | Dark | NotFound/Professional/Dark/Mobile/Success（0:2731） | professional-notfound-dark-mobile.png |
+
+代理看過其中 5 張（Vibrant Light 與 Dark 的 Home、Vibrant Dark 的 NotFound、Professional Dark 的 Home、Professional Light 的 NotFound）：Dark 是近黑綠底、淺色字；Light 是淺米白底、深字；Vibrant 強調色為青綠、圓角明顯；Professional 強調色為淡紫（Dark）或灰紫（Light）、圓角極小，Metric 卡片左側有粗邊。顏色與 `variables.json` 相符。其餘 3 張代理沒有逐張看。**人眼抽查仍待使用者確認**：上面是代理的目視，不是使用者確認，也不聲稱像素比對（兩邊渲染器不同，視覺 QA 維持目視）。
+
+### 圖上的疊字：版面是舊的（開放問題）
+
+看過的圖都有文字疊在一起：Home 的大標題壓在麵包屑、說明文字與按鈕上，「從規則，到完整畫面」「繼續探索」壓在下一區塊上，NotFound 的標題壓在麵包屑與說明上，導覽列文字也擠在一起。這是版面問題，不是顏色問題。
+
+- **原因**：`.pen` 轉 `.fig` 時，受變數控制的值被轉壞（基準 `7205b2f` 的 `Home/Vibrant/Light/Desktop/Success`：標題與兩個區塊標題的 `fontSize` 是 `NaN`，圓角、內距、間距多為 0），轉換當下算出的 auto-layout 幾何（文字高度、frame 高度、子節點 y）就是用這些壞值算的，例如 `Page title` 高度為 2。ISSUE-009 把字級（56）、內距、間距寫回正確值，但離線存檔沒有把重算後的幾何存回去。所以**舊幾何在轉換時就有了，ISSUE-009 的綁定把它顯露出來**，不是綁定本身弄壞的。基準 `7205b2f` 沒有可比的好圖：它匯出的圖標題不見、主要按鈕與卡片是黑色、區塊緊貼（另一種壞）；更早的 `5124b60` 匯出幾乎空白（只有麵包屑），因為當時節點帶著指向不存在變數的綁定。
+- **離線可否修**：在記憶體裡可以。對一個 frame 的每個文字節點重設 `fontSize` 會觸發重算，`Page introduction` 高度變 123、根 frame 高度變 1117.5、各區塊 y 依序往下。但存檔後重新讀檔，只有部分高度被保留（`Page introduction` 為 123），子節點 y 與根 frame 高度又回到舊值（根 654），再重複一輪「重算＋存檔」也一樣。所以離線存檔無法持久化重算結果，這不是 ISSUE-009 腳本內的小修。我沒有改任何 `.fig`。
+- **OpenPencil App**：兩個設計檔都在 App 分頁開著（`tab-1` professional、`tab-2` vibrant；分頁內容可能與磁碟版不同步）。對 vibrant 的 `0:158` 用 `get_node` 讀到：`Page introduction` 高度是 206（離線檔是 46，App 已重算），但它的 y 仍是 125、`Start and style preview` 的 y 是 171、`從規則，到完整畫面` 的 y 是 396、`Footer divider` 的 y 是 1007，根 frame 高度仍是 654；也就是區塊高度在 App 裡被重算了，彼此的位置沒有，區塊仍會互相重疊。App 的 `export_image` 對 `0:158` 回傳 `No visible nodes to export`，所以**我沒有看到 App 的實際畫面**，上面是幾何數字推論，不是目視。
+- **建議（待使用者決定）**：在 OpenPencil App 內對每個頁面 frame 觸發一次 auto-layout 重算並存檔（需要一個 App 內的批次做法，或接受以後逐頁編輯時順便修），或另開一張票處理「重建 auto-layout 幾何」。ISSUE-006 結案前使用者需決定是否接受這個狀態；`verify-themes.js` 與其他腳本都不驗版面。
+
+### 其他檢查
+
+- `npm run typecheck`、`npm run lint` 通過；`npm test`（Playwright）72 passed。
+- `apply-variables.js --check`：兩檔節點數 5826、變數逐筆一致；`apply-bindings.js --check`：兩檔 175 個 frame／母版、10648 筆綁定全部一致；`build-theme-data.js --check-fig`：9984 條路徑全部一致。三者結束碼皆為 0。兩個套系設計檔仍是 5826 個節點，本票沒有修改任何 `.fig`。

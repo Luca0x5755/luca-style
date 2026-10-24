@@ -8,7 +8,11 @@
 //   - 名稱：兩檔合計涵蓋原檔全部 frame；套系 frame 不得同時出現在兩檔，也不得出現在不屬於它的套系檔。
 //   - 節點數：frame 本身加上所有層級的後代。
 //   - 文字：所有後代 TEXT 節點的 characters，依樹序逐字比對。
-//   - 填色：frame 本身與所有後代依樹序的 fills。
+//   - 填色：不再與基準比。components.fig 的顏色是丟失主題後的預設主題攤平值，Dark 與 Professional 的 frame
+//     加上變數與綁定之後本來就與它不同，所以顏色改由 verify-themes.js 對 resolved.json 驗收。
+//   - 明暗模式：同一個設計檔內，名稱只差 Light／Dark 的兩個 frame（同一頁面群組），顏色分布不得完全相同
+//     （顏色分布＝frame 本身與全部後代的填色、描邊顏色，各色出現次數）。完全相同代表明暗模式遺失
+//     （.pen 轉 .fig 後的狀態）；有任何一組相同就回報非零結束碼。這是保險絲，不是保真比對，保真見 verify-themes.js。
 // 母版（COMPONENT）與頂層 TEXT 不在本腳本範圍（母版比對見 ISSUE-004）。不做逐像素比對。
 //
 // 全程以離線、唯讀的 `openpencil eval` 讀檔（不加 -o / -w），不經過 OpenPencil App。
@@ -43,7 +47,7 @@ const suiteOf = (name) => {
   return null;
 };
 
-// 文字與填色只比 32 位元雜湊加長度，用途是抓誤改，不防蓄意碰撞。
+// 文字與顏色分布只比 32 位元雜湊加長度，用途是抓誤改，不防蓄意碰撞。
 // 在 openpencil 內執行的腳本：回傳頁面最上層每個 FRAME 的摘要（節點數與文字／填色雜湊）。
 const evalScript = `
 const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(16) + ':' + s.length }
@@ -52,8 +56,12 @@ if (!page) return { error: '找不到頁面 ' + ${JSON.stringify(PAGE)} }
 const frames = page.children.filter((n) => n.type === 'FRAME').map((f) => {
   const all = [f].concat(f.findAll(() => true))
   const texts = all.filter((n) => n.type === 'TEXT').map((n) => n.characters)
-  const fills = all.map((n) => JSON.stringify(n.fills))
-  return { name: f.name, nodes: all.length, texts: hash(JSON.stringify(texts)), fills: hash(JSON.stringify(fills)) }
+  // 顏色分布：填色與描邊的顏色（十六進位）出現次數，依色碼排序後串成字串再雜湊。
+  const hex = (c) => '#' + [c.r, c.g, c.b].map((x) => Math.round(x * 255).toString(16).padStart(2, '0')).join('')
+  const dist = {}
+  for (const n of all) for (const p of [].concat(n.fills || [], n.strokes || [])) if (p && p.color) dist[hex(p.color)] = (dist[hex(p.color)] || 0) + 1
+  const colors = hash(Object.keys(dist).sort().map((k) => k + 'x' + dist[k]).join(','))
+  return { name: f.name, nodes: all.length, texts: hash(JSON.stringify(texts)), colors }
 })
 return { frames }
 `;
@@ -99,7 +107,6 @@ if (source.length !== EXPECTED_FRAMES) {
 const compare = (name, base, actual, where) => {
   if (base.nodes !== actual.nodes) diffs.push(`[節點數] ${name}：${where} 為 ${actual.nodes}，基準為 ${base.nodes}`);
   if (base.texts !== actual.texts) diffs.push(`[文字] ${name}：${where} 的文字內容與基準不同`);
-  if (base.fills !== actual.fills) diffs.push(`[填色] ${name}：${where} 的填色與基準不同`);
 };
 
 for (const base of source) {
@@ -138,12 +145,31 @@ for (const [where, map] of Object.entries(files)) {
   }
 }
 
+// 明暗模式：同一個設計檔內，名稱只差 Light／Dark 的 frame 配成一組，顏色分布不得完全相同。
+let lightDarkPairs = 0;
+for (const [where, frames] of [['vibrant', vibrant], ['professional', professional]]) {
+  const groups = new Map();
+  for (const f of frames) {
+    const m = f.name.match(/(^|\/)(Light|Dark)(?=\/|$)/);
+    if (!m) continue;
+    const key = f.name.replace(/(^|\/)(Light|Dark)(?=\/|$)/, '$1*');
+    if (!groups.has(key)) groups.set(key, {});
+    groups.get(key)[m[2]] = f;
+  }
+  for (const [key, g] of groups) {
+    if (!g.Light || !g.Dark) continue;
+    lightDarkPairs++;
+    if (g.Light.colors === g.Dark.colors) diffs.push(`[明暗相同] ${key}：${where} 的 Light 與 Dark 顏色分布完全相同（明暗模式遺失）`);
+  }
+}
+
 console.log(`頁面：${PAGE}`);
 console.log(`基準 frame：${source.length}`);
 console.log(`vibrant frame：${vibrant.length}`);
 console.log(`professional frame：${professional.length}`);
 console.log(`共用 frame：${source.filter((f) => SHARED.has(f.name)).length}`);
 console.log(`套系 frame：${source.filter((f) => !SHARED.has(f.name)).length}`);
+console.log(`明暗成對：${lightDarkPairs} 組`);
 if (diffs.length > 0) {
   console.log(diffs.join('\n'));
   console.log(`共 ${diffs.length} 項差異`);
