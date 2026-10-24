@@ -135,6 +135,68 @@ exit=1
 
 腳本唯讀（以 `sha1sum docs/mockup/*.fig > before.sha` 取前後值，再 `sha1sum docs/mockup/*.fig | diff - before.sha`，無差異）：執行全部矩陣前後，`sha1sum docs/mockup/*.fig` 與 `git status --porcelain docs/mockup` 完全相同。已知限制：基準檔若被誤改而 frame 數仍為 302，腳本抓不到；`components.fig` 已進版控且在 ISSUE-006 前不變動。人眼抽查與母版比對不屬於本節（見 ISSUE-004、005）。
 
+## 母版一致性比對
+
+2026-10-24，ISSUE-004（PR-FILE-05、PR-FILE-06 的指令部分）。兩個套系設計檔各帶一份 22 個母版與共用物件，`scripts/design/check-masters.js` 以離線唯讀的 `openpencil eval` 讀兩檔，逐節點比對。比對單元共 26 個（vibrant 側 110 個節點）：22 個 `C/...` 母版（名單寫死於腳本）、共用 frame `Library guide` 與 `00 / Canvas directory`、2 個頂層 TEXT（兩個 `… / Style zone heading`）。單元以名稱配對，單元內依樹序以子節點索引路徑配對節點。
+
+「相同」比對每個節點的 65 項屬性：型別、名稱、可見度、不透明度、混合模式、填色、描邊（粗細、對齊、虛線、四邊粗細）、效果、圓角（含四角與平滑度）、clipsContent、旋轉、寬高、約束、auto-layout 全部屬性（方向、對齊、間距、四邊 padding、換行、sizing mode、layoutGrow／Align／Positioning、min/max）、文字（characters、字型、字級、字重、對齊、字距、行高、大小寫、裝飾、自動縮放，另含混合樣式的分段內容）、樣式 id、元件屬性定義，並比子節點數量。`x`、`y`：頂層單元不比（兩檔頁面版面不同），所有後代的 `x`、`y`（相對父節點）要比。不比節點 id 與絕對座標，不做逐像素比對。屬性清單見腳本檔頭與 `PROPS`。
+
+結束碼：0 全部相同、1 有差異（逐行 `[差異] 單元名稱：節點（名稱）的 屬性 不同`，另有 `[母版名單]`、`[共用缺失]`、`[重複]` 標籤，最後一行彙總差異數與涉及的單元名稱）、2 讀檔失敗。
+
+通過（約 11 秒）：
+
+```sh
+node scripts/design/check-masters.js; echo "exit=$?"
+```
+
+```text
+頁面：Library guide
+母版：vibrant 22、professional 22（預期 22）
+共用 frame：2；頂層 TEXT：2
+比對單元：26，vibrant 節點：110，每節點屬性：65
+全部相同
+exit=0
+```
+
+證明腳本會失敗：用 `openpencil eval components-vibrant.fig -o S/<副本>.fig -c "<JS>"` 在 repo 外的暫存區 `S` 產生壞副本，以 `CHECK_MASTERS_VIBRANT`／`CHECK_MASTERS_PROFESSIONAL` 指向。以下 `G` 為 `const p=figma.root.children.find(p=>p.name==='Library guide');`，`RED` 為 `[{type:'SOLID',color:{r:1,g:0,b:0,a:1},opacity:1,visible:true,blendMode:'NORMAL'}]`。
+
+| 副本 | 產生用的 JS（接在 `G` 之後） | 結果 |
+| --- | --- | --- |
+| b-fill | `p.children.find(c=>c.name==='C/Button/Primary').fills=RED` | exit=1，`[差異] C/Button/Primary：本身…的 fills 不同` |
+| b-radius | `const m=p.children.find(c=>c.name==='C/Checkbox');m.findAll(x=>x.cornerRadius===3)[0].cornerRadius=9` | exit=1，`C/Checkbox：節點 /0（Checked box）的 cornerRadius` 與四個角半徑 |
+| b-spacing | 對 `C/Button/Primary` 的 `itemSpacing` 加 5 | exit=1，`itemSpacing 不同` |
+| b-remove | `p.children.find(c=>c.name==='C/Button/Primary').remove()` | exit=1，`[母版名單] C/Button/Primary：vibrant 沒有這個單元` |
+| b-shared | `p.children.find(c=>c.name==='00 / Canvas directory').fills=RED` | exit=1，`[差異] 00 / Canvas directory：本身…的 fills 不同` |
+| b-child | `const m=p.children.find(c=>c.name==='00 / Canvas directory');m.children[m.children.length-1].remove()` | exit=1，`childCount 不同` 與 `節點 /9 只在 professional 有` |
+| b-text2 | `const t=p.children.find(c=>c.name==='Vibrant / Style zone heading');t.characters=t.characters+'X'` | exit=1，`characters`、`segments`、`height` 不同 |
+| b-move | `const m=p.children.find(c=>c.name==='C/Button/Primary');m.x+=1000;m.y+=1000` | exit=0（頂層位置不比，預期相同） |
+| 兩檔各壞一處 | b-radius 當 vibrant、b-fill 當 professional | exit=1，共 6 項差異，涉及 `C/Button/Primary`、`C/Checkbox` 兩個單元 |
+| 路徑不存在 | — | exit=2，`[讀取] vibrant：Command failed: openpencil eval "…nope.fig" --stdin` |
+
+重現其中一例（完整輸出）：
+
+```sh
+CHECK_MASTERS_VIBRANT=S/b-radius.fig node scripts/design/check-masters.js; echo "exit=$?"
+```
+
+```text
+頁面：Library guide
+母版：vibrant 22、professional 22（預期 22）
+共用 frame：2；頂層 TEXT：2
+比對單元：26，vibrant 節點：110，每節點屬性：65
+[差異] C/Checkbox：節點 /0（Checked box）的 cornerRadius 不同
+[差異] C/Checkbox：節點 /0（Checked box）的 topLeftRadius 不同
+[差異] C/Checkbox：節點 /0（Checked box）的 topRightRadius 不同
+[差異] C/Checkbox：節點 /0（Checked box）的 bottomLeftRadius 不同
+[差異] C/Checkbox：節點 /0（Checked box）的 bottomRightRadius 不同
+共 5 項差異，涉及 1 個單元：C/Checkbox
+exit=1
+```
+
+唯讀：腳本執行前後 `sha1sum docs/mockup/*.fig` 相同，`git status --porcelain docs/mockup` 無變動。
+
+已知限制：（1）`openpencil eval -o` 在目前版本無法輸出「修改了母版內文字節點」的副本（匯出時回報 `Missing bound variable`，改名、字級、新增文字皆同），所以母版內文字節點的差異沒有實際造出壞副本；文字比對的邏輯由頂層 TEXT 的 `b-text2`（`characters`／`segments`）實測，母版後代與頂層 TEXT 走同一段比對程式。（2）自動排版內子節點的 `x`、`y` 會被重新計算，無法用壞副本單獨驗證後代位置差異。（3）若兩檔同步改成另一組一致的內容，腳本不會報錯，它只保證兩檔彼此相同；母版名單另以寫死的 22 個名稱防止同步改名。（4）不做逐像素比對，視覺 QA 仍是人工。
+
 ## 凍結承諾與證據
 
 承諾全文、範圍、排除項目及決策已遷移至[設計系統需求承諾](capabilities/design-system.md#需求承諾)，共 PR-STYLE-01～24，無 retired 行。下列證據使用真實套件與瀏覽器，不以靜態 Pencil frame 代替 React 驗收。
