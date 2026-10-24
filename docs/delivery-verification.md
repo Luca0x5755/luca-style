@@ -384,117 +384,13 @@ node --test scripts/design/apply-variables.test.js
 - `--check`：兩檔「節點數 5826，變數與 variables.json 逐筆一致」。檢查邏輯獨立於分類：對 48 個變數、本套系的 3 個裝置×2 個明暗共 6 個組合，在檔內找到該變數並用模式名稱挑值，顏色以 `Math.round(x*255)` 轉回十六進位後與 JSON 比對（alpha 必須為 1），數值、字串、布林嚴格相等。
 - 測試：`node --test scripts/design/apply-variables.test.js` 11 項全過（在 `.fig` 暫存副本上套用，用 `openpencil eval` 讀回）。
 
-### MCP `set_fill` 驗證：未完成
+### MCP `set_fill` 驗證：當時未完成，已於 ISSUE-009 補驗
 
-OpenPencil App 在這次執行中，`open_file` 對 `components-vibrant.fig` 的副本、`HEAD` 版本（沒有變數）的副本與原檔都回傳逾時（或 `ResourceCache cleanup failed`），等待超過 10 分鐘仍未出現在 `list_documents`；App 本身有回應（`list_collections` 對既有的小分頁正常）。因為連沒有變數的 `HEAD` 版本也打不開，這不是變數造成的，是 App 目前載入大檔失敗，所以無法完成 MCP `set_fill` 驗證。替代證據（不等同 MCP）：離線 `openpencil eval` 把套用變數後的 vibrant 副本中葉節點 `Footer divider`（RECTANGLE）填色改為紅色並另存，重新讀檔後填色已改且 48 個變數仍在。ISSUE-008 因此帶著這一項未驗就結案；ISSUE-009 的 Done when 有同一條（MCP `set_fill`），App 能載入大檔後在 ISSUE-009 或 ISSUE-010 一併補驗，兩檔都要驗。
+OpenPencil App 在這次執行中，`open_file` 對 `components-vibrant.fig` 的副本、`HEAD` 版本（沒有變數）的副本與原檔都回傳逾時（或 `ResourceCache cleanup failed`），等待超過 10 分鐘仍未出現在 `list_documents`；App 本身有回應（`list_collections` 對既有的小分頁正常）。因為連沒有變數的 `HEAD` 版本也打不開，這不是變數造成的，是 App 目前載入大檔失敗，所以無法完成 MCP `set_fill` 驗證。替代證據（不等同 MCP）：離線 `openpencil eval` 把套用變數後的 vibrant 副本中葉節點 `Footer divider`（RECTANGLE）填色改為紅色並另存，重新讀檔後填色已改且 48 個變數仍在。ISSUE-008 因此帶著這一項未驗就結案；後來在 ISSUE-009 補驗，兩檔皆通過（見該節 MCP 驗證）。
 
-### 重新讀檔列出的值（`--list` 輸出）
+### 重新讀檔列出的值
 
-#### components-vibrant.fig（Vibrant）
-
-| 集合 | 變數 | 型別 | 各模式的值 |
-| --- | --- | --- | --- |
-| Mode | bg | COLOR | Light #F7F7F2；Dark #151A18 |
-| Mode | surface | COLOR | Light #FFFFFF；Dark #1D2420 |
-| Mode | surface-subtle | COLOR | Light #F1F3EE；Dark #252E28 |
-| Mode | text | COLOR | Light #24312A；Dark #EDF3ED |
-| Mode | muted | COLOR | Light #626F65；Dark #A5B5A8 |
-| Mode | border | COLOR | Light #DDE5DC；Dark #354139 |
-| Mode | accent | COLOR | Light #147F82；Dark #64C2BC |
-| Mode | accent-soft | COLOR | Light #E3F2F0；Dark #173637 |
-| Mode | accent-ink | COLOR | Light #FFFFFF；Dark #151A18 |
-| Mode | secondary | COLOR | Light #DF826D；Dark #E8A18B |
-| Mode | success | COLOR | Light #237354；Dark #7ED4AB |
-| Mode | warning | COLOR | Light #886018；Dark #EAC678 |
-| Mode | error | COLOR | Light #B24445；Dark #F29C96 |
-| Mode | card-highlight | COLOR | Light #E3F2F0；Dark #173637 |
-| Mode | control-border | COLOR | Light #7B8C80；Dark #65766B |
-| Mode | loading-tide-light-opacity | FLOAT | Light 100；Dark 0 |
-| Mode | loading-tide-dark-opacity | FLOAT | Light 0；Dark 100 |
-| Mode | loading-square-light-opacity | FLOAT | Light 0；Dark 0 |
-| Mode | loading-square-dark-opacity | FLOAT | Light 0；Dark 0 |
-| Device | fs-hero | FLOAT | Desktop 56；Tablet 44；Mobile 32 |
-| Device | fs-title | FLOAT | Desktop 32；Tablet 28；Mobile 24 |
-| Device | fs-section | FLOAT | Desktop 24；Tablet 22；Mobile 20 |
-| Base | font-zh | STRING | Default Noto Sans TC |
-| Base | font-en | STRING | Default Inter |
-| Base | font-data | STRING | Default IBM Plex Mono |
-| Base | radius-card | FLOAT | Default 20 |
-| Base | radius-control | FLOAT | Default 16 |
-| Base | border-width | FLOAT | Default 1 |
-| Base | card-padding | FLOAT | Default 24 |
-| Base | gap-section | FLOAT | Default 32 |
-| Base | fs-card | FLOAT | Default 18 |
-| Base | fs-body | FLOAT | Default 16 |
-| Base | fs-small | FLOAT | Default 14 |
-| Base | fs-label | FLOAT | Default 12 |
-| Base | elevation-enabled | BOOLEAN | Default true |
-| Base | metric-border-left | FLOAT | Default 1 |
-| Base | suite-label | STRING | Default 精緻活力 · 潮汐 |
-| Base | space-1 | FLOAT | Default 4 |
-| Base | space-2 | FLOAT | Default 8 |
-| Base | space-3 | FLOAT | Default 12 |
-| Base | space-4 | FLOAT | Default 16 |
-| Base | space-6 | FLOAT | Default 24 |
-| Base | space-8 | FLOAT | Default 32 |
-| Base | space-12 | FLOAT | Default 48 |
-| Base | space-16 | FLOAT | Default 64 |
-| Base | motion-feedback | FLOAT | Default 120 |
-| Base | motion-standard | FLOAT | Default 180 |
-| Base | motion-region | FLOAT | Default 240 |
-
-#### components-professional.fig（Professional）
-
-| 集合 | 變數 | 型別 | 各模式的值 |
-| --- | --- | --- | --- |
-| Mode | bg | COLOR | Light #F7F7F2；Dark #151A18 |
-| Mode | surface | COLOR | Light #FFFFFF；Dark #1D2420 |
-| Mode | surface-subtle | COLOR | Light #F1F3EE；Dark #252E28 |
-| Mode | text | COLOR | Light #24312A；Dark #EDF3ED |
-| Mode | muted | COLOR | Light #626F65；Dark #A5B5A8 |
-| Mode | border | COLOR | Light #DDE5DC；Dark #354139 |
-| Mode | accent | COLOR | Light #625C83；Dark #ABA4D7 |
-| Mode | accent-soft | COLOR | Light #EEEDF4；Dark #2D2A3B |
-| Mode | accent-ink | COLOR | Light #FFFFFF；Dark #151A18 |
-| Mode | secondary | COLOR | Light #6799B9；Dark #8BBDD8 |
-| Mode | success | COLOR | Light #356858；Dark #93C6B2 |
-| Mode | warning | COLOR | Light #80601F；Dark #DBC28B |
-| Mode | error | COLOR | Light #A34B5C；Dark #DDA3B2 |
-| Mode | card-highlight | COLOR | Light #FFFFFF；Dark #1D2420 |
-| Mode | control-border | COLOR | Light #7B8C80；Dark #65766B |
-| Mode | loading-tide-light-opacity | FLOAT | Light 0；Dark 0 |
-| Mode | loading-tide-dark-opacity | FLOAT | Light 0；Dark 0 |
-| Mode | loading-square-light-opacity | FLOAT | Light 100；Dark 0 |
-| Mode | loading-square-dark-opacity | FLOAT | Light 0；Dark 100 |
-| Device | fs-hero | FLOAT | Desktop 56；Tablet 44；Mobile 32 |
-| Device | fs-title | FLOAT | Desktop 32；Tablet 28；Mobile 24 |
-| Device | fs-section | FLOAT | Desktop 24；Tablet 22；Mobile 20 |
-| Base | font-zh | STRING | Default Noto Sans TC |
-| Base | font-en | STRING | Default Inter |
-| Base | font-data | STRING | Default IBM Plex Mono |
-| Base | radius-card | FLOAT | Default 3 |
-| Base | radius-control | FLOAT | Default 3 |
-| Base | border-width | FLOAT | Default 1.5 |
-| Base | card-padding | FLOAT | Default 20 |
-| Base | gap-section | FLOAT | Default 24 |
-| Base | fs-card | FLOAT | Default 18 |
-| Base | fs-body | FLOAT | Default 16 |
-| Base | fs-small | FLOAT | Default 14 |
-| Base | fs-label | FLOAT | Default 12 |
-| Base | elevation-enabled | BOOLEAN | Default false |
-| Base | metric-border-left | FLOAT | Default 3 |
-| Base | suite-label | STRING | Default 精緻專業 · 石墨紫 |
-| Base | space-1 | FLOAT | Default 4 |
-| Base | space-2 | FLOAT | Default 8 |
-| Base | space-3 | FLOAT | Default 12 |
-| Base | space-4 | FLOAT | Default 16 |
-| Base | space-6 | FLOAT | Default 24 |
-| Base | space-8 | FLOAT | Default 32 |
-| Base | space-12 | FLOAT | Default 48 |
-| Base | space-16 | FLOAT | Default 64 |
-| Base | motion-feedback | FLOAT | Default 120 |
-| Base | motion-standard | FLOAT | Default 180 |
-| Base | motion-region | FLOAT | Default 240 |
+兩檔的 48 個變數逐筆值不在此重列：`node scripts/design/apply-variables.js --list` 可重新讀出，`--check` 逐筆比對 `docs/mockup/themes/variables.json`。
 
 ## 變數綁定與 frame 模式（ISSUE-009）
 
@@ -657,14 +553,9 @@ openpencil export docs/mockup/components-vibrant.fig --node 0:2731 -o <暫存區
 
 代理看過其中 5 張（Vibrant Light 與 Dark 的 Home、Vibrant Dark 的 NotFound、Professional Dark 的 Home、Professional Light 的 NotFound）：Dark 是近黑綠底、淺色字；Light 是淺米白底、深字；Vibrant 強調色為青綠、圓角明顯；Professional 強調色為淡紫（Dark）或灰紫（Light）、圓角極小，Metric 卡片左側有粗邊。顏色與 `variables.json` 相符。其餘 3 張代理沒有逐張看。**人眼抽查仍待使用者確認**：上面是代理的目視，不是使用者確認，也不聲稱像素比對（兩邊渲染器不同，視覺 QA 維持目視）。
 
-### 圖上的疊字：版面是舊的（開放問題）
+### 圖上的疊字：版面是舊的（已解決）
 
-看過的圖都有文字疊在一起：Home 的大標題壓在麵包屑、說明文字與按鈕上，「從規則，到完整畫面」「繼續探索」壓在下一區塊上，NotFound 的標題壓在麵包屑與說明上，導覽列文字也擠在一起。這是版面問題，不是顏色問題。
-
-- **原因**：`.pen` 轉 `.fig` 時，受變數控制的值被轉壞（基準 `7205b2f` 的 `Home/Vibrant/Light/Desktop/Success`：標題與兩個區塊標題的 `fontSize` 是 `NaN`，圓角、內距、間距多為 0），轉換當下算出的 auto-layout 幾何（文字高度、frame 高度、子節點 y）就是用這些壞值算的，例如 `Page title` 高度為 2。ISSUE-009 把字級（56）、內距、間距寫回正確值，但離線存檔沒有把重算後的幾何存回去。所以**舊幾何在轉換時就有了，ISSUE-009 的綁定把它顯露出來**，不是綁定本身弄壞的。基準 `7205b2f` 沒有可比的好圖：它匯出的圖標題不見、主要按鈕與卡片是黑色、區塊緊貼（另一種壞）；更早的 `5124b60` 匯出幾乎空白（只有麵包屑），因為當時節點帶著指向不存在變數的綁定。
-- **離線可否修**：在記憶體裡可以。對一個 frame 的每個文字節點重設 `fontSize` 會觸發重算，`Page introduction` 高度變 123、根 frame 高度變 1117.5、各區塊 y 依序往下。但存檔後重新讀檔，只有部分高度被保留（`Page introduction` 為 123），子節點 y 與根 frame 高度又回到舊值（根 654），再重複一輪「重算＋存檔」也一樣。所以離線存檔無法持久化重算結果，這不是 ISSUE-009 腳本內的小修。我沒有改任何 `.fig`。
-- **OpenPencil App**：兩個設計檔都在 App 分頁開著（`tab-1` professional、`tab-2` vibrant；分頁內容可能與磁碟版不同步）。對 vibrant 的 `0:158` 用 `get_node` 讀到：`Page introduction` 高度是 206（離線檔是 46，App 已重算），但它的 y 仍是 125、`Start and style preview` 的 y 是 171、`從規則，到完整畫面` 的 y 是 396、`Footer divider` 的 y 是 1007，根 frame 高度仍是 654；也就是區塊高度在 App 裡被重算了，彼此的位置沒有，區塊仍會互相重疊。App 的 `export_image` 對 `0:158` 回傳 `No visible nodes to export`，所以**我沒有看到 App 的實際畫面**，上面是幾何數字推論，不是目視。
-- **建議（待使用者決定）**：在 OpenPencil App 內對每個頁面 frame 觸發一次 auto-layout 重算並存檔（需要一個 App 內的批次做法，或接受以後逐頁編輯時順便修），或另開一張票處理「重建 auto-layout 幾何」。ISSUE-006 結案前使用者需決定是否接受這個狀態；`verify-themes.js` 與其他腳本都不驗版面。
+當時看過的圖有文字互相重疊。原因是 `.pen` 轉 `.fig` 時受變數控制的值被轉壞，轉換當下算出的 auto-layout 幾何（`NaN` 行高、標題高度 2px）留在檔案裡，ISSUE-009 寫回正確字級與間距後把它顯露出來；離線存檔不保存重算結果。後續提交 `9a2b46e` 與 `574ad4c` 以 `relayout-fig.js` 修正，並由 `verify-split.js` 驗收（PR-FILE-14），做法與結果見〈版面修正與重疊檢查〉。
 
 ### 其他檢查
 
