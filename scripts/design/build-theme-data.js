@@ -394,7 +394,8 @@ const checkDoc = () => {
   const docPath = resolve(process.env.THEME_DOC || join(root, 'docs/delivery-verification.md'));
   const snippetPath = resolve(process.env.THEME_SCRIPT_SNIPPET || join(root, 'scripts/design/extract-pen-themes.pen.js'));
   const min = Number(process.env.THEME_SAMPLE_MIN || 5);
-  const doc = read(dirname(docPath), docPath.slice(dirname(docPath).length + 1));
+  // Windows 檢出會把 LF 換成 CRLF，表格列比對前先統一換行。
+  const doc = read(dirname(docPath), docPath.slice(dirname(docPath).length + 1)).replace(/\r\n/g, '\n');
   const gen = generate();
   for (const needle of ['build-theme-data.js', 'extract-raw.txt', 'extract-pen-themes.pen.js']) {
     if (!doc.includes(needle)) problems.push('[文件] 沒有提到 ' + needle);

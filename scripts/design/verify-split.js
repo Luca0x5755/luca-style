@@ -1,4 +1,5 @@
-// 結構驗收：以原檔 docs/mockup/components.fig 為基準，檢查兩個套系設計檔。
+// 結構驗收：以 docs/mockup/themes/baseline.json 為基準，檢查兩個套系設計檔。
+// baseline.json 記錄拆檔前單檔 components.fig 每個頁面 frame 的名稱、節點數與文字雜湊（該檔已刪除，提交 ebe6c61 找得回）。
 //   docs/mockup/components-vibrant.fig      精緻活力
 //   docs/mockup/components-professional.fig 精緻專業
 // 用法：node scripts/design/verify-split.js
@@ -8,7 +9,7 @@
 //   - 名稱：兩檔合計涵蓋原檔全部 frame；套系 frame 不得同時出現在兩檔，也不得出現在不屬於它的套系檔。
 //   - 節點數：frame 本身加上所有層級的後代。
 //   - 文字：所有後代 TEXT 節點的 characters，依樹序逐字比對。
-//   - 填色：不再與基準比。components.fig 的顏色是丟失主題後的預設主題攤平值，Dark 與 Professional 的 frame
+//   - 填色：不再與基準比。原單檔 components.fig 的顏色是丟失主題後的預設主題攤平值，Dark 與 Professional 的 frame
 //     加上變數與綁定之後本來就與它不同，所以顏色改由 verify-themes.js 對 resolved.json 驗收。
 //   - 明暗模式：同一個設計檔內，名稱只差 Light／Dark 的兩個 frame（同一頁面群組），顏色分布不得完全相同
 //     （顏色分布＝frame 本身與全部後代的填色、描邊顏色，各色出現次數）。完全相同代表明暗模式遺失
@@ -23,6 +24,7 @@
 // 測試用：可用環境變數覆寫路徑，指向故意改壞的副本：
 //   VERIFY_SPLIT_SOURCE / VERIFY_SPLIT_VIBRANT / VERIFY_SPLIT_PROFESSIONAL
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CHECK_SNIPPET } from './layout-snippets.js';
@@ -32,12 +34,12 @@ const mockup = join(root, 'docs/mockup');
 const pick = (envName, file) => resolve(process.env[envName] || join(mockup, file));
 
 const paths = {
-  source: pick('VERIFY_SPLIT_SOURCE', 'components.fig'),
+  source: pick('VERIFY_SPLIT_SOURCE', 'themes/baseline.json'),
   vibrant: pick('VERIFY_SPLIT_VIBRANT', 'components-vibrant.fig'),
   professional: pick('VERIFY_SPLIT_PROFESSIONAL', 'components-professional.fig'),
 };
 
-// 基準檔 components.fig 目前的 frame 數；基準檔有合法增減時需同步修改。
+// 基準的 frame 數；基準檔有合法增減時需同步修改。
 const EXPECTED_FRAMES = 302;
 const PAGE = 'Library guide';
 // 無套系的共用 frame：兩檔各留一份，內容須與原檔一致，不受「不得同時出現」限制。
@@ -98,7 +100,16 @@ const readLayout = (label, file) => {
   }
 };
 
-const source = readFrames('基準', paths.source);
+const readBaseline = () => {
+  try {
+    return JSON.parse(readFileSync(paths.source, 'utf8')).frames;
+  } catch (error) {
+    console.log(`[讀取] 基準：${String(error.message).split('\n')[0]}`);
+    process.exit(2);
+  }
+};
+
+const source = readBaseline();
 const vibrant = readFrames('vibrant', paths.vibrant);
 const professional = readFrames('professional', paths.professional);
 

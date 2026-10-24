@@ -1,3 +1,6 @@
+// 已完成的一次性工具：來源 docs/mockup/components.fig 已刪除（提交 ebe6c61 找得回），本腳本現在無法執行，
+// 留下來是為了記錄切檔做法與下方的 Windows 修補說明（其他腳本引用）。
+//
 // 把 docs/mockup/components.fig 依套系切成兩個可用 MCP 編輯的設計檔：
 //   docs/mockup/components-vibrant.fig      精緻活力
 //   docs/mockup/components-professional.fig 精緻專業

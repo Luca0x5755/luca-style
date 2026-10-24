@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # Split the design source by style suite and make OpenPencil `.fig` the source of truth
 
@@ -21,4 +21,4 @@ Consequences:
 - Splitting is done offline with `openpencil eval`, because deleting thousands of nodes inside the running app crashes its renderer.
 - Documents that name `components.pen` or call it the single design file are updated in the same change that lands the split.
 - Converting `.pen` to `.fig` flattens the theme variables to their default-theme values, so Dark pages and the Professional palette are lost in the converted file. The themes are rebuilt in OpenPencil as variable collections with modes (Light and Dark, plus the three device sizes) and bound to the nodes, instead of baking resolved colours into the nodes. The suite axis needs no modes because each file carries one suite. The `.pen` values are saved as JSON under `docs/mockup/themes/` before the `.pen` is deleted, because later verification compares against them.
-- Visual QA stays a manual check, as before. Verification of the split is structural: frame names, node counts, text and fills match the original, with a spot check of two frames per page.
+- Visual QA stays a manual check, as before. Verification of the split is structural: frame names, node counts and text match a saved baseline (`docs/mockup/themes/baseline.json`), colours are checked against the saved resolved values, and a person looks at representative frames.

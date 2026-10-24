@@ -1,5 +1,6 @@
 // 在 Pencil 的 `execute` 工具內執行的擷取片段（不是 Node 腳本，不能直接 node 執行）。
 // 目標檔：docs/mockup/components.pen（加密檔，只能透過 pencil MCP 的 execute 存取，不可修改）。
+// 該檔已從工作樹刪除，要重跑需先從提交歷史取回（最後存在的提交是刪除前一個）。
 // Pencil 的 execute 不能寫檔：片段用 Print 輸出文字，再由人把輸出存成
 //   docs/mockup/themes/extract-raw.txt、docs/mockup/themes/variables-raw.txt
 // 之後執行 node scripts/design/build-theme-data.js 產生三份 JSON。

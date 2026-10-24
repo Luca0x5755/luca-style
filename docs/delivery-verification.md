@@ -17,7 +17,7 @@ npm run test:consumer
 
 ## 拆檔結構驗收
 
-2026-10-24，ISSUE-003（PR-FILE-03、PR-FILE-04）。`scripts/design/verify-split.js` 以 `docs/mockup/components.fig` 為基準，用離線唯讀的 `openpencil eval` 比對 `components-vibrant.fig` 與 `components-professional.fig`：原檔 302 個 frame 的名稱須全部被兩檔合計涵蓋、套系 frame 不得同時出現在兩檔，並逐 frame 比對節點數（frame 加全部後代）、文字（後代 TEXT 的 characters，依樹序）與填色（frame 與全部後代的 fills）。`Library guide`、`00 / Canvas directory` 兩個共用 frame 兩檔各一份，須與原檔一致，不受「不得同時出現」限制。母版與頂層 TEXT 不在本腳本範圍。結束碼：0 全部一致、1 有差異（逐行列出 `[標籤] frame 名稱：說明`）、2 讀檔失敗。不做逐像素比對。
+2026-10-24，ISSUE-003（PR-FILE-03、PR-FILE-04）。（ISSUE-006 之後基準改為 `docs/mockup/themes/baseline.json`，下文的 `components.fig` 是當時的基準檔，已刪除。）`scripts/design/verify-split.js` 以 `docs/mockup/components.fig` 為基準，用離線唯讀的 `openpencil eval` 比對 `components-vibrant.fig` 與 `components-professional.fig`：原檔 302 個 frame 的名稱須全部被兩檔合計涵蓋、套系 frame 不得同時出現在兩檔，並逐 frame 比對節點數（frame 加全部後代）、文字（後代 TEXT 的 characters，依樹序）與填色（frame 與全部後代的 fills）。`Library guide`、`00 / Canvas directory` 兩個共用 frame 兩檔各一份，須與原檔一致，不受「不得同時出現」限制。母版與頂層 TEXT 不在本腳本範圍。結束碼：0 全部一致、1 有差異（逐行列出 `[標籤] frame 名稱：說明`）、2 讀檔失敗。不做逐像素比對。
 
 通過（約 12 秒）：
 
@@ -296,6 +296,8 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 涵蓋範圍：304 個頂層項目（302 個頁面 frame 加兩個頂層標題文字）與 22 個母版；展開後共 11,444 個頁面節點、94 個母版節點。未展開時 `.pen` 內的 `$` 引用為頁面 7,930 筆、母版 207 筆（工單寫的「約 7,500」是估計；母版內的引用在每個實例裡會再展開一次，所以展開後的筆數較多）。逐類型筆數：fill（frame 2,091、text 6,122、icon 839、rectangle 624）、stroke 1,883、strokeWidth 451、fontFamily 6,122、fontSize 508、gap 288、padding 170、cornerRadius 1,434、effect.enabled 85、strokeWidth.left 85、fill 的四個 opacity 各 89；完整表見腳本 `--check` 的獨立計數。
 
 ### 重做步驟
+
+（`components.pen` 已於 ISSUE-006 刪除；要重做需先從提交歷史取回它，最後存在的提交是刪除前一個。）
 
 1. 開啟 Pencil 並載入 `docs/mockup/components.pen`（加密檔，只能經由 pencil MCP 的 `execute` 存取，不可修改）。
 2. 依 `scripts/design/extract-pen-themes.pen.js` 的片段 1 印出變數，存成 `docs/mockup/themes/variables-raw.txt`。
@@ -692,3 +694,12 @@ node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test
 - 人眼：只看過 `Home/Vibrant/Light/Desktop/Success` 與 `Dark` 的離線匯出圖，標題、麵包屑、說明、按鈕與卡片不重疊。其他 frame 與 Professional 只有數值檢查，沒有看圖。
 - 已知取捨：行高用 `AUTO`（`.pen` 原值取不到）、69 個多行文字改為固定高度、匯出圖底部 `Footer` 文字沒有畫出來（座標與可見性正常，原因未查）。
 - 檢查只涵蓋「同一自動排版 frame 內相鄰子節點」，不含非自動排版的絕對定位節點，也不是像素比對。
+
+## 人眼抽查與退役 `.pen`、`components.fig`（ISSUE-006）
+
+2026-10-24。
+
+- **人眼抽查：** 使用者在 OpenPencil App 逐一開啟 `components-vibrant.fig` 與 `components-professional.fig`（一次一個檔案），回報「沒有問題」。使用者沒有說明看了哪些 frame，所以這裡**不記**成「每頁各 2 個代表 frame」，也不聲稱做過像素比對。我另外只用離線匯出圖看過 `Home/Vibrant/Light/Desktop/Success` 與 `Dark` 兩張。
+- **基準改為 JSON：** `verify-split.js` 原本以 `components.fig` 為基準。刪除它之前，先把 302 個 frame 的名稱、節點數與文字雜湊存成 `docs/mockup/themes/baseline.json`（來源是提交 `ebe6c61` 的 `components.fig`），`verify-split.js` 改讀它；改讀前後的驗收結果相同（套系 frame 300、共用 2、明暗成對 150 組、全部一致）。
+- **已刪除：** `docs/mockup/components.fig`、`docs/mockup/components.pen`。兩者都能從提交歷史取回：`components.pen` 在本提交的前一個提交仍存在。`split-by-suite.js` 與 `extract-pen-themes.pen.js` 因此無法重跑，檔頭已註明，只留作做法與 Windows 修補的紀錄。
+- **ADR 0003** 改為 `Accepted`；`PR-FILE-01～14` 移入 `docs/capabilities/design-system.md`（PR-FILE-04 改成對 `baseline.json` 比對，並新增 PR-FILE-14 版面檢查）。

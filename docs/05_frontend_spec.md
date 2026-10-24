@@ -160,7 +160,7 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 | 操作結果 | `C/Status/Success`、`Warning`、`Error`；後兩項共用 `C/Status/` 前綴 |
 | 內容可用性 | `C/State/Loading`、`Empty`、`Error`；後兩項共用 `C/State/` 前綴 |
 
-每個母版元件的 metadata 記錄 `source: components.pen` 與完整元件名稱（此為舊 `.pen` 內部識別碼，待 ISSUE-006 移除 `.pen` 後才完全消失），供同檔頁面實例核對來源。
+每個母版元件的 metadata 記錄 `source: components.pen` 與完整元件名稱（此為舊 `.pen` 內部識別碼；`.pen` 已從工作樹移除，這個欄位只留在母版 metadata），供同檔頁面實例核對來源。
 
 檢視板以 `<suite>/<mode>/Component review`、`<suite>/<mode>/Tablet typography`、`<suite>/<mode>/Mobile components` 命名；各有 Vibrant、Professional 與 Light、Dark 的四種組合，共 12 張。平板與手機板分別採 834px、390px 寬度；Component review 為 1120px 寬的元件展示板，不代替 1280px 的頁面範本。
 
