@@ -46,8 +46,14 @@ Blocked by: none
 - 單檔 `components.fig` 拆完即刪除。
 - `.pen` 在同一功能分支內、驗收通過後的最後一步從工作樹刪除，由 git 歷史保留。否決保留凍結期與永久封存。
 
+- 無套系的共用物件（`Library guide` 頁、`00 / Canvas directory` 目錄與兩個文字節點）兩檔各放一份，與母版同樣處理，並納入 PR-FILE-05 的比對。
+- 原檔既有的 `Internal Only Canvas` 頁與套系無關，兩個套系設計檔都不放。
+- `openpencil` 在 Windows 需要的兩處本機修補（位於全域 npm 安裝目錄，重新安裝會還原）寫在切檔工作的 Notes，不另寫文件。
+
 ## Open questions
 
-- 兩個頁面層級的共用物件放哪裡：`Library guide` 頁、`00 / Canvas directory` 目錄與兩個無套系的文字節點。建議兩檔各放一份，與母版相同處理，並納入 PR-FILE-05 的比對。需你確認。
-- 原檔的另一個頁面 `Internal Only Canvas` 是否要保留，放進哪個檔案，尚未決定。
-- 一次性的 `openpencil` 兩處 Windows 本機修補（位於全域 npm 安裝目錄，重新安裝會還原）要不要寫進文件，讓其他機器也能重跑切檔，尚未決定。
+無。
+
+## 拆票
+
+ISSUE-002 至 ISSUE-006，依賴關係：002 → 003、004、005 → 006。
