@@ -58,7 +58,9 @@ test('created plans retain the chosen category in recent items',async({page})=>{
  await page.goto('/templates/product');
  const form=page.getByRole('form',{name:'建立計畫'});
  await form.getByLabel('計畫名稱').fill('團隊練球');
- await form.getByLabel('計畫分類').selectOption('團隊活動');
+ // Select 改為自訂選單（ISSUE-009），不再是原生 select：點欄位開啟後點選項。
+ await form.getByLabel('計畫分類').click();
+ await page.getByRole('option',{name:'團隊活動'}).click();
  await form.getByRole('button',{name:'建立計畫',exact:true}).click();
  await expect(page.getByRole('row').filter({hasText:'團隊練球'})).toContainText('團隊活動');
 });

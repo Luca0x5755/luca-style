@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { modeAttribute, modeStorageKey, suiteAttribute, themeAttribute } from './theme-init.js';
 import type { ColorMode, Density, Shape, StyleSuite } from './theme-types.js';
 import { deriveAccent, type AccentInput } from '@luca-style/tokens/accent';
@@ -24,6 +24,10 @@ export type ThemeProviderProps = {
   children:ReactNode;
 };
 const ThemeContext = createContext<{mode:ColorMode; resolvedMode:'light'|'dark'; setMode:(mode:ColorMode)=>void} | null>(null);
+// 彈出層（例如 Select 選單）的 portal 容器，不對外公開：target="self" 時是外層 div，主題屬性與行內強調色變數靠繼承套到彈出層；
+// target="document" 或沒有 ThemeProvider 時為 null，交給 Base UI 預設的 document.body（<html> 已帶主題屬性）。
+const PortalContainerContext = createContext<RefObject<HTMLDivElement | null> | null>(null);
+export function usePortalContainer() { return useContext(PortalContainerContext); }
 function storedMode():ColorMode {
   try { const value = localStorage.getItem(modeStorageKey); return value === 'dark' || value === 'light' ? value : 'system'; } catch { return 'system'; }
 }
@@ -53,6 +57,7 @@ export function ThemeProvider({suite='vibrant', accent, density, shape, persist=
     ? Object.fromEntries(Object.entries(deriveAccent(JSON.parse(accentKey), resolvedMode, tokenData[suite][resolvedMode])).map(([name,value]) => [`--${name}`, value]))
     : {}, [accentKey, suite, resolvedMode]);
   const toDocument = target === 'document';
+  const container = useRef<HTMLDivElement>(null);
   const attributeKey = JSON.stringify(attributes), variableKey = JSON.stringify(variables);
   useLayoutEffect(() => {
     if (!toDocument) return;
@@ -68,7 +73,7 @@ export function ThemeProvider({suite='vibrant', accent, density, shape, persist=
     };
   }, [toDocument, attributeKey, variableKey]);
   const value = {mode,resolvedMode,setMode};
-  if (toDocument) return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-  return <ThemeContext.Provider value={value}><div {...attributes} style={accent ? variables as CSSProperties : undefined}>{children}</div></ThemeContext.Provider>;
+  if (toDocument) return <ThemeContext.Provider value={value}><PortalContainerContext.Provider value={null}>{children}</PortalContainerContext.Provider></ThemeContext.Provider>;
+  return <ThemeContext.Provider value={value}><PortalContainerContext.Provider value={container}><div ref={container} {...attributes} style={accent ? variables as CSSProperties : undefined}>{children}</div></PortalContainerContext.Provider></ThemeContext.Provider>;
 }
 export function useTheme() { const theme = useContext(ThemeContext); if(!theme) throw new Error('useTheme requires ThemeProvider'); return theme; }

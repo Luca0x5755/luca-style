@@ -14,6 +14,18 @@
 .luca-input { width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-3) var(--space-4); font:500 1rem/1.5 var(--font-body); color:var(--text); background:var(--surface); border:1px solid var(--control-border); border-radius:var(--radius-control); }
 .luca-input[aria-invalid=true] { border-color:var(--error); }
 .luca-input:disabled { opacity:.6; cursor:not-allowed; }
+/* Select 欄位與選單，對照元件庫母版 C/Select/Open 與前端規格 §5.5.2。 */
+.luca-select-trigger { display:flex; align-items:center; gap:var(--space-3); text-align:left; cursor:pointer; }
+.luca-select-value { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.luca-select-icon { display:flex; flex:none; color:var(--muted); }
+.luca-select-positioner { z-index:10; outline:0; }
+/* 選單與欄位同寬（--anchor-width 由 Base UI 提供）；陰影取自母版的 0 8px 24px、文字色 12%。 */
+.luca-select-popup { box-sizing:border-box; display:grid; gap:2px; width:var(--anchor-width); max-height:var(--available-height); overflow-y:auto; padding:var(--space-1); background:var(--surface); color:var(--text); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); box-shadow:0 8px 24px rgba(36,49,42,.12); outline:0; }
+.luca-select-option { display:flex; align-items:center; height:40px; padding:0 var(--space-3); border-radius:var(--radius-control); font:var(--type-control-weight) var(--type-control-size)/var(--type-control-line-height) var(--font-body); cursor:pointer; outline:0; }
+/* 滑過與鍵盤目前項目同為 data-highlighted；選中項以柔和強調表面加粗、不加打勾。 */
+.luca-select-option[data-highlighted] { background:var(--surface-subtle); }
+.luca-select-option[data-selected] { background:var(--accent-soft); font-weight:700; }
+.luca-select-option[data-disabled] { color:var(--muted); cursor:not-allowed; }
 .luca-field-helper, .luca-field-error { font:400 .875rem/1.6 var(--font-body); }
 .luca-field-helper { color:var(--muted); }
 .luca-field-error { color:var(--error); }

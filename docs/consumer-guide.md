@@ -129,3 +129,36 @@ npm run test:consumer
 - 推算的只有沒給的角色：暗黑主色、柔和底色、點綴色，以及一律推算的滑過、按下、焦點框色。推算值都通過文字對比 4.5:1（焦點框 3:1）；位移後不足時會再加深／加亮。
 - 按鈕滑過不再用 `filter:brightness(.94)`，改為 `--accent-hover`；測試若斷言 `filter` 或焦點框粗細（舊為 3px 文字色單圈，現為 2px 表面色內圈＋2px 主色外圈）需調整。
 - 新增的 CSS 變數：`--accent-hover`、`--accent-pressed`、`--focus-ring`；套系預設值在建置時算好，也寫進設計檔變數。
+
+### Select 改為自訂選單（ISSUE-009）
+
+`Select` 改由 Base UI 的 Select 實作，選單外觀跟著風格套系、明暗模式與元件外形。`@luca-style/react` 新增依賴 `@base-ui/react` ^1.9，`react-dom` 19 列為 peer。
+
+DOM 改變：欄位是 `role="combobox"` 的 `<button>`（仍帶 `.luca-input`，另加 `.luca-select-trigger`），選單是 `role="listbox"`，選項是 `role="option"`。選單 portal 到 `ThemeProvider` 的外層容器；`target="document"` 時 portal 到 `<body>`。沒有 `ThemeProvider` 時也 portal 到 `<body>`，這時選單拿不到主題變數。
+
+端對端測試的改法：`selectOption()` 只能操作原生 select，對 `Select` 會報「Element is not a `<select>` element」。改為點欄位、再以顯示文字點選項：
+
+```ts
+// 0.1.0
+await page.getByLabel('明暗模式').selectOption('dark');
+// 0.2.0
+await page.getByLabel('明暗模式').click();
+await page.getByRole('option', {name:'暗黑'}).click();
+```
+
+- 選項以顯示文字找，不是 `value`。
+- 欄位沒有 `value` 屬性，`toHaveValue()` 改用 `toHaveText()` 比對欄位顯示的選項文字。表單送出的值仍在 `FormData` 裡（有給 `name` 時）。
+- 鍵盤操作：Enter、Space 或方向鍵開啟；方向鍵移動；Enter 選取並關閉；Esc 關閉不變更；關閉後焦點回到欄位。
+
+仍可用的 props：`label`、`helper`、`error`、`id`、`className`、`value`、`defaultValue`、`onChange`（`event.target.value` 仍為字串）、`name`、`disabled`、`required`、`form`、`autoComplete`、`aria-*`，以及以 `<option>` 子元素描述選項（`value`、`label`、`disabled` 與文字；沒給 `value` 時以文字當值）。沒給 `value`、`defaultValue` 時與原生相同，選第一個可選項。
+
+不相容處：
+
+- `multiple`、`size` 移除，傳入會造成型別錯誤。
+- `value`、`defaultValue` 只接受單一字串或數字；傳陣列會造成型別錯誤。
+- `onChange` 收到的不是瀏覽器原生的 change 事件，只有 `type: 'change'` 與 `target`／`currentTarget` 上的 `value`、`name`、`id`。`preventDefault()`、`nativeEvent`、`target.selectedOptions` 等都不存在。
+- 其他屬性（`title`、`data-*`、`onFocus`、`onBlur`、`onKeyDown` 等）套在欄位的 `<button>` 上；型別仍宣告為 `HTMLSelectElement` 的事件，但執行時的 `currentTarget` 是 button。
+- 子元素只讀 `<option>`（包在 Fragment 裡也可以）；`<optgroup>` 和其他元素會被略過，群組內的選項也不會出現。
+- 停用的選項在選單中顯示為「名稱（不可選）」，可以用方向鍵移到它，但無法選取。
+- 以 `select` 標籤選擇器寫的 CSS 或 DOM 查詢（例如 `document.querySelectorAll('select')`）不再找得到 `Select`；改用 `.luca-select-trigger`。
+- Vite 建置時，Base UI 檔案開頭的 `'use client'` 會產生「module level directive may not be preserved」警告，不影響輸出，可以忽略。

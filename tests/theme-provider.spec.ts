@@ -1,13 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
-import { access, mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { build } from 'vite';
+import { rm } from 'node:fs/promises';
 import { themeInitScript } from '../packages/react/src/theme-init.js';
 import type { Density, Shape } from '../packages/react/src/theme-types.js';
 import { deriveAccent, type AccentInput } from '../packages/tokens/accent.js';
 import { neutralsOf } from './tokens-helpers';
+import { buildHarness, origin, serveHarness } from './theme-harness';
 
 // 舊的 accent 寫法已移除（decision-log 2026-10-28）：若又能編譯，npm run typecheck 會因 @ts-expect-error 未被用到而失敗。
 const acceptsAccent = (accent:AccentInput) => accent;
@@ -21,38 +18,6 @@ const acceptsLevels = (levels:{density?:Density; shape?:Shape}) => levels;
 acceptsLevels({density:'dense'});
 // @ts-expect-error 外形不接受連續倍率
 acceptsLevels({shape:1.5});
-
-// 假 origin：localStorage 需要真實 origin，about:blank 會拒絕存取。
-const origin = 'http://harness.test';
-
-// 以 vite 打包測試載具到暫存目錄；fileURLToPath 產生 Windows 也能用的絕對路徑。
-async function buildHarness() {
-  const outDir = await mkdtemp(join(tmpdir(), 'luca-theme-harness-'));
-  try {
-    await build({
-      root:fileURLToPath(new URL('./fixtures/theme-harness/', import.meta.url)),
-      base:'./', logLevel:'error', configFile:false,
-      resolve:{alias:{'@luca-style/react':fileURLToPath(new URL('../packages/react/src/index.tsx', import.meta.url))}},
-      build:{outDir, emptyOutDir:true},
-    });
-  } catch (error) {
-    // 打包失敗時先清掉暫存目錄，再拋出原本的錯誤。
-    await rm(outDir, {recursive:true, force:true});
-    throw error;
-  }
-  return outDir;
-}
-
-// 由假 origin 提供打包後的載具檔案。
-async function serveHarness(page:Page, outDir:string) {
-  await page.route(`${origin}/**`, async route => {
-    const path = new URL(route.request().url()).pathname;
-    const file = join(outDir, path === '/' ? 'index.html' : path);
-    // 不存在的檔案（例如 favicon）回 404，避免請求懸著變成逾時。
-    const exists = await access(file).then(() => true, () => false);
-    await (exists ? route.fulfill({path:file}) : route.fulfill({status:404}));
-  });
-}
 
 // 先以原始方法寫入種子值，再把 localStorage 的每次存取記到計數器；計數器在種子寫入後才從 0 開始。
 async function seedAndCountStorage(page:Page, stored:string) {

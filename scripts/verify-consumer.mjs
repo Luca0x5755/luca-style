@@ -38,8 +38,21 @@ try {
   assert.equal(await page.getByRole('navigation',{name:'子路徑導覽'}).locator('.luca-brand').getAttribute('href'),'/luca-style/');
   await page.getByRole('button',{name:'完成操作'}).click();
   assert.match(await page.getByRole('status').innerText(),/已完成 1 次/);
-  await page.getByLabel('風格套系').selectOption('vibrant');
-  await page.getByLabel('明暗模式').selectOption('dark');
+  // Select 是 Base UI 自訂選單（ISSUE-009），不能用 selectOption()：點欄位開啟，再點選項。
+  const choose=async(label,option)=>{
+    await page.getByLabel(label).click();
+    const listbox=page.getByRole('listbox');
+    await listbox.waitFor();
+    // 選單 portal 到 ThemeProvider 的外層容器，主題屬性才套得到。
+    const theme=await listbox.evaluate(element=>{const container=element.closest('[data-luca-theme]');return container && [container.getAttribute('data-suite'),container.getAttribute('data-mode')];});
+    assert.ok(theme,`${label} 的選單不在主題容器內`);
+    await listbox.getByRole('option',{name:option,exact:true}).click();
+    await listbox.waitFor({state:'hidden'});
+    return theme;
+  };
+  await choose('風格套系','精緻活力');
+  // 開啟明暗選單時套系已切到 vibrant，選單所在容器同步顯示。
+  assert.deepEqual(await choose('明暗模式','暗黑'),['vibrant','light']);
   await page.getByLabel('專案強調色').check();
   const theme=page.locator('[data-luca-theme]');
   assert.equal(await theme.getAttribute('data-suite'),'vibrant');
@@ -56,7 +69,7 @@ try {
     assert.match(await response.text(),/SIL OPEN FONT LICENSE/i);
   }
   assert.equal(await page.evaluate(async()=>{const faces=await Promise.all(['16px Inter','16px "Noto Sans TC"','16px "IBM Plex Mono"','600 16px "IBM Plex Mono"'].map(font=>document.fonts.load(font)));return faces.every(group=>group.length>0 && group.every(face=>face.status==='loaded'));}),true);
-  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build, theme/mode/accent/status, fonts, font licenses and MIT license');
+  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license');
 } finally {
   if(browser) await browser.close();
   if(server && server.exitCode===null) {const closed=new Promise(done=>server.once('exit',done));server.kill();await closed;}
