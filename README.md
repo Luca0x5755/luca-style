@@ -48,6 +48,7 @@ import '@luca-style/react/css';
 | --- | --- |
 | 在其他專案安裝與套用 | [使用端接入](docs/consumer-guide.md) |
 | 讓其他專案的代理執行接入 | [跨專案套用提示詞](docs/adoption-prompt.md)，內附精緻活力與精緻專業的輸入範例 |
+| 讓代理使用設計系統 | [DESIGN.md](DESIGN.md) 與 [llms.txt](llms.txt)；每個設計變數的值與用途見[設計變數規格](docs/design-tokens.md)（產生物） |
 | 了解設計系統的承諾與範圍 | [設計系統能力規格](docs/capabilities/design-system.md) |
 | 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為元件庫設計檔 `docs/mockup/luca-style-library.fig`（兩套風格的母版與設計變數合為一檔） |
 | 查架構與部署方式 | [架構設計](docs/03_architecture_design.md) |
@@ -56,7 +57,7 @@ import '@luca-style/react/css';
 
 ## 開發與驗證
 
-變數來源為 `packages/tokens/src/` 下的 DTCG 分層檔（`base`、`mode/<明暗>`、`suite/<套系>/<common|明暗>`、`typography`），每個變數都要有 `$value`、`$type` 與 `$description`。修改後執行 `npm run generate`，由 Style Dictionary 重新產生輸出；任一「風格套系 × 明暗模式」組合缺值時建置失敗並列出缺的變數。之後再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
+變數來源為 `packages/tokens/src/` 下的 DTCG 分層檔（`base`、`mode/<明暗>`、`suite/<套系>/<common|明暗>`、`typography`），每個變數都要有 `$value`、`$type` 與 `$description`。修改後執行 `npm run generate`，由 Style Dictionary 重新產生輸出（含 `docs/design-tokens.md` 設計變數規格，勿手改）；任一「風格套系 × 明暗模式」組合缺值時建置失敗並列出缺的變數。之後再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
 
 ```sh
 npm run build

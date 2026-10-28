@@ -6,7 +6,8 @@
   "files": [
     "dist",
     "accent.js",
-    "accent.d.ts"
+    "accent.d.ts",
+    "design-tokens.md"
   ],
   "exports": {
     "./css": {
@@ -21,7 +22,7 @@
     }
   },
   "scripts": {
-    "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",
+    "prepack": "node -e \"const fs=require('node:fs');fs.copyFileSync('../../LICENSE','LICENSE');fs.copyFileSync('../../docs/design-tokens.md','design-tokens.md')\"",
     "build": "node build.mjs"
   },
   "devDependencies": {

@@ -6,14 +6,16 @@ import { deriveAccent } from './accent.js';
 
 // 設計變數產生器：讀 DTCG 分層原始檔，經 Style Dictionary 產生與 0.1.0 相同結構的 css、data、typography。
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
+// --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，公開輸出維持三份。
 // --fig <路徑>：另外寫一份設計檔變數資料（scripts/design/apply-variables.js 讀它寫入元件庫設計檔）；
 //   不放進 --out，因為 dist 會發布到 npm，且公開輸出只有三份。
 const { values: args } = parseArgs({ options: {
-  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, fig: { type: 'string' },
+  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, fig: { type: 'string' }, doc: { type: 'string' },
 } });
 const source = resolve(args.source);
 const out = resolve(args.out);
 const figPath = args.fig && resolve(args.fig);
+const docPath = args.doc && resolve(args.doc);
 
 // 套系與明暗的順序決定 CSS 區塊順序；第一個組合同時是 :root 的預設主題。
 const suites = ['vibrant', 'professional'];
@@ -293,6 +295,53 @@ const figData = {
   variables: [...figVariables.values()],
 };
 
+// 第六步：給代理讀的設計變數規格文件。內容全部取自上面已解析（含推算）的 allTokens 與 typography，不另存手寫的值。
+// 列的順序固定（依第一個組合的宣告順序），結尾一個換行，重跑產生器才會與已提交的檔案逐字相同。
+const escapeCell = value => String(value ?? '').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const code = value => `\`${escapeCell(value)}\``;
+const table = (headers, rows) => [`| ${headers.join(' | ')} |`, `| ${headers.map(() => '---').join(' | ')} |`, ...rows.map(row => `| ${row.join(' | ')} |`)].join('\n');
+const valueMap = allTokens => new Map(published(allTokens).map(token => [nameOf(token), token]));
+// 一個軸（密度或外形）的表：變數順序取第一個等級檔，每個等級一欄。
+const levelTable = levels => {
+  const maps = levels.map(level => valueMap(level.allTokens));
+  return table(['變數', '用途', ...levels.map(level => level.label)],
+    [...maps[0].values()].map(token => [code(nameOf(token)), escapeCell(token.$description), ...maps.map(map => code(map.get(nameOf(token)).$value))]));
+};
+const themeMaps = themes.map(theme => valueMap(theme.allTokens));
+const defaultsOf = axis => suites.map(suite => `${suite} 為 ${suiteDefaults[suite][axis]}`).join('、');
+const docText = [
+  '# 設計變數規格',
+  '',
+  '> 由 `npm run generate` 自 `packages/tokens/src` 的 DTCG 原始檔產生，勿手改；要改值或用途請改原始檔後重跑。',
+  '',
+  '變數名即 CSS 自訂屬性名（加 `--`），也是 `@luca-style/tokens/data` 的鍵；值與 `@luca-style/tokens/css`、`@luca-style/tokens/data` 相同。滑過、按下與焦點框由主色推算。',
+  '',
+  '## 設計變數',
+  '',
+  table(['變數', '用途', ...themes.map(({ suite, mode }) => `${suite} / ${mode}`)],
+    [...themeMaps[0].values()].map(token => [code(nameOf(token)), escapeCell(token.$description), ...themeMaps.map(map => code(map.get(nameOf(token)).$value))])),
+  '',
+  '## 資訊密度',
+  '',
+  `各風格套系的預設等級：${defaultsOf('density')}。套系區塊已含預設等級的值；專案以 \`density\` 覆寫，覆寫只改下表的變數。`,
+  '',
+  levelTable(axes[0].levels),
+  '',
+  '## 元件外形',
+  '',
+  `各風格套系的預設等級：${defaultsOf('shape')}。專案以 \`shape\` 覆寫，覆寫只改下表的變數。`,
+  '',
+  levelTable(axes[1].levels),
+  '',
+  '## 字體角色',
+  '',
+  '不分風格套系與明暗。CSS 變數為 `--type-<角色>-size`、`--type-<角色>-weight`、`--type-<角色>-line-height`；字級依裝置寬度切換（平板 600px 起、桌面 1024px 起）。',
+  '',
+  table(['角色', '手機', '平板', '桌面', '字重', '行高'],
+    Object.entries(typography).map(([role, fields]) => [code(role), ...['mobile', 'tablet', 'desktop', 'weight', 'lineHeight'].map(field => code(fields[field]))])),
+  '',
+].join('\n');
+
 await mkdir(out, { recursive: true });
 await Promise.all([
   writeFile(join(out, 'css.d.ts'), 'export {};\n'),
@@ -300,6 +349,10 @@ await Promise.all([
   writeFile(join(out, 'tokens.json'), JSON.stringify(data, null, 2) + '\n'),
   writeFile(join(out, 'tokens.css'), css.join('\n') + '\n'),
 ]);
+if (docPath) {
+  await mkdir(dirname(docPath), { recursive: true });
+  await writeFile(docPath, docText);
+}
 if (figPath) {
   await mkdir(dirname(figPath), { recursive: true });
   await writeFile(figPath, JSON.stringify(figData, null, 1) + '\n');

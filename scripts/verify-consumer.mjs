@@ -24,6 +24,8 @@ try {
   npm(['install','--no-audit','--no-fund',...tarballs],consumer);
   // tarball 須隨附 prepack 複製的 MIT 授權。
   for(const name of ['tokens','react']) assert.match(await readFile(join(consumer,'node_modules','@luca-style',name,'LICENSE'),'utf8'),/^MIT License/);
+  // 給代理讀的文件（ISSUE-013）須隨套件安裝：react 帶 DESIGN.md 與 llms.txt，tokens 帶設計變數規格。
+  for(const [name,file] of [['react','DESIGN.md'],['react','llms.txt'],['tokens','design-tokens.md']]) assert.ok((await readFile(join(consumer,'node_modules','@luca-style',name,file),'utf8')).length>0,`${name} 套件缺少 ${file}`);
   npm(['run','build'],consumer);
   server=spawn(process.execPath,[join(consumer,'node_modules/vite/bin/vite.js'),'preview','--host','127.0.0.1','--port','4174','--strictPort'],{cwd:consumer,stdio:'pipe'});
   await new Promise((done,reject)=>{
