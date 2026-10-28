@@ -1,9 +1,4 @@
 {
-  "control-height": {
-    "$value": "3rem",
-    "$type": "dimension",
-    "$description": "操作元件（按鈕、輸入框、下拉選單）的最小高度"
-  },
   "font-en": {
     "$value": "Inter",
     "$type": "fontFamily",

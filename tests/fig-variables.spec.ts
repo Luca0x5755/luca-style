@@ -69,9 +69,10 @@ test('every published CSS variable is in the design-file data, under its legacy 
     expect(new Set(names).size).toBe(names.length);
     expect([...cssNames].map(name => merged[name] ?? name).filter(name => !names.includes(name))).toEqual([]);
     expect(names.filter(name => name in merged)).toEqual([]);
-    // 48 個舊變數＋22 個程式獨有變數（含 ISSUE-006 建置時推算的 accent-hover、accent-pressed、focus-ring）。
-    expect(data.count).toBe(70);
-    expect(names.length).toBe(70);
+    // 48 個舊變數＋24 個程式獨有變數（含 ISSUE-006 建置時推算的 accent-hover、accent-pressed、focus-ring，
+    // 與 ISSUE-008 的 table-cell-padding-block、table-cell-padding-inline；等級區塊只覆寫同名變數，不另增變數）。
+    expect(data.count).toBe(72);
+    expect(names.length).toBe(72);
   } finally {
     await workspace.dispose();
   }

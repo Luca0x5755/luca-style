@@ -142,7 +142,7 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 | 操作元件高度 `control-height` | 40 | 48 | 56 | 40 | 48 | 52 |
 | 容器內距 `card-padding` | 16 | 24 | 32 | 12 | 20 | 24 |
 | 區塊間距 `gap-section` | 24 | 32 | 48 | 16 | 24 | 32 |
-| 表格儲存格內距（上下／左右） | 8／8 | 12／8 | 16／12 | 6／8 | 12／8 | 14／10 |
+| 表格儲存格內距（上下 `table-cell-padding-block`／左右 `table-cell-padding-inline`） | 8／8 | 12／8 | 16／12 | 6／8 | 12／8 | 14／10 |
 
 `density` 取 `compact`（精簡）、`standard`（標準）、`comfortable`（寬鬆）。文字角色不隨密度改變（§5.1.2）；精簡等級的操作元件仍高於 24px 的最小點擊範圍。
 
@@ -154,7 +154,7 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 | 操作元件圓角 `radius-control` | 16px | 3px |
 | 選單與選項圓角（同操作元件圓角） | 16px | 3px |
 | 容器邊界寬度 `border-width` | 1px | 1.5px |
-| 指標卡左邊界 `metric-border-left` | 1px，邊界色 | 3px，主色 |
+| 指標卡左邊界 `metric-border-left` | 1px，邊界色 | 3px，邊界色 |
 | 指標卡背景 `metric-background` | 柔和強調表面 | 主要表面 |
 | 指標卡陰影 `metric-shadow` | 垂直位移 4px、模糊 16px、`#00000008` | 無 |
 

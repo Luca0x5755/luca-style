@@ -1,16 +1,22 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { modeAttribute, modeStorageKey, suiteAttribute, themeAttribute } from './theme-init.js';
-import type { ColorMode, StyleSuite } from './theme-types.js';
+import type { ColorMode, Density, Shape, StyleSuite } from './theme-types.js';
 import { deriveAccent, type AccentInput } from '@luca-style/tokens/accent';
 import tokenData from '@luca-style/tokens/data' with { type: 'json' };
 export type { AccentInput } from '@luca-style/tokens/accent';
-export type { ColorMode, StyleSuite } from './theme-types.js';
+export type { ColorMode, Density, Shape, StyleSuite } from './theme-types.js';
 export { themeInitScript, type ThemeInitOptions } from './theme-init.js';
 export type ThemeTarget = 'self' | 'document';
+// 資訊密度與元件外形的屬性名；只由 ThemeProvider 寫入，首屏腳本不處理（架構 §3.3）。
+const densityAttribute = 'data-density';
+const shapeAttribute = 'data-shape';
 export type ThemeProviderProps = {
   suite?:StyleSuite;
   // 只有日間主色必填；其餘沒給時由 deriveAccent 推算（架構 §3.3）。
   accent?:AccentInput;
+  // 資訊密度與元件外形可單獨覆寫；沒給時沿用風格套系的預設等級（ADR 0005）。
+  density?:Density;
+  shape?:Shape;
   // false 時完全不讀寫瀏覽器儲存，偏好只存在本次頁面。
   persist?:boolean;
   // document 時主題屬性與強調色變數套在 <html>，不另包外層元素。
@@ -21,7 +27,7 @@ const ThemeContext = createContext<{mode:ColorMode; resolvedMode:'light'|'dark';
 function storedMode():ColorMode {
   try { const value = localStorage.getItem(modeStorageKey); return value === 'dark' || value === 'light' ? value : 'system'; } catch { return 'system'; }
 }
-export function ThemeProvider({suite='vibrant', accent, persist=true, target='self', children}: ThemeProviderProps) {
+export function ThemeProvider({suite='vibrant', accent, density, shape, persist=true, target='self', children}: ThemeProviderProps) {
   const [mode, updateMode] = useState<ColorMode>(() => persist ? storedMode() : 'system');
   const [dark, setDark] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches);
   useEffect(() => {
@@ -37,7 +43,9 @@ export function ThemeProvider({suite='vibrant', accent, persist=true, target='se
   };
   const resolvedMode = mode === 'system' ? dark ? 'dark' : 'light' : mode;
   // 主題屬性與強調色變數只算一份，依 target 套到外層 div 或 <html>。
-  const attributes = {[themeAttribute]:'', [suiteAttribute]:suite, [modeAttribute]:resolvedMode};
+  // density、shape 沒給就不寫屬性，tokens CSS 的套系區塊即為預設值，畫面與 0.1.0 相同（PR-STYLE-29）。
+  const attributes:Record<string,string> = {[themeAttribute]:'', [suiteAttribute]:suite, [modeAttribute]:resolvedMode,
+    ...(density && {[densityAttribute]:density}), ...(shape && {[shapeAttribute]:shape})};
   // 中性色取自設計變數輸出，與建置時推算套系預設色用的是同一組值。
   // 推算要走數次明度搜尋，只在輸入、套系或明暗改變時重算；accent 物件常是每次 render 新建，故以內容當鍵。
   const accentKey = accent ? JSON.stringify(accent) : '';

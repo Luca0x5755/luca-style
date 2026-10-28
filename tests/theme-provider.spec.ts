@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
 import { themeInitScript } from '../packages/react/src/theme-init.js';
+import type { Density, Shape } from '../packages/react/src/theme-types.js';
 import { deriveAccent, type AccentInput } from '../packages/tokens/accent.js';
 import { neutralsOf } from './tokens-helpers';
 
@@ -14,6 +15,12 @@ const acceptsAccent = (accent:AccentInput) => accent;
 acceptsAccent({primary:'#9A4C32', secondary:'#BD7454', soft:'#F7F1EB', ink:'#FFFFFF'});
 // @ts-expect-error 0.1.0 的成對色票 {light: 色票, dark: 色票}
 acceptsAccent({light:{primary:'#9A4C32'}, dark:{primary:'#E8A18B'}});
+// 密度與外形只接受具名等級（decision-log 2026-10-28），不接受任意字串或倍率。
+const acceptsLevels = (levels:{density?:Density; shape?:Shape}) => levels;
+// @ts-expect-error 不在 compact／standard／comfortable 之內
+acceptsLevels({density:'dense'});
+// @ts-expect-error 外形不接受連續倍率
+acceptsLevels({shape:1.5});
 
 // 假 origin：localStorage 需要真實 origin，about:blank 會拒絕存取。
 const origin = 'http://harness.test';
@@ -104,6 +111,137 @@ test.describe('ThemeProvider', () => {
     for (const name of ['data-luca-theme','data-suite','data-mode']) await expect(html).not.toHaveAttribute(name);
     expect(await html.evaluate(element => element.style.getPropertyValue('--accent'))).toBe('');
   });
+
+  // ADR 0005：density、shape 有給才寫屬性；沒給就不寫，由套系區塊提供預設值。
+  for (const target of ['self','document']) {
+    test(`target ${target} writes data-density and data-shape only when given and clears them on unmount`, async ({page}) => {
+      await serveHarness(page, outDir);
+      const themed = page.locator(target === 'document' ? 'html' : '[data-luca-theme]');
+      await page.goto(`${origin}/?persist=0&target=${target}`);
+      await expect(themed).toHaveAttribute('data-suite', 'vibrant');
+      for (const name of ['data-density','data-shape']) await expect(themed).not.toHaveAttribute(name);
+      await page.goto(`${origin}/?persist=0&target=${target}&density=compact&shape=sharp`);
+      await expect(themed).toHaveAttribute('data-density', 'compact');
+      await expect(themed).toHaveAttribute('data-shape', 'sharp');
+      await page.getByRole('button', {name:'卸載'}).click();
+      if (target === 'document') for (const name of ['data-density','data-shape']) await expect(page.locator('html')).not.toHaveAttribute(name);
+    });
+  }
+
+  // PR-STYLE-29～31：從元件樣本讀固定的計算樣式清單，依軸分組。期望值抄自前端規格 §5.4.1、§5.4.2 的表。
+  type AxisStyles = {density:Record<string,string>; shape:Record<string,string>; color:Record<string,string>};
+  const readAxes = (page:Page) => page.locator('[data-luca-theme]').evaluate(theme => {
+    const style = (selector:string) => getComputedStyle(theme.querySelector(selector)!);
+    const button = style('.luca-button-primary'), secondary = style('.luca-button-secondary'), input = style('.luca-input');
+    const metric = style('.luca-metric'), table = style('.luca-table-region'), cell = style('.luca-table td'), state = style('.luca-content-state');
+    return {
+      density:{
+        'button min-height':button.minHeight, 'input min-height':input.minHeight,
+        'metric padding':metric.padding, 'content-state padding':state.padding, 'table-region padding':table.padding,
+        'cell padding':`${cell.paddingTop} ${cell.paddingRight} ${cell.paddingBottom} ${cell.paddingLeft}`,
+        'gap-section':getComputedStyle(theme).getPropertyValue('--gap-section').trim(),
+      },
+      shape:{
+        'button radius':button.borderRadius, 'input radius':input.borderRadius, 'metric radius':metric.borderRadius, 'content-state radius':state.borderRadius,
+        // Chromium 在 DPR 1 把 1.5px 邊框畫成 1px，計算樣式看不出差別，所以邊框寬度讀變數本身。
+        'border-width':getComputedStyle(theme).getPropertyValue('--border-width').trim(),
+        'metric border-left-width':metric.borderLeftWidth, 'metric background':metric.backgroundColor, 'metric shadow':metric.boxShadow,
+      },
+      color:{
+        'theme background':getComputedStyle(theme).backgroundColor, 'theme text':getComputedStyle(theme).color,
+        'button background':button.backgroundColor, 'button text':button.color, 'secondary text':secondary.color,
+        'input border':input.borderTopColor, 'metric border':metric.borderTopColor, 'metric border-left':metric.borderLeftColor,
+        'metric value':getComputedStyle(theme.querySelector('.luca-metric strong')!).color, 'cell border':cell.borderBottomColor,
+        'state background':state.backgroundColor,
+      },
+    };
+  }) as Promise<AxisStyles>;
+  const densityTable = {
+    vibrant:{compact:[40,16,24,8,8], standard:[48,24,32,12,8], comfortable:[56,32,48,16,12]},
+    professional:{compact:[40,12,16,6,8], standard:[48,20,24,12,8], comfortable:[52,24,32,14,10]},
+  } as const;
+  const expectedDensity = ([height, padding, gap, block, inline]:readonly number[]) => ({
+    'button min-height':`${height}px`, 'input min-height':`${height}px`,
+    'metric padding':`${padding}px`, 'content-state padding':`${padding}px`, 'table-region padding':`${padding}px`,
+    'cell padding':`${block}px ${inline}px ${block}px ${inline}px`, 'gap-section':`${gap / 16}rem`.replace(/^0\./, '.'),
+  });
+  // 指標卡底色：rounded 為柔和強調表面、sharp 為主要表面（§5.5.2 與中性色表）。
+  const softSurface = {vibrant:{light:'rgb(227, 242, 240)', dark:'rgb(23, 54, 55)'}, professional:{light:'rgb(238, 237, 244)', dark:'rgb(45, 42, 59)'}} as const;
+  const surface = {light:'rgb(255, 255, 255)', dark:'rgb(29, 36, 32)'} as const;
+  const expectedShape = (shape:'rounded'|'sharp', suite:'vibrant'|'professional', mode:'light'|'dark') => shape === 'rounded'
+    ? {'button radius':'16px', 'input radius':'16px', 'metric radius':'20px', 'content-state radius':'20px', 'border-width':'1px',
+      'metric border-left-width':'1px', 'metric background':softSurface[suite][mode], 'metric shadow':'rgba(0, 0, 0, 0.03) 0px 4px 16px 0px'}
+    : {'button radius':'3px', 'input radius':'3px', 'metric radius':'3px', 'content-state radius':'3px', 'border-width':'1.5px',
+      'metric border-left-width':'3px', 'metric background':surface[mode], 'metric shadow':'none'};
+  const suiteDefaults = {vibrant:{density:'standard', shape:'rounded'}, professional:{density:'standard', shape:'sharp'}} as const;
+  async function openAxes(page:Page, mode:'light'|'dark', query:string) {
+    await page.emulateMedia({colorScheme:mode, reducedMotion:'reduce'});
+    await page.goto(`${origin}/?persist=0&accent=none&${query}`);
+    await expect(page.getByLabel('目前明暗')).toHaveText(mode);
+    return readAxes(page);
+  }
+
+  for (const suite of ['vibrant','professional'] as const) {
+    for (const mode of ['light','dark'] as const) {
+      test(`${suite}/${mode} without an override shows the suite default density and shape, the same as an explicit default`, async ({page}) => {
+        await serveHarness(page, outDir);
+        const unset = await openAxes(page, mode, `suite=${suite}`);
+        expect(unset.density).toEqual(expectedDensity(densityTable[suite].standard));
+        expect(unset.shape).toEqual(expectedShape(suiteDefaults[suite].shape, suite, mode));
+        expect(await openAxes(page, mode, `suite=${suite}&density=${suiteDefaults[suite].density}&shape=${suiteDefaults[suite].shape}`)).toEqual(unset);
+      });
+
+      test(`${suite}/${mode} overriding density changes only density, to the §5.4.1 values`, async ({page}) => {
+        await serveHarness(page, outDir);
+        const unset = await openAxes(page, mode, `suite=${suite}`);
+        for (const [level, values] of Object.entries(densityTable[suite])) {
+          const got = await openAxes(page, mode, `suite=${suite}&density=${level}`);
+          expect(got.density, level).toEqual(expectedDensity(values));
+          expect(got.shape, level).toEqual(unset.shape);
+          expect(got.color, level).toEqual(unset.color);
+        }
+      });
+
+      test(`${suite}/${mode} overriding shape changes only shape, to the §5.4.2 values`, async ({page}) => {
+        await serveHarness(page, outDir);
+        const unset = await openAxes(page, mode, `suite=${suite}`);
+        for (const level of ['rounded','sharp'] as const) {
+          const got = await openAxes(page, mode, `suite=${suite}&shape=${level}`);
+          expect(got.shape, level).toEqual(expectedShape(level, suite, mode));
+          expect(got.density, level).toEqual(unset.density);
+          expect(got.color, level).toEqual(unset.color);
+        }
+      });
+    }
+  }
+
+  // 外形翻轉會換指標卡底色（professional + rounded 為柔和強調表面、vibrant + sharp 為主要表面），文字仍須達 4.5:1。
+  for (const [suite, shape] of [['professional','rounded'],['vibrant','sharp']] as const) {
+    for (const accent of ['none', JSON.stringify({light:'#9A4C32'})]) {
+      test(`${suite} with shape ${shape}${accent === 'none' ? '' : ' and a project accent'} keeps metric text at 4.5:1 in both modes`, async ({page}) => {
+        await serveHarness(page, outDir);
+        for (const mode of ['light','dark'] as const) {
+          await page.emulateMedia({colorScheme:mode, reducedMotion:'reduce'});
+          await page.goto(`${origin}/?persist=0&suite=${suite}&shape=${shape}&accent=${encodeURIComponent(accent)}`);
+          await expect(page.getByLabel('目前明暗')).toHaveText(mode);
+          const contrasts = await page.locator('.luca-metric').evaluate(element => {
+            const luminance = (color:string) => {
+              const [r, g, b] = color.match(/[\d.]+/g)!.slice(0,3).map(Number).map(value => value / 255)
+                .map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4);
+              return r * .2126 + g * .7152 + b * .0722;
+            };
+            const background = luminance(getComputedStyle(element).backgroundColor);
+            return [...element.querySelectorAll('small,h2,strong,p')].map(child => {
+              const foreground = luminance(getComputedStyle(child).color);
+              return (Math.max(background, foreground) + .05) / (Math.min(background, foreground) + .05);
+            });
+          });
+          expect(contrasts.length).toBe(4);
+          for (const contrast of contrasts) expect(contrast, `${mode} metric text contrast`).toBeGreaterThanOrEqual(4.5);
+        }
+      });
+    }
+  }
 
   // PR-STYLE-32、45、47：容器上的強調色變數就是同一份 deriveAccent 對目前明暗的結果，切換明暗即重算。
   const accentVariables = ['accent','accent-secondary','accent-soft','accent-hover','accent-pressed','focus-ring'] as const;

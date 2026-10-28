@@ -48,7 +48,9 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 
 `accent={{light, dark?, secondary?, soft?:{light?, dark?}}}` 覆寫專案強調色（`AccentInput`）；只有日間主色 `light` 必填。暗黑主色、柔和底色沒給時由 ThemeProvider 推算（同色相，通過文字對比 4.5:1）；點綴色沒給時沿用該模式的主色，有給則兩種模式都用同一值。滑過 `--accent-hover`、按下 `--accent-pressed` 與焦點框外圈 `--focus-ring` 一律由主色推算（OKLCH 明度位移，色相不變）。推算函式 `deriveAccent` 由 `@luca-style/tokens/accent` 匯出，建置與設計檔匯入用的是同一份。有給的顏色原樣使用、不做對比檢查：主按鈕文字在日間固定為白色，太淺的日間主色會讓按鈕文字看不清，請自行確認對比。Showcase 日間覆寫使用暖銅色與淺暖底，暗黑使用亮珊瑚色與深暖底。覆寫不改 success／warning／error。業務資料另定 `--data-positive` 等專案變數，使用文字、符號或圖例；不要引用 `--success`／`--error` 代表漲跌。
 
-套系預設透過 `--card-padding`、`--gap-section` 控制密度。特定頁面可用 CSS 在自身區域覆寫這些變數，例如 `.dense-section { --card-padding:var(--space-4); --gap-section:var(--space-4); }`；不改文字角色或全域套系。自行版面使用 `--space-*`，欄位設定 `min-width:0`，窄版堆疊，表格保留可聚焦的水平捲動區。
+`density`（`compact`／`standard`／`comfortable`）與 `shape`（`sharp`／`rounded`）可單獨覆寫風格套系的預設等級，例如 `<ThemeProvider suite="professional" shape="rounded">`；沒給時沿用套系預設（精緻活力：標準、圓潤；精緻專業：標準、俐落），畫面與 0.1.0 相同。密度只改 `--control-height`、`--card-padding`、`--gap-section`、`--table-cell-padding-block`／`-inline`；外形只改 `--radius-card`、`--radius-control`、`--border-width`、`--metric-border-left`、`--metric-background`、`--metric-shadow`；兩者都不改色彩。數值見[前端 §5.4.1、§5.4.2](05_frontend_spec.md)。ThemeProvider 以 `data-density`、`data-shape` 屬性套用，與其他主題屬性在同一元素。`themeInitScript` 不處理這兩軸：`target="document"` 搭配覆寫時，React 掛載前會先以套系預設的間距與圓角排版，掛載後才換成覆寫值（色彩不受影響）；介意這一下跳動時，可在 `<head>` 首屏腳本之後自行加上 `document.documentElement.setAttribute('data-density','compact')` 等同值屬性。
+
+整頁之外，特定頁面也可用 CSS 在自身區域覆寫密度變數，例如 `.dense-section { --card-padding:var(--space-4); --gap-section:var(--space-4); }`；不改文字角色或全域套系。自行版面使用 `--space-*`，欄位設定 `min-width:0`，窄版堆疊，表格保留可聚焦的水平捲動區。
 
 響應式字級與斷點以[前端 §5.1](05_frontend_spec.md)為準。使用 `--type-title-size`／`--type-title-weight`／`--type-title-line-height` 等角色，正文同理使用 body。CSS 已處理三種裝置字級；頁面欄數與換行由使用端配置。減少動態規則隨 React CSS 交付。
 
@@ -103,6 +105,12 @@ npm run test:consumer
 - `persist={false}` 時不要放首屏腳本：腳本會讀 localStorage，與「不讀寫儲存」矛盾，屬於誤用。
 - 偏好鍵名仍是 `luca-style-mode`，值仍為 `light`／`dark` 純字串；0.1.0 存下的選擇不需遷移。
 - `target="document"` 後頁面上符合 `[data-luca-theme]` 的元素是 `<html>`，不再有外層 `div`；以該選擇器找主題容器的測試仍可用，但依賴外層 `div` 結構的 CSS 或測試要調整。
+
+### 資訊密度與元件外形可單獨覆寫（ISSUE-008）
+
+- 沒給 `density`、`shape` 時畫面與 0.1.0 相同，不需修改。
+- 新增 CSS 變數 `--table-cell-padding-block`、`--table-cell-padding-inline`（預設 12px／8px，即 0.1.0 表格儲存格內距），也寫進設計檔變數。
+- `--control-height` 改由密度等級提供，精緻專業 comfortable 為 52px；直接在頁面覆寫這些變數的寫法仍有效。
 
 ### 專案強調色改為 `AccentInput`（ISSUE-006）
 

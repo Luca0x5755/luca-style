@@ -19,9 +19,20 @@ const figPath = args.fig && resolve(args.fig);
 const suites = ['vibrant', 'professional'];
 const modes = ['light', 'dark'];
 
-// 每個組合依序疊加的分層檔，順序與 0.1.0 的合併順序相同。
-const layersOf = (suite, mode) => ['base', `mode/${mode}`, `suite/${suite}/common`, `suite/${suite}/${mode}`]
-  .map(layer => `${layer}.tokens.json`);
+// 資訊密度與元件外形的具名等級（ADR 0005）。密度數值依套系各一組，外形數值不分套系。
+// 套系只決定預設等級；預設等級檔疊進套系區塊，所以未覆寫時的值只有一份來源（PR-STYLE-29）。
+const densityLevels = ['compact', 'standard', 'comfortable'];
+const shapeLevels = ['rounded', 'sharp'];
+const suiteDefaults = { vibrant: { density: 'standard', shape: 'rounded' }, professional: { density: 'standard', shape: 'sharp' } };
+const densityFile = (suite, level) => `density/${suite}/${level}.tokens.json`;
+const shapeFile = level => `shape/${level}.tokens.json`;
+
+// 每個組合依序疊加的分層檔；密度與外形放在套系共用層之後、套系明暗層之前。
+const layersOf = (suite, mode) => [
+  ...['base', `mode/${mode}`, `suite/${suite}/common`].map(layer => `${layer}.tokens.json`),
+  densityFile(suite, suiteDefaults[suite].density), shapeFile(suiteDefaults[suite].shape),
+  `suite/${suite}/${mode}.tokens.json`,
+];
 
 const toGlob = path => path.replace(/\\/g, '/');
 const declarations = entries => entries.map(([name, value]) => `  --${name}: ${value};`).join('\n');
@@ -32,9 +43,11 @@ const published = tokens => tokens.filter(token => !ours(token).designFileOnly);
 
 // 自訂 format 一律輸出原始值，不經任何會改寫值的 transform；變數名直接取路徑，
 // 不用內建 css/variables、json/flat 與 name transform，以免改寫 0.1.0 的名稱與值。
+// 一個 CSS 區塊：選擇器加上公開變數的宣告；extra 是接在變數之後的其他宣告（例如 color-scheme）。
+const cssBlock = (selector, allTokens, extra = '') =>
+  `${selector} {\n${declarations(published(allTokens).map(token => [nameOf(token), token.$value]))}${extra}\n}`;
 const formats = {
-  'luca/css-theme': ({ dictionary, options }) =>
-    `${options.selector} {\n${declarations(published(dictionary.allTokens).map(token => [nameOf(token), token.$value]))}\n  color-scheme: ${options.mode};\n}`,
+  'luca/css-theme': ({ dictionary, options }) => cssBlock(options.selector, dictionary.allTokens, `\n  color-scheme: ${options.mode};`),
   'luca/json-theme': ({ dictionary }) => Object.fromEntries(published(dictionary.allTokens).map(token => [nameOf(token), token.$value])),
   'luca/typography-json': ({ dictionary }) => {
     const roles = {};
@@ -96,6 +109,25 @@ for (const suite of suites) {
 // 第二步：完整性檢查。任一組合缺值就列出變數名與組合並讓建置失敗，不寫任何輸出。
 const missing = themes.flatMap(({ suite, mode, valued }) =>
   [...expected].filter(name => !valued.has(name)).map(name => `缺少設計變數的值：${name}（${suite}/${mode}）`));
+// 等級完整性：同一軸的每個等級檔都必須對該軸所有變數（各等級檔宣告的聯集）給值，
+// 否則覆寫成那個等級時會默默沿用套系預設值，看起來像覆寫沒生效。
+const axes = [
+  { axis: 'density', levels: suites.flatMap(suite => densityLevels.map(level => ({ label: `${suite}/${level}`, file: densityFile(suite, level), suite, level }))) },
+  { axis: 'shape', levels: shapeLevels.map(level => ({ label: level, file: shapeFile(level), level })) },
+];
+for (const entry of axes) {
+  const names = new Set();
+  for (const level of entry.levels) {
+    const { allTokens } = await createDictionary([level.file], { css: {} }).getPlatformTokens('css');
+    level.allTokens = allTokens;
+    for (const name of await declaredNames(level.file)) names.add(name);
+  }
+  entry.names = names;
+  for (const level of entry.levels) {
+    const valued = new Set(level.allTokens.map(nameOf));
+    for (const name of names) if (!valued.has(name)) missing.push(`缺少設計變數的值：${name}（${entry.axis} ${level.label}）`);
+  }
+}
 if (missing.length) {
   console.error(missing.join('\n'));
   process.exit(1);
@@ -124,6 +156,11 @@ for (const { suite, mode, selector, allTokens } of themes) {
   css.push(formats['luca/css-theme']({ dictionary: { allTokens }, options: { mode, selector } }));
   (data[suite] ??= {})[mode] = formats['luca/json-theme']({ dictionary: { allTokens } });
 }
+// 等級區塊：只含該軸的變數，接在套系區塊之後。屬性與套系屬性在同一元素（target self 為外層 div、document 為 <html>）。
+// 特異度須與套系區塊同為 (0,3,0) 才能靠順序勝出，所以外形選擇器也帶 [data-suite]。
+// 等級區塊不進 data 與設計檔：data 的套系、明暗兩層鍵固定（0.1.0 快照），設計檔的密度、外形模式不在 ISSUE-008。
+for (const { suite, level, allTokens } of axes[0].levels) css.push(cssBlock(`[data-luca-theme][data-suite="${suite}"][data-density="${level}"]`, allTokens));
+for (const { level, allTokens } of axes[1].levels) css.push(cssBlock(`[data-luca-theme][data-suite][data-shape="${level}"]`, allTokens));
 
 const typographyDictionary = createDictionary(['typography.tokens.json'], {
   data: { files: [{ destination: 'typography.json', format: 'luca/typography-json' }] },

@@ -1,0 +1,27 @@
+{
+  "control-height": {
+    "$value": "3rem",
+    "$type": "dimension",
+    "$description": "操作元件（按鈕、輸入框、下拉選單）的最小高度"
+  },
+  "card-padding": {
+    "$value": "1.5rem",
+    "$type": "dimension",
+    "$description": "卡片內距"
+  },
+  "gap-section": {
+    "$value": "2rem",
+    "$type": "dimension",
+    "$description": "頁面區段之間的間距"
+  },
+  "table-cell-padding-block": {
+    "$value": ".75rem",
+    "$type": "dimension",
+    "$description": "表格儲存格的上下內距"
+  },
+  "table-cell-padding-inline": {
+    "$value": ".5rem",
+    "$type": "dimension",
+    "$description": "表格儲存格的左右內距"
+  }
+}

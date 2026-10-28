@@ -46,6 +46,7 @@
 .luca-table { width:100%; border-collapse:collapse; text-align:left; font:400 .875rem/1.6 var(--font-body); }
 .luca-table caption { text-align:left; margin-bottom:var(--space-4); color:var(--text); font:600 1.125rem/1.5 var(--font-body); }
 .luca-table th { color:var(--muted); font-weight:500; }
-.luca-table th,.luca-table td { padding:var(--space-3) var(--space-2); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
+/* 儲存格內距隨資訊密度改變（§5.4.1），standard 即 0.1.0 的 12px／8px。 */
+.luca-table th,.luca-table td { padding:var(--table-cell-padding-block) var(--table-cell-padding-inline); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
 /* 所有元件共用的雙圈焦點框（PR-STYLE-46）：外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
 .luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox input:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }

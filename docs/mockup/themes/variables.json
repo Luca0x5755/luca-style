@@ -15,26 +15,8 @@
    "Mobile"
   ]
  },
- "count": 70,
+ "count": 72,
  "variables": [
-  {
-   "name": "control-height",
-   "type": "number",
-   "values": {
-    "Light/Vibrant/Desktop": 48,
-    "Light/Vibrant/Tablet": 48,
-    "Light/Vibrant/Mobile": 48,
-    "Dark/Vibrant/Desktop": 48,
-    "Dark/Vibrant/Tablet": 48,
-    "Dark/Vibrant/Mobile": 48,
-    "Light/Professional/Desktop": 48,
-    "Light/Professional/Tablet": 48,
-    "Light/Professional/Mobile": 48,
-    "Dark/Professional/Desktop": 48,
-    "Dark/Professional/Tablet": 48,
-    "Dark/Professional/Mobile": 48
-   }
-  },
   {
    "name": "font-en",
    "type": "string",
@@ -576,39 +558,39 @@
    }
   },
   {
-   "name": "radius-card",
-   "type": "number",
+   "name": "suite-label",
+   "type": "string",
    "values": {
-    "Light/Vibrant/Desktop": 20,
-    "Light/Vibrant/Tablet": 20,
-    "Light/Vibrant/Mobile": 20,
-    "Dark/Vibrant/Desktop": 20,
-    "Dark/Vibrant/Tablet": 20,
-    "Dark/Vibrant/Mobile": 20,
-    "Light/Professional/Desktop": 3,
-    "Light/Professional/Tablet": 3,
-    "Light/Professional/Mobile": 3,
-    "Dark/Professional/Desktop": 3,
-    "Dark/Professional/Tablet": 3,
-    "Dark/Professional/Mobile": 3
+    "Light/Vibrant/Desktop": "精緻活力 · 潮汐",
+    "Light/Vibrant/Tablet": "精緻活力 · 潮汐",
+    "Light/Vibrant/Mobile": "精緻活力 · 潮汐",
+    "Dark/Vibrant/Desktop": "精緻活力 · 潮汐",
+    "Dark/Vibrant/Tablet": "精緻活力 · 潮汐",
+    "Dark/Vibrant/Mobile": "精緻活力 · 潮汐",
+    "Light/Professional/Desktop": "精緻專業 · 石墨紫",
+    "Light/Professional/Tablet": "精緻專業 · 石墨紫",
+    "Light/Professional/Mobile": "精緻專業 · 石墨紫",
+    "Dark/Professional/Desktop": "精緻專業 · 石墨紫",
+    "Dark/Professional/Tablet": "精緻專業 · 石墨紫",
+    "Dark/Professional/Mobile": "精緻專業 · 石墨紫"
    }
   },
   {
-   "name": "radius-control",
+   "name": "control-height",
    "type": "number",
    "values": {
-    "Light/Vibrant/Desktop": 16,
-    "Light/Vibrant/Tablet": 16,
-    "Light/Vibrant/Mobile": 16,
-    "Dark/Vibrant/Desktop": 16,
-    "Dark/Vibrant/Tablet": 16,
-    "Dark/Vibrant/Mobile": 16,
-    "Light/Professional/Desktop": 3,
-    "Light/Professional/Tablet": 3,
-    "Light/Professional/Mobile": 3,
-    "Dark/Professional/Desktop": 3,
-    "Dark/Professional/Tablet": 3,
-    "Dark/Professional/Mobile": 3
+    "Light/Vibrant/Desktop": 48,
+    "Light/Vibrant/Tablet": 48,
+    "Light/Vibrant/Mobile": 48,
+    "Dark/Vibrant/Desktop": 48,
+    "Dark/Vibrant/Tablet": 48,
+    "Dark/Vibrant/Mobile": 48,
+    "Light/Professional/Desktop": 48,
+    "Light/Professional/Tablet": 48,
+    "Light/Professional/Mobile": 48,
+    "Dark/Professional/Desktop": 48,
+    "Dark/Professional/Tablet": 48,
+    "Dark/Professional/Mobile": 48
    }
   },
   {
@@ -645,6 +627,78 @@
     "Dark/Professional/Desktop": 24,
     "Dark/Professional/Tablet": 24,
     "Dark/Professional/Mobile": 24
+   }
+  },
+  {
+   "name": "table-cell-padding-block",
+   "type": "number",
+   "values": {
+    "Light/Vibrant/Desktop": 12,
+    "Light/Vibrant/Tablet": 12,
+    "Light/Vibrant/Mobile": 12,
+    "Dark/Vibrant/Desktop": 12,
+    "Dark/Vibrant/Tablet": 12,
+    "Dark/Vibrant/Mobile": 12,
+    "Light/Professional/Desktop": 12,
+    "Light/Professional/Tablet": 12,
+    "Light/Professional/Mobile": 12,
+    "Dark/Professional/Desktop": 12,
+    "Dark/Professional/Tablet": 12,
+    "Dark/Professional/Mobile": 12
+   }
+  },
+  {
+   "name": "table-cell-padding-inline",
+   "type": "number",
+   "values": {
+    "Light/Vibrant/Desktop": 8,
+    "Light/Vibrant/Tablet": 8,
+    "Light/Vibrant/Mobile": 8,
+    "Dark/Vibrant/Desktop": 8,
+    "Dark/Vibrant/Tablet": 8,
+    "Dark/Vibrant/Mobile": 8,
+    "Light/Professional/Desktop": 8,
+    "Light/Professional/Tablet": 8,
+    "Light/Professional/Mobile": 8,
+    "Dark/Professional/Desktop": 8,
+    "Dark/Professional/Tablet": 8,
+    "Dark/Professional/Mobile": 8
+   }
+  },
+  {
+   "name": "radius-card",
+   "type": "number",
+   "values": {
+    "Light/Vibrant/Desktop": 20,
+    "Light/Vibrant/Tablet": 20,
+    "Light/Vibrant/Mobile": 20,
+    "Dark/Vibrant/Desktop": 20,
+    "Dark/Vibrant/Tablet": 20,
+    "Dark/Vibrant/Mobile": 20,
+    "Light/Professional/Desktop": 3,
+    "Light/Professional/Tablet": 3,
+    "Light/Professional/Mobile": 3,
+    "Dark/Professional/Desktop": 3,
+    "Dark/Professional/Tablet": 3,
+    "Dark/Professional/Mobile": 3
+   }
+  },
+  {
+   "name": "radius-control",
+   "type": "number",
+   "values": {
+    "Light/Vibrant/Desktop": 16,
+    "Light/Vibrant/Tablet": 16,
+    "Light/Vibrant/Mobile": 16,
+    "Dark/Vibrant/Desktop": 16,
+    "Dark/Vibrant/Tablet": 16,
+    "Dark/Vibrant/Mobile": 16,
+    "Light/Professional/Desktop": 3,
+    "Light/Professional/Tablet": 3,
+    "Light/Professional/Mobile": 3,
+    "Dark/Professional/Desktop": 3,
+    "Dark/Professional/Tablet": 3,
+    "Dark/Professional/Mobile": 3
    }
   },
   {
@@ -717,24 +771,6 @@
     "Dark/Professional/Desktop": "#1D2420",
     "Dark/Professional/Tablet": "#1D2420",
     "Dark/Professional/Mobile": "#1D2420"
-   }
-  },
-  {
-   "name": "suite-label",
-   "type": "string",
-   "values": {
-    "Light/Vibrant/Desktop": "精緻活力 · 潮汐",
-    "Light/Vibrant/Tablet": "精緻活力 · 潮汐",
-    "Light/Vibrant/Mobile": "精緻活力 · 潮汐",
-    "Dark/Vibrant/Desktop": "精緻活力 · 潮汐",
-    "Dark/Vibrant/Tablet": "精緻活力 · 潮汐",
-    "Dark/Vibrant/Mobile": "精緻活力 · 潮汐",
-    "Light/Professional/Desktop": "精緻專業 · 石墨紫",
-    "Light/Professional/Tablet": "精緻專業 · 石墨紫",
-    "Light/Professional/Mobile": "精緻專業 · 石墨紫",
-    "Dark/Professional/Desktop": "精緻專業 · 石墨紫",
-    "Dark/Professional/Tablet": "精緻專業 · 石墨紫",
-    "Dark/Professional/Mobile": "精緻專業 · 石墨紫"
    }
   },
   {

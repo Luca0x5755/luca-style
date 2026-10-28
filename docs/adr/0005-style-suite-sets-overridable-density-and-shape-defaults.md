@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # A style suite sets defaults for density and component shape, which a project may override
 

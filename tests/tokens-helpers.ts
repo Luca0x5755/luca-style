@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { cp, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,21 @@ export async function makeWorkspace() {
 export function runGenerator(cwd: string, source = 'src', out = 'out', extra: string[] = []) {
   const result = spawnSync(process.execPath, [generator, '--source', source, '--out', out, ...extra], { cwd, encoding: 'utf8' });
   return { status: result.status, stderr: result.stderr, stdout: result.stdout };
+}
+
+// 在暫存工作區改一份分層檔後執行產生器，回傳結果與工作區根目錄的內容（用來確認失敗時沒有寫出 out）。
+export async function buildWithout(layer: string, edit: (tokens: Record<string, Record<string, unknown>>) => void) {
+  const workspace = await makeWorkspace();
+  try {
+    const file = join(workspace.source, layer);
+    const tokens = await readJson(file);
+    edit(tokens);
+    await writeFile(file, JSON.stringify(tokens, null, 2));
+    const result = runGenerator(workspace.root);
+    return { ...result, outputs: await readdir(workspace.root) };
+  } finally {
+    await workspace.dispose();
+  }
 }
 
 export const readText = async (path: string) => (await readFile(path, 'utf8')).replace(/\r\n/g, '\n');
