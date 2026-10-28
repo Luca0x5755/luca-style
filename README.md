@@ -79,6 +79,17 @@ npm test
 - `npm run build:pages`：以 `/luca-style/` 為 base 建置 GitHub Pages 靜態輸出到 `apps/showcase/dist-pages`。push 到 `main` 後由 `.github/workflows/pages.yml` 驗證並部署。
 - `npm run screenshots`：重新產生 `docs/images/` 的四張截圖（使用 4177 port，不屬於 `npm test`）；`npm run verify:screenshots` 驗證產生結果穩定。
 
+### 截圖基準
+
+樣張每一頁（含找不到頁面）× 兩種風格套系 × 日間／暗黑 × 寬度 1280／834／390，共 72 張，存於 `tests/__screenshots__/`（PR-STYLE-42）；只含 Success 狀態，設計基礎頁的密度與外形切換維持預設，不在基準內。基準只在 Playwright 官方 Linux Docker 映像（版本與 `@playwright/test` 一致）產生與比對，因為 Windows 與 Linux 字型渲染不同；本機 `npm test` 不含截圖比對。需要 Docker 與 4173 port；首次會下載映像，並在容器內安裝依賴（放在命名 volume `luca-style-visual-node-modules`，不動本機 `node_modules`）。`npm run screenshots` 產生的是 README 用圖，不做比對，與此基準無關。
+
+```sh
+npm run test:visual    # 在 Docker 內與基準比對，不符即失敗
+npm run update:visual  # 在 Docker 內更新基準；之後檢查並提交 tests/__screenshots__/
+```
+
+CI 的 `visual` job（`.github/workflows/pages.yml`）用同一個映像比對，通過後才部署。升級 `@playwright/test` 時須同步改 pages.yml 的映像標籤並重新產生基準。
+
 ## 授權
 
 程式碼與文件以 [MIT License](LICENSE) 釋出。`packages/react/fonts/` 內的字體維持 SIL Open Font License 1.1，再散布時須保留對應的 OFL 檔案。

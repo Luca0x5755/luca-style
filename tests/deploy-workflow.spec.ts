@@ -21,9 +21,9 @@ test('workflow runs only on push to main', () => {
   expect(on).not.toContain('pull_request');
 });
 
-test('deploy job needs the verify job', () => {
-  expect(jobNames()).toEqual(['verify', 'deploy']);
-  expect(job('deploy')).toMatch(/^\s+needs:\s*(verify|\[\s*verify\s*\])\s*$/m);
+test('deploy job needs both the verify and the visual jobs', () => {
+  expect(jobNames()).toEqual(['verify', 'visual', 'deploy']);
+  expect(job('deploy')).toMatch(/^\s+needs:\s*\[\s*verify\s*,\s*visual\s*\]\s*$/m);
 });
 
 test('verify job runs build, typecheck, lint and Playwright in order', () => {

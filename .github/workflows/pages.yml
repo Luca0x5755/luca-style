@@ -38,8 +38,21 @@ jobs:
         with:
           path: apps/showcase/dist-pages
 
+  # 截圖比對：與本機 npm run test:visual 使用同一個官方 Linux 映像（版本須與 @playwright/test 一致，
+  # tests/visual-config.spec.ts 會檢查）。container 是 job 層級設定，所以獨立成一個 job。
+  visual:
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
+    env:
+      PW_VISUAL: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright test --project=visual --update-snapshots=none
+
   deploy:
-    needs: verify
+    needs: [verify, visual]
     runs-on: ubuntu-latest
     permissions:
       pages: write

@@ -17,6 +17,8 @@
     "build:pages": "npm run build:pages -w @luca-style/showcase",
     "preview": "npm run preview -w @luca-style/showcase",
     "test": "playwright test",
+    "test:visual": "node scripts/visual-docker.mjs test",
+    "update:visual": "node scripts/visual-docker.mjs update",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test:consumer": "node scripts/verify-consumer.mjs",
