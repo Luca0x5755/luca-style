@@ -16,6 +16,9 @@
   },
   "scripts": {
     "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",
-    "build": "node generate.mjs"
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.7.1"
   }
 }

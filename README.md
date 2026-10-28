@@ -56,7 +56,7 @@ import '@luca-style/react/css';
 
 ## 開發與驗證
 
-變數來源為 `packages/tokens/src/tokens.json`。修改後執行 `npm run generate`，再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
+變數來源為 `packages/tokens/src/` 下的 DTCG 分層檔（`base`、`mode/<明暗>`、`suite/<套系>/<common|明暗>`、`typography`），每個變數都要有 `$value`、`$type` 與 `$description`。修改後執行 `npm run generate`，由 Style Dictionary 重新產生輸出；任一「風格套系 × 明暗模式」組合缺值時建置失敗並列出缺的變數。之後再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
 
 ```sh
 npm run build

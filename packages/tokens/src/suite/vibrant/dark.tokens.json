@@ -1,0 +1,32 @@
+{
+  "success": {
+    "$value": "#7ED4AB",
+    "$type": "color",
+    "$description": "語意狀態色：成功；須搭配文字或圖示，不單靠顏色傳達"
+  },
+  "warning": {
+    "$value": "#EAC678",
+    "$type": "color",
+    "$description": "語意狀態色：警告；須搭配文字或圖示，不單靠顏色傳達"
+  },
+  "error": {
+    "$value": "#F29C96",
+    "$type": "color",
+    "$description": "語意狀態色：錯誤；須搭配文字或圖示，不單靠顏色傳達"
+  },
+  "accent": {
+    "$value": "#64C2BC",
+    "$type": "color",
+    "$description": "主要強調色，用於主要按鈕、連結與選取狀態"
+  },
+  "accent-secondary": {
+    "$value": "#E8A18B",
+    "$type": "color",
+    "$description": "點綴色，用於次要強調與裝飾"
+  },
+  "accent-soft": {
+    "$value": "#173637",
+    "$type": "color",
+    "$description": "柔和強調底色，用於選取列、標籤與指標卡底"
+  }
+}

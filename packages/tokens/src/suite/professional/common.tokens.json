@@ -1,0 +1,42 @@
+{
+  "radius-card": {
+    "$value": ".1875rem",
+    "$type": "dimension",
+    "$description": "卡片與容器的圓角"
+  },
+  "radius-control": {
+    "$value": ".1875rem",
+    "$type": "dimension",
+    "$description": "按鈕與操作元件的圓角"
+  },
+  "card-padding": {
+    "$value": "1.25rem",
+    "$type": "dimension",
+    "$description": "卡片內距"
+  },
+  "gap-section": {
+    "$value": "1.5rem",
+    "$type": "dimension",
+    "$description": "頁面區段之間的間距"
+  },
+  "border-width": {
+    "$value": "1.5px",
+    "$type": "dimension",
+    "$description": "卡片與操作元件的邊框粗細"
+  },
+  "metric-border-left": {
+    "$value": "3px",
+    "$type": "dimension",
+    "$description": "指標卡左側邊框的粗細"
+  },
+  "metric-shadow": {
+    "$value": "none",
+    "$type": "shadow",
+    "$description": "指標卡的陰影；none 表示不加陰影"
+  },
+  "metric-background": {
+    "$value": "var(--surface)",
+    "$type": "color",
+    "$description": "指標卡的底色，可參照其他變數"
+  }
+}

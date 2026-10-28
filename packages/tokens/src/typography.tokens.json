@@ -1,0 +1,218 @@
+{
+  "hero": {
+    "mobile": {
+      "$value": "2rem",
+      "$type": "dimension",
+      "$description": "首屏主標在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "2.75rem",
+      "$type": "dimension",
+      "$description": "首屏主標在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "3.5rem",
+      "$type": "dimension",
+      "$description": "首屏主標在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 700,
+      "$type": "fontWeight",
+      "$description": "首屏主標的字重"
+    },
+    "lineHeight": {
+      "$value": 1.2,
+      "$type": "number",
+      "$description": "首屏主標的行高（相對字級的倍數）"
+    }
+  },
+  "title": {
+    "mobile": {
+      "$value": "1.5rem",
+      "$type": "dimension",
+      "$description": "頁面標題在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "1.75rem",
+      "$type": "dimension",
+      "$description": "頁面標題在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "2rem",
+      "$type": "dimension",
+      "$description": "頁面標題在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 700,
+      "$type": "fontWeight",
+      "$description": "頁面標題的字重"
+    },
+    "lineHeight": {
+      "$value": 1.3,
+      "$type": "number",
+      "$description": "頁面標題的行高（相對字級的倍數）"
+    }
+  },
+  "section": {
+    "mobile": {
+      "$value": "1.25rem",
+      "$type": "dimension",
+      "$description": "區段標題在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "1.375rem",
+      "$type": "dimension",
+      "$description": "區段標題在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "1.5rem",
+      "$type": "dimension",
+      "$description": "區段標題在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 600,
+      "$type": "fontWeight",
+      "$description": "區段標題的字重"
+    },
+    "lineHeight": {
+      "$value": 1.4,
+      "$type": "number",
+      "$description": "區段標題的行高（相對字級的倍數）"
+    }
+  },
+  "card": {
+    "mobile": {
+      "$value": "1.125rem",
+      "$type": "dimension",
+      "$description": "卡片標題在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "1.125rem",
+      "$type": "dimension",
+      "$description": "卡片標題在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "1.125rem",
+      "$type": "dimension",
+      "$description": "卡片標題在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 600,
+      "$type": "fontWeight",
+      "$description": "卡片標題的字重"
+    },
+    "lineHeight": {
+      "$value": 1.5,
+      "$type": "number",
+      "$description": "卡片標題的行高（相對字級的倍數）"
+    }
+  },
+  "body": {
+    "mobile": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "內文在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "內文在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "內文在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 400,
+      "$type": "fontWeight",
+      "$description": "內文的字重"
+    },
+    "lineHeight": {
+      "$value": 1.75,
+      "$type": "number",
+      "$description": "內文的行高（相對字級的倍數）"
+    }
+  },
+  "control": {
+    "mobile": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "操作元件文字在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "操作元件文字在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "操作元件文字在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 500,
+      "$type": "fontWeight",
+      "$description": "操作元件文字的字重"
+    },
+    "lineHeight": {
+      "$value": 1.5,
+      "$type": "number",
+      "$description": "操作元件文字的行高（相對字級的倍數）"
+    }
+  },
+  "secondary": {
+    "mobile": {
+      "$value": ".875rem",
+      "$type": "dimension",
+      "$description": "次要文字在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": ".875rem",
+      "$type": "dimension",
+      "$description": "次要文字在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": ".875rem",
+      "$type": "dimension",
+      "$description": "次要文字在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 400,
+      "$type": "fontWeight",
+      "$description": "次要文字的字重"
+    },
+    "lineHeight": {
+      "$value": 1.6,
+      "$type": "number",
+      "$description": "次要文字的行高（相對字級的倍數）"
+    }
+  },
+  "helper": {
+    "mobile": {
+      "$value": ".75rem",
+      "$type": "dimension",
+      "$description": "輔助說明文字在手機（未滿 600px）的字級"
+    },
+    "tablet": {
+      "$value": ".75rem",
+      "$type": "dimension",
+      "$description": "輔助說明文字在平板（600px 起）的字級"
+    },
+    "desktop": {
+      "$value": ".75rem",
+      "$type": "dimension",
+      "$description": "輔助說明文字在桌面（1024px 起）的字級"
+    },
+    "weight": {
+      "$value": 500,
+      "$type": "fontWeight",
+      "$description": "輔助說明文字的字重"
+    },
+    "lineHeight": {
+      "$value": 1.5,
+      "$type": "number",
+      "$description": "輔助說明文字的行高（相對字級的倍數）"
+    }
+  }
+}

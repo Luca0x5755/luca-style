@@ -1,0 +1,72 @@
+{
+  "control-height": {
+    "$value": "3rem",
+    "$type": "dimension",
+    "$description": "操作元件（按鈕、輸入框、下拉選單）的最小高度"
+  },
+  "font-body": {
+    "$value": "Inter, 'Noto Sans TC', sans-serif",
+    "$type": "fontFamily",
+    "$description": "內文與介面文字的字型堆疊"
+  },
+  "font-data": {
+    "$value": "'IBM Plex Mono', monospace",
+    "$type": "fontFamily",
+    "$description": "數據、代碼與需要數字對齊處的等寬字型"
+  },
+  "space-1": {
+    "$value": "0.25rem",
+    "$type": "dimension",
+    "$description": "間距刻度 1（4px），用於內距與元素間距"
+  },
+  "space-2": {
+    "$value": "0.5rem",
+    "$type": "dimension",
+    "$description": "間距刻度 2（8px），用於內距與元素間距"
+  },
+  "space-3": {
+    "$value": "0.75rem",
+    "$type": "dimension",
+    "$description": "間距刻度 3（12px），用於內距與元素間距"
+  },
+  "space-4": {
+    "$value": "1rem",
+    "$type": "dimension",
+    "$description": "間距刻度 4（16px），用於內距與元素間距"
+  },
+  "space-6": {
+    "$value": "1.5rem",
+    "$type": "dimension",
+    "$description": "間距刻度 6（24px），用於內距與元素間距"
+  },
+  "space-8": {
+    "$value": "2rem",
+    "$type": "dimension",
+    "$description": "間距刻度 8（32px），用於內距與元素間距"
+  },
+  "space-12": {
+    "$value": "3rem",
+    "$type": "dimension",
+    "$description": "間距刻度 12（48px），用於內距與元素間距"
+  },
+  "space-16": {
+    "$value": "4rem",
+    "$type": "dimension",
+    "$description": "間距刻度 16（64px），用於內距與元素間距"
+  },
+  "motion-feedback": {
+    "$value": "120ms",
+    "$type": "duration",
+    "$description": "即時回饋的動效時長，例如滑過與按下"
+  },
+  "motion-standard": {
+    "$value": "180ms",
+    "$type": "duration",
+    "$description": "一般狀態轉換的動效時長"
+  },
+  "motion-region": {
+    "$value": "240ms",
+    "$type": "duration",
+    "$description": "區塊展開、收合等大範圍變化的動效時長"
+  }
+}
