@@ -54,3 +54,4 @@
 2026-10-28 — 0.2.0 規格（ISSUE-001）中沒有 ADR 的決策，其不採用的做法：滑過與按下不混入文字色、不維持調暗 6%；焦點框不用主色單圈或文字色單圈；專案強調色不只收日間主色、也不全部必填；沒給點綴色時不改用互補色或鄰近色；明暗偏好保存不整個移交使用端；整頁主題與防閃爍不維持由使用端自補；axe 不要求零違規；截圖基準不在本機 Windows 產生、也不各平台各存一份。規格議題刪除後以此行保留。
 2026-10-28 — PR-FILE-14（套系設計檔沒有 NaN 行高、重疊、超出父 frame）改為 retired：缺陷來自 .pen 轉 .fig 的頁面 frame 版面，兩個套系設計檔與 relayout-fig.js 已隨 ADR 0007 刪除；元件庫母版的版面限制記在需求承諾的實作補充。PR-FILE-06、07 保留編號，改寫為指向元件庫設計檔的檢查與路徑。
 2026-10-29 — `C/Nav/Mobile` 刪除 20×20 的主題圖示與選單圖示：程式的 Navigation 沒有這兩個按鈕（手機版連結換行排列），母版不畫程式沒有的控制項，也消除 touch-target-size 警告。`C/Checkbox` 高度改為 48px（control-height），與程式 `.luca-checkbox` 的最小高度一致。
+2026-10-29 — `C/State/Loading` 的載入圖片改回四個圖片填色（tide-light／tide-dark／square-light／square-dark，FIT，透明度 1／0／0／0），取代自 d74e893 起的四層純黑填色。原因是 OpenPencil 0.16.0 的 `.pen` 匯入（`@open-pencil/pen` 的 `convertFill`）把所有填色轉成 SOLID，圖片填色因此變黑；上游 open-pencil/open-pencil 尚無此回報。透明度沒有綁定欄位，檔案只存預設模式（活力／日間）的顯示，其他模式要在 App 手動切換。`openpencil lint` 的 `no-empty-frames` 只把 SOLID 視為填色，因此對此 frame 多報一條 info，屬誤報。
