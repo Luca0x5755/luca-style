@@ -10,6 +10,7 @@ Blocked by: ISSUE-003
 - 四種「套系 × 明暗」組合各匯出一張母版總覽 PNG，人工核對與合併前的兩份檔案一致。
 - 只為頁面或兩檔比對存在的腳本與測試已刪除（`paginate-fig`、`relayout-fig`、`verify-split`、`pages.js`、`layout-snippets.js` 等，以實際用途為準）；留下的腳本改指向新檔且測試通過。
 - `apply-variables.js` 的預設路徑與 `apply-variables.test.js` 對真實設計檔跑 `--check` 的測試，改指向 `luca-style-library.fig` 並照樣通過；這個測試不能因舊檔刪除而一起刪掉。（PR-FILE-16）
+- 母版的滑過、按下、焦點框改綁 ISSUE-006 新增的設計變數 `accent-hover`、`accent-pressed`、`focus-ring`（`C/Select/Open` 的焦點框目前綁 `accent`）；ISSUE-005 匯出母版檢查強調色時依賴這一項。（PR-FILE-18、PR-STYLE-46）
 - `GLOSSARY.md` 的「套系設計檔」「畫布頁」依 ADR 0007 改寫。
 - `docs/adoption-prompt.md` 等仍指向兩份套系設計檔或頁面 frame 的說明，改指向元件庫設計檔與樣張網站（`docs/delivery-verification.md` 的歷史紀錄不改）。
 

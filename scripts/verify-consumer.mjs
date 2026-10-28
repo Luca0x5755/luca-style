@@ -45,7 +45,8 @@ try {
   assert.equal(await theme.getAttribute('data-suite'),'vibrant');
   assert.equal(await theme.getAttribute('data-mode'),'dark');
   const colors=await theme.evaluate(element=>{const s=getComputedStyle(element);return [s.getPropertyValue('--accent').trim(),s.getPropertyValue('--success').trim()];});
-  assert.deepEqual(colors.map(value=>value.toLowerCase()),['#275a83','#7ed4ab']);
+  // 範例只給日間主色，暗黑主色由 deriveAccent 推算。
+  assert.deepEqual(colors.map(value=>value.toLowerCase()),['#7fb4e2','#7ed4ab']);
   await page.reload();
   assert.equal(await theme.getAttribute('data-mode'),'dark');
   for(const name of ['Inter 授權','Noto Sans TC 授權','IBM Plex Mono 授權']) {
