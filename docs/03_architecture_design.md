@@ -63,14 +63,14 @@ type ThemeProviderProps = {
   children: React.ReactNode;
 };
 
-declare function themeInitScript(): string;
+declare function themeInitScript(options?: { suite?: StyleSuite }): string; // suite 預設 "vibrant"
 ```
 
 - `vibrant` 對應精緻活力，`professional` 對應精緻專業。
 - `system` 表示跟隨裝置設定；`light` 與 `dark` 表示使用者明確選擇的模式。
 - 主題控制提供主題容器與切換介面；使用者偏好保存在目前網站，各專案不共用偏好。
 - `persist` 為 `true` 時，偏好存於瀏覽器儲存鍵 `luca-style-mode`；為 `false` 時不讀寫瀏覽器儲存。
-- `target` 為 `"document"` 時，主題屬性套在 `<html>`；`themeInitScript()` 回傳首屏腳本字串，在 React 掛載前依已存偏好設定 `<html>` 的主題屬性。
+- `target` 為 `"document"` 時，主題屬性（`data-luca-theme`、`data-suite`、`data-mode`）與強調色變數套在 `<html>`，不另包外層元素；卸載時移除。`themeInitScript()` 回傳不依賴任何 import 的首屏腳本字串，放在 `<head>`，在 React 掛載前依已存偏好設定 `<html>` 的三個主題屬性；`suite` 須與 `ThemeProvider` 相同。首屏腳本會讀取儲存，只與 `persist` 為 `true` 搭配。
 - 未指定 `density`、`shape` 時沿用風格套系的預設值；各等級的數值由前端規格定義。
 - `AccentInput` 只有 `light` 必填；`dark`、`soft` 未給時由 `ThemeProvider` 推算，`secondary` 未給時沿用主色。滑過、按下與焦點框由主色推算；風格套系預設色的推算值在建置時產生。
 - 元件透過語意設計變數取色，不直接綁定色票數值；專案強調色覆寫不改變語意狀態色的意思。

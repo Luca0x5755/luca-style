@@ -6,7 +6,7 @@ import {Foundations} from './foundations';
 import {isKnownRoute, stripBase, withBase} from './routes';
 import '@luca-style/react/fonts.css';
 import { createRoot } from 'react-dom/client';
-import { useLayoutEffect, useState } from 'react';
+import { useState } from 'react';
 import { Navigation, ThemeProvider, useTheme, type StyleSuite, type ColorMode } from '@luca-style/react';
 import '@luca-style/tokens/css';
 import '@luca-style/react/css';
@@ -15,13 +15,10 @@ import './styles.css';
 function App() {
   const [override, setOverride] = useState(false);
   const [suite, setSuite] = useState<StyleSuite>('vibrant');
-  return <ThemeProvider suite={suite} accent={override ? {light:{primary:"#9A4C32",secondary:"#BD7454",soft:"#F7F1EB",ink:"#FFFFFF"},dark:{primary:"#E8A18B",secondary:"#E6BE70",soft:"#382820",ink:"#151A18"}} : undefined}><Content suite={suite} setSuite={setSuite} override={override} setOverride={setOverride}/></ThemeProvider>;
+  return <ThemeProvider target="document" suite={suite} accent={override ? {light:{primary:"#9A4C32",secondary:"#BD7454",soft:"#F7F1EB",ink:"#FFFFFF"},dark:{primary:"#E8A18B",secondary:"#E6BE70",soft:"#382820",ink:"#151A18"}} : undefined}><Content suite={suite} setSuite={setSuite} override={override} setOverride={setOverride}/></ThemeProvider>;
 }
 function Content({suite,setSuite,override,setOverride}: {suite:StyleSuite; setSuite:(suite:StyleSuite)=>void; override:boolean; setOverride:(value:boolean)=>void}) {
   const {mode,resolvedMode,setMode} = useTheme();
-  useLayoutEffect(() => {
-    document.documentElement.dataset.mode = resolvedMode;
-  },[resolvedMode]);
   const suiteName = suite === 'vibrant' ? '精緻活力 · 潮汐' : '精緻專業 · 石墨紫';
   // route 為去掉 base 的路由；導覽連結含 base，currentPath 需同為含 base 的路徑才能比對 aria-current。
   const route = stripBase(window.location.pathname);

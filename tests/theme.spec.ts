@@ -15,12 +15,60 @@ test('document background resolves the theme before application assets load', as
     await page.route('**/*',route => ['script','stylesheet'].includes(route.request().resourceType()) ? route.abort() : route.continue());
     for (const path of ['/','/foundations','/templates/product']) {
       await page.goto(path);
+      // React 未掛載（#root 為空），以下屬性全由 <head> 內的首屏腳本設定。
       await expect(page.locator('#root')).toBeEmpty();
+      await expect(page.locator('html')).toHaveAttribute('data-luca-theme','');
+      await expect(page.locator('html')).toHaveAttribute('data-suite','vibrant');
+      await expect(page.locator('html')).toHaveAttribute('data-mode',scenario.expected);
       await expect(page.locator('html')).toHaveCSS('background-color',scenario.expected === 'dark' ? 'rgb(21, 26, 24)' : 'rgb(247, 247, 242)');
       await expect(page.locator('html')).toHaveCSS('color-scheme',scenario.expected);
     }
     await context.close();
   }
+});
+
+test('first-paint script runs in <head> before any stylesheet', async ({request}) => {
+  const html = await (await request.get('/')).text();
+  // 找出讀取偏好鍵的行內 <script>（沒有 src 屬性）。
+  const script = html.search(/<script>[^<]*luca-style-mode/);
+  const head = html.indexOf('</head>');
+  const stylesheet = html.indexOf('rel="stylesheet"');
+  expect(script).toBeGreaterThan(-1);
+  expect(stylesheet).toBeGreaterThan(-1);
+  expect(script).toBeLessThan(head);
+  expect(script).toBeLessThan(stylesheet);
+});
+
+test('a preference stored by 0.1.0 still applies and is written back in the same format', async ({browser}) => {
+  const context = await browser.newContext({colorScheme:'light'});
+  // 0.1.0 的格式：鍵 luca-style-mode、值為純字串。
+  await context.addInitScript(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('luca-style-mode','dark'); sessionStorage.setItem('seeded','1'); } });
+  const page = await context.newPage();
+  await page.goto('/');
+  await expect(page.getByLabel('明暗模式')).toHaveValue('dark');
+  await expect(page.locator('html')).toHaveAttribute('data-mode','dark');
+  await page.getByLabel('明暗模式').selectOption('light');
+  expect(await page.evaluate(() => localStorage.getItem('luca-style-mode'))).toBe('light');
+  await page.getByLabel('明暗模式').selectOption('system');
+  expect(await page.evaluate(() => localStorage.getItem('luca-style-mode'))).toBeNull();
+  await context.close();
+});
+
+test('showcase themes the whole document through ThemeProvider', async ({page}) => {
+  await page.emulateMedia({colorScheme:'light'});
+  await page.goto('/');
+  const html = page.locator('html');
+  await expect(page.locator('[data-luca-theme]')).toHaveCount(1);
+  await expect(html).toHaveAttribute('data-luca-theme','');
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await expect(html).toHaveAttribute('data-mode','dark');
+  await expect(html).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await expect(html).toHaveCSS('color-scheme','dark');
+  await page.getByLabel('明暗模式').selectOption('light');
+  await expect(html).toHaveCSS('background-color','rgb(247, 247, 242)');
+  await expect(html).toHaveCSS('color-scheme','light');
+  await page.getByLabel('風格套系').selectOption('professional');
+  await expect(html).toHaveAttribute('data-suite','professional');
 });
 
 test('project accent override keeps metric text readable in both suites and modes', async ({page}) => {
