@@ -11,8 +11,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 export const script = (name) => resolve(here, name);
 export const mockup = resolve(here, '../../docs/mockup');
 export const themes = join(mockup, 'themes');
-export const vibrantFig = join(mockup, 'components-vibrant.fig');
-export const professionalFig = join(mockup, 'components-professional.fig');
+export const libraryFig = join(mockup, 'luca-style-library.fig');
 
 const tempDirs = [];
 after(() => tempDirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
@@ -30,7 +29,7 @@ export const mutate = (src, dst, code) => {
   return dst;
 };
 
-// 片段共用前置：依名稱找 frame（跨所有畫布頁）、依索引路徑找節點。
+// 片段共用前置：依名稱找頂層節點（跨所有畫布頁）、依索引路徑找節點。
 export const PRELUDE = `
 const frameOf = (name) => figma.root.children.flatMap((p) => p.children).find((f) => f.name === name)
 const at = (f, p) => (p === '-' ? f : p.split('.').reduce((n, i) => n.children[+i], f))

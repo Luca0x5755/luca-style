@@ -16,16 +16,16 @@ _避免_：用高彩度覆蓋所有內容、把每個元件都做成裝飾焦點
 預設標準密度、俐落外形的風格套系，整體適中偏密集；預設強調色為 P3「石墨紫」。
 _避免_：縮小文字到難以閱讀、以密度取代清楚的資訊層次。
 
-**套系設計檔**：
-一個風格套系對應的 `.fig` 檔，含該套系全部頁面 frame，以及一份與另一套系內容相同的母版副本；目前有 `components-vibrant.fig` 與 `components-professional.fig`。設計稿正本是這兩個檔案，不是 `.pen`。
-_避免_：唯一設計檔、單檔元件庫、components.pen。
+**元件庫設計檔**：
+唯一的設計檔 `docs/mockup/luca-style-library.fig`（ADR 0007），只含設計變數與 23 個母版，沒有頁面 frame。變數以 Suite、Mode、Device 模式切換；同時依套系與明暗變化的變數放在 Suite x Mode 集合。使用端的設計稿複製此檔開始，頁面範本以樣張網站為準。設計稿正本是這個檔案，不是 `.pen`。
+_避免_：套系設計檔、兩份設計檔、components-vibrant.fig、components-professional.fig、components.pen。
 
 **畫布頁**：
-套系設計檔內的一個 OpenPencil page（App 左側頁籤）。同一產品頁面的全部 frame 放在名稱相同的畫布頁；母版、元件檢視板、目錄與標題放在 `Library guide`。畫布頁只用來分組 frame，不改變 frame 名稱，也不是另一份設計檔。
-_避免_：把畫布頁叫「頁面」（那是產品頁面）、把它當成拆檔（拆檔是 ADR 0003 延後的另一件事）。
+OpenPencil 的一個 page（App 左側頁籤）。元件庫設計檔只有一個有內容的畫布頁，放 23 個母版；另有 App 為存放變數自動維持的空頁 `Internal Only Canvas`，不放內容。畫布頁不用來分組頁面 frame（設計檔不再有頁面 frame），也不是另一份設計檔。
+_避免_：把畫布頁叫「頁面」（那是產品頁面）、為產品頁面另開畫布頁。
 
 **頁面**：
-樣張與範本中的一個產品畫面群，例如 Home、Foundations、Components、Product、Intro、NotFound；在設計檔裡以「頁面 frame」呈現，frame 名稱第一段就是頁名。
+樣張與範本中的一個產品畫面群，例如 Home、Foundations、Components、Product、Intro、NotFound；頁面範本以樣張網站為準，設計檔不畫頁面。
 _避免_：用來指 OpenPencil 的 page（請用「畫布頁」）。
 
 **明暗模式**：

@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # Keep one component library design file, without page frames
 
@@ -9,6 +9,8 @@ Consumer projects start their own mockup by copying this file, then importing th
 This amends ADR 0003, which kept two suite files each carrying every page frame and its own copy of the masters.
 
 Evidence: neither consumer project uses the luca-style design files. `automated_trading` draws in its own `docs/monitoring-platform.fig` and records that it never compared against the luca-style file; `badminton` draws in its own `docs/mockup/squadup.pen`. Agents draw each project's mockup from scratch, so the page frames in luca-style serve nobody, while the masters and variables are what a new mockup lacks. In the benchmark (`docs/research/design-system-benchmark.md`), Radix Themes and shadcn/ui keep no design file and use the site as reference; Carbon, Primer and Spectrum keep one because designers draw new screens in it.
+
+The two-mode-group wording ("Suite" and "Mode" beside each other) did not survive contact with the tool: a node holds one mode per collection and the offline export does not resolve aliases, so the 14 variables that vary by both suite and mode live in a fourth collection, `Suite x Mode`, with four modes. Switching suite and mode therefore sets three collections together. See `docs/decision-log.md`.
 
 The split in ADR 0003 existed because one file with every page exceeded OpenPencil's 10,000-node edit limit. Without pages the file is far below it.
 

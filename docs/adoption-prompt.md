@@ -24,7 +24,7 @@
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
    - packages/tokens/src/（DTCG 分層檔）：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 OpenPencil 工具開啟所選套系的設計檔：活力為 docs/mockup/components-vibrant.fig，專業為 docs/mockup/components-professional.fig，一次只需開一個。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。
+3. 需要核對視覺設計時，使用 OpenPencil 工具開啟元件庫設計檔 docs/mockup/luca-style-library.fig（只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準），以 Suite、Mode、Suite x Mode 三個集合的模式切換套系與明暗。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】
@@ -69,9 +69,9 @@
 2. 在設計來源執行 `git log --oneline <舊 commit>..HEAD -- packages apps docs/05_frontend_spec.md docs/03_architecture_design.md`，列出舊 commit 之後與本專案有關的變更。舊 commit 不明時，改以下列差異清單核對。
 
 【已知差異與處理】
-3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開所選套系的設計檔，活力為 docs/mockup/components-vibrant.fig，專業為 docs/mockup/components-professional.fig，一次只開一個，透過 OpenPencil 工具讀取。每個檔案都含該套系的全部頁面 frame 與一份 22 個母版；frame 名稱規則不變（<頁>/<套系>/<模式>/<裝置>/<狀態>），在 OpenPencil 內依產品頁面分在同名畫布頁，母版與元件檢視板在 Library guide。工具不可用時，明確記錄尚未重新做 mockup 比對。
+3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.fig，透過 OpenPencil 工具讀取。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。
 4. tokens 與套件：比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔與專案目前使用的數值。公開 API 與 0.1.0 版本沒有變，若數值一致就不重新安裝；不一致才依 docs/consumer-guide.md 重新建置、封裝並安裝同版 tarball（兩個套件版本須一致），或同步其他框架的自建 tokens。
-5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為所選套系的 `.fig` 路徑。
+5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.fig` 的路徑。
 6. 若專案在第 1 步記錄的 commit 之前就有自訂覆寫（強調色、密度、資料色），確認它們沒有被新的套系預設取代；覆寫值不變。
 
 【驗收】

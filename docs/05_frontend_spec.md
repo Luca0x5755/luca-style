@@ -160,7 +160,7 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 
 ## 5.5 共用 OpenPencil 元件（能力：設計系統）
 
-元件庫設計檔 `docs/mockup/luca-style-library.fig` 只含設計變數與共用元件母版，涵蓋按鈕、表單、導覽、卡片、表格與狀態提示，不含頁面 frame。變數以 `Suite`（Vibrant、Professional）、`Mode`（Light、Dark）、`Device`（Desktop、Tablet、Mobile）模式切換；母版的填色、描邊、字型、圓角與間距綁定設計變數，每個母版只有一份。
+元件庫設計檔 `docs/mockup/luca-style-library.fig` 只含設計變數與共用元件母版，涵蓋按鈕、表單、導覽、卡片、表格與狀態提示，不含頁面 frame。變數以 `Suite`（Vibrant、Professional）、`Mode`（Light、Dark）、`Device`（Desktop、Tablet、Mobile）模式切換；母版的填色、描邊、字型、圓角與間距綁定設計變數，每個母版只有一份。同時依套系與明暗變化的變數（主色、滑過與按下色、焦點框色、成功／警告／錯誤色等）放在 `Suite x Mode` 集合，模式為「套系 / 明暗」四種組合，因為 OpenPencil 一個節點在每個集合只持有一個模式，且匯出不解別名；所以切換套系與明暗時要同時設定 `Suite`、`Mode`、`Suite x Mode` 三個集合的模式（決策見[決策紀錄](decision-log.md)）。
 
 使用端的設計稿複製此檔開始，匯入專案強調色後以母版組合頁面；設計變數由程式產生，可重新匯入。
 
@@ -221,6 +221,6 @@ Select 選單：
 
 ### 5.5.4 畫面核對（能力：設計系統）
 
-元件庫設計檔含 23 個母版，以元件名稱搜尋定位，例如 `C/Select/Open`。核對方式為切換 `Suite` 與 `Mode` 模式截圖檢視母版，並比對變數值與程式產生的資料一致（PR-FILE-16）。
+元件庫設計檔含 23 個母版，以元件名稱搜尋定位，例如 `C/Select/Open`。核對方式為切換 `Suite`、`Mode` 與 `Suite x Mode` 模式截圖檢視母版，並比對變數值與程式產生的資料一致（PR-FILE-16）。
 
 頁面截圖檢視在樣張網站進行，涵蓋六頁的桌面、平板、手機及載入、空白、錯誤狀態；檢查文字換行、主要操作、表格、表單及頁尾。React 瀏覽器與使用端驗證另見[交付驗證](delivery-verification.md)。

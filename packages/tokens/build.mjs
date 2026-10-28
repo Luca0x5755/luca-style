@@ -6,7 +6,7 @@ import { deriveAccent } from './accent.js';
 
 // 設計變數產生器：讀 DTCG 分層原始檔，經 Style Dictionary 產生與 0.1.0 相同結構的 css、data、typography。
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
-// --fig <路徑>：另外寫一份設計檔變數資料（scripts/design/apply-variables.js 讀它寫入套系設計檔）；
+// --fig <路徑>：另外寫一份設計檔變數資料（scripts/design/apply-variables.js 讀它寫入元件庫設計檔）；
 //   不放進 --out，因為 dist 會發布到 npm，且公開輸出只有三份。
 const { values: args } = parseArgs({ options: {
   source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, fig: { type: 'string' },
@@ -255,6 +255,32 @@ for (const token of typographyTokens) {
     if (!devices[field] || devices[field] === device) setFig(name, `${mode}/${suite}/${device}`, converted, `${role}.${devices[field] ? 'size' : field}`);
   }
 }
+// 設計檔的集合與模式：Figma 一個節點在每個集合只持有一個模式，所以一個集合的模式只對應一組軸。
+// 變數依「實際變化的軸」放進對應集合；套系與明暗同時變化的變數沒有別名可用（匯出不解別名，ISSUE-004），
+// 放進模式為「套系 / 明暗」四種組合的 Suite x Mode 集合。其他跨軸組合（例如明暗加裝置）無法建模，直接失敗。
+const figKey = (mode, suite, device) => `${mode}/${suite}/${device}`;
+const figCollections = [
+  { name: 'Base', axes: [], modes: ['Default'] },
+  { name: 'Suite', axes: ['suite'], modes: figAxes.suite },
+  { name: 'Mode', axes: ['mode'], modes: figAxes.mode },
+  { name: 'Device', axes: ['device'], modes: figAxes.device },
+  { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: figAxes.suite.flatMap(suite => figAxes.mode.map(mode => `${suite} / ${mode}`)) },
+];
+// 某一軸上是否變化：固定其他兩軸的任一組合，換這一軸的值就得到不同的值。
+const variesOn = (variable, axis) => {
+  const others = Object.keys(figAxes).filter(other => other !== axis);
+  return figAxes[others[0]].some(x => figAxes[others[1]].some(y =>
+    new Set(figAxes[axis].map(value => {
+      const pick = { [others[0]]: x, [others[1]]: y, [axis]: value };
+      return JSON.stringify(variable.values[figKey(pick.mode, pick.suite, pick.device)]);
+    })).size > 1));
+};
+for (const variable of figVariables.values()) {
+  const varying = Object.keys(figAxes).filter(axis => variesOn(variable, axis));
+  const target = figCollections.find(collection => collection.axes.length === varying.length && varying.every(axis => collection.axes.includes(axis)));
+  if (!target) figProblems.push(`無法轉成設計檔變數：${variable.name}（同時依 ${varying.join('、')} 變化，沒有對應的集合）`);
+  else variable.collection = target.name;
+}
 if (figProblems.length) {
   console.error([...new Set(figProblems)].join('\n'));
   process.exit(1);
@@ -262,6 +288,7 @@ if (figProblems.length) {
 const figData = {
   $generated: '由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑，再執行 node scripts/design/apply-variables.js 寫入設計檔。',
   axes: figAxes,
+  collections: figCollections,
   count: figVariables.size,
   variables: [...figVariables.values()],
 };

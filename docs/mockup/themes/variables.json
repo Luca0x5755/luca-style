@@ -15,6 +15,59 @@
    "Mobile"
   ]
  },
+ "collections": [
+  {
+   "name": "Base",
+   "axes": [],
+   "modes": [
+    "Default"
+   ]
+  },
+  {
+   "name": "Suite",
+   "axes": [
+    "suite"
+   ],
+   "modes": [
+    "Vibrant",
+    "Professional"
+   ]
+  },
+  {
+   "name": "Mode",
+   "axes": [
+    "mode"
+   ],
+   "modes": [
+    "Light",
+    "Dark"
+   ]
+  },
+  {
+   "name": "Device",
+   "axes": [
+    "device"
+   ],
+   "modes": [
+    "Desktop",
+    "Tablet",
+    "Mobile"
+   ]
+  },
+  {
+   "name": "Suite x Mode",
+   "axes": [
+    "suite",
+    "mode"
+   ],
+   "modes": [
+    "Vibrant / Light",
+    "Vibrant / Dark",
+    "Professional / Light",
+    "Professional / Dark"
+   ]
+  }
+ ],
  "count": 72,
  "variables": [
   {
@@ -33,7 +86,8 @@
     "Dark/Professional/Desktop": "Inter",
     "Dark/Professional/Tablet": "Inter",
     "Dark/Professional/Mobile": "Inter"
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "font-zh",
@@ -51,7 +105,8 @@
     "Dark/Professional/Desktop": "Noto Sans TC",
     "Dark/Professional/Tablet": "Noto Sans TC",
     "Dark/Professional/Mobile": "Noto Sans TC"
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "font-body",
@@ -69,7 +124,8 @@
     "Dark/Professional/Desktop": "Inter",
     "Dark/Professional/Tablet": "Inter",
     "Dark/Professional/Mobile": "Inter"
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "font-data",
@@ -87,7 +143,8 @@
     "Dark/Professional/Desktop": "IBM Plex Mono",
     "Dark/Professional/Tablet": "IBM Plex Mono",
     "Dark/Professional/Mobile": "IBM Plex Mono"
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-1",
@@ -105,7 +162,8 @@
     "Dark/Professional/Desktop": 4,
     "Dark/Professional/Tablet": 4,
     "Dark/Professional/Mobile": 4
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-2",
@@ -123,7 +181,8 @@
     "Dark/Professional/Desktop": 8,
     "Dark/Professional/Tablet": 8,
     "Dark/Professional/Mobile": 8
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-3",
@@ -141,7 +200,8 @@
     "Dark/Professional/Desktop": 12,
     "Dark/Professional/Tablet": 12,
     "Dark/Professional/Mobile": 12
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-4",
@@ -159,7 +219,8 @@
     "Dark/Professional/Desktop": 16,
     "Dark/Professional/Tablet": 16,
     "Dark/Professional/Mobile": 16
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-6",
@@ -177,7 +238,8 @@
     "Dark/Professional/Desktop": 24,
     "Dark/Professional/Tablet": 24,
     "Dark/Professional/Mobile": 24
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-8",
@@ -195,7 +257,8 @@
     "Dark/Professional/Desktop": 32,
     "Dark/Professional/Tablet": 32,
     "Dark/Professional/Mobile": 32
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-12",
@@ -213,7 +276,8 @@
     "Dark/Professional/Desktop": 48,
     "Dark/Professional/Tablet": 48,
     "Dark/Professional/Mobile": 48
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "space-16",
@@ -231,7 +295,8 @@
     "Dark/Professional/Desktop": 64,
     "Dark/Professional/Tablet": 64,
     "Dark/Professional/Mobile": 64
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "motion-feedback",
@@ -249,7 +314,8 @@
     "Dark/Professional/Desktop": 120,
     "Dark/Professional/Tablet": 120,
     "Dark/Professional/Mobile": 120
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "motion-standard",
@@ -267,7 +333,8 @@
     "Dark/Professional/Desktop": 180,
     "Dark/Professional/Tablet": 180,
     "Dark/Professional/Mobile": 180
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "motion-region",
@@ -285,7 +352,8 @@
     "Dark/Professional/Desktop": 240,
     "Dark/Professional/Tablet": 240,
     "Dark/Professional/Mobile": 240
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "loading-tide-light-opacity",
@@ -303,7 +371,8 @@
     "Dark/Professional/Desktop": 0,
     "Dark/Professional/Tablet": 0,
     "Dark/Professional/Mobile": 0
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "loading-tide-dark-opacity",
@@ -321,7 +390,8 @@
     "Dark/Professional/Desktop": 0,
     "Dark/Professional/Tablet": 0,
     "Dark/Professional/Mobile": 0
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "loading-square-light-opacity",
@@ -339,7 +409,8 @@
     "Dark/Professional/Desktop": 0,
     "Dark/Professional/Tablet": 0,
     "Dark/Professional/Mobile": 0
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "loading-square-dark-opacity",
@@ -357,7 +428,8 @@
     "Dark/Professional/Desktop": 100,
     "Dark/Professional/Tablet": 100,
     "Dark/Professional/Mobile": 100
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "accent-hover",
@@ -375,7 +447,8 @@
     "Dark/Professional/Desktop": "#BBB4E8",
     "Dark/Professional/Tablet": "#BBB4E8",
     "Dark/Professional/Mobile": "#BBB4E8"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "accent-pressed",
@@ -393,7 +466,8 @@
     "Dark/Professional/Desktop": "#CBC4F9",
     "Dark/Professional/Tablet": "#CBC4F9",
     "Dark/Professional/Mobile": "#CBC4F9"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "focus-ring",
@@ -411,7 +485,8 @@
     "Dark/Professional/Desktop": "#ABA4D7",
     "Dark/Professional/Tablet": "#ABA4D7",
     "Dark/Professional/Mobile": "#ABA4D7"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "bg",
@@ -429,7 +504,8 @@
     "Dark/Professional/Desktop": "#151A18",
     "Dark/Professional/Tablet": "#151A18",
     "Dark/Professional/Mobile": "#151A18"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "surface",
@@ -447,7 +523,8 @@
     "Dark/Professional/Desktop": "#1D2420",
     "Dark/Professional/Tablet": "#1D2420",
     "Dark/Professional/Mobile": "#1D2420"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "surface-subtle",
@@ -465,7 +542,8 @@
     "Dark/Professional/Desktop": "#252E28",
     "Dark/Professional/Tablet": "#252E28",
     "Dark/Professional/Mobile": "#252E28"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "text",
@@ -483,7 +561,8 @@
     "Dark/Professional/Desktop": "#EDF3ED",
     "Dark/Professional/Tablet": "#EDF3ED",
     "Dark/Professional/Mobile": "#EDF3ED"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "muted",
@@ -501,7 +580,8 @@
     "Dark/Professional/Desktop": "#A5B5A8",
     "Dark/Professional/Tablet": "#A5B5A8",
     "Dark/Professional/Mobile": "#A5B5A8"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "border",
@@ -519,7 +599,8 @@
     "Dark/Professional/Desktop": "#354139",
     "Dark/Professional/Tablet": "#354139",
     "Dark/Professional/Mobile": "#354139"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "control-border",
@@ -537,7 +618,8 @@
     "Dark/Professional/Desktop": "#65766B",
     "Dark/Professional/Tablet": "#65766B",
     "Dark/Professional/Mobile": "#65766B"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "accent-ink",
@@ -555,7 +637,8 @@
     "Dark/Professional/Desktop": "#151A18",
     "Dark/Professional/Tablet": "#151A18",
     "Dark/Professional/Mobile": "#151A18"
-   }
+   },
+   "collection": "Mode"
   },
   {
    "name": "suite-label",
@@ -573,7 +656,8 @@
     "Dark/Professional/Desktop": "精緻專業 · 石墨紫",
     "Dark/Professional/Tablet": "精緻專業 · 石墨紫",
     "Dark/Professional/Mobile": "精緻專業 · 石墨紫"
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "control-height",
@@ -591,7 +675,8 @@
     "Dark/Professional/Desktop": 48,
     "Dark/Professional/Tablet": 48,
     "Dark/Professional/Mobile": 48
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "card-padding",
@@ -609,7 +694,8 @@
     "Dark/Professional/Desktop": 20,
     "Dark/Professional/Tablet": 20,
     "Dark/Professional/Mobile": 20
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "gap-section",
@@ -627,7 +713,8 @@
     "Dark/Professional/Desktop": 24,
     "Dark/Professional/Tablet": 24,
     "Dark/Professional/Mobile": 24
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "table-cell-padding-block",
@@ -645,7 +732,8 @@
     "Dark/Professional/Desktop": 12,
     "Dark/Professional/Tablet": 12,
     "Dark/Professional/Mobile": 12
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "table-cell-padding-inline",
@@ -663,7 +751,8 @@
     "Dark/Professional/Desktop": 8,
     "Dark/Professional/Tablet": 8,
     "Dark/Professional/Mobile": 8
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "radius-card",
@@ -681,7 +770,8 @@
     "Dark/Professional/Desktop": 3,
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "radius-control",
@@ -699,7 +789,8 @@
     "Dark/Professional/Desktop": 3,
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "border-width",
@@ -717,7 +808,8 @@
     "Dark/Professional/Desktop": 1.5,
     "Dark/Professional/Tablet": 1.5,
     "Dark/Professional/Mobile": 1.5
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "metric-border-left",
@@ -735,7 +827,8 @@
     "Dark/Professional/Desktop": 3,
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "elevation-enabled",
@@ -753,7 +846,8 @@
     "Dark/Professional/Desktop": false,
     "Dark/Professional/Tablet": false,
     "Dark/Professional/Mobile": false
-   }
+   },
+   "collection": "Suite"
   },
   {
    "name": "card-highlight",
@@ -771,7 +865,8 @@
     "Dark/Professional/Desktop": "#1D2420",
     "Dark/Professional/Tablet": "#1D2420",
     "Dark/Professional/Mobile": "#1D2420"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "success",
@@ -789,7 +884,8 @@
     "Dark/Professional/Desktop": "#93C6B2",
     "Dark/Professional/Tablet": "#93C6B2",
     "Dark/Professional/Mobile": "#93C6B2"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "warning",
@@ -807,7 +903,8 @@
     "Dark/Professional/Desktop": "#DBC28B",
     "Dark/Professional/Tablet": "#DBC28B",
     "Dark/Professional/Mobile": "#DBC28B"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "error",
@@ -825,7 +922,8 @@
     "Dark/Professional/Desktop": "#DDA3B2",
     "Dark/Professional/Tablet": "#DDA3B2",
     "Dark/Professional/Mobile": "#DDA3B2"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "accent",
@@ -843,7 +941,8 @@
     "Dark/Professional/Desktop": "#ABA4D7",
     "Dark/Professional/Tablet": "#ABA4D7",
     "Dark/Professional/Mobile": "#ABA4D7"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "secondary",
@@ -861,7 +960,8 @@
     "Dark/Professional/Desktop": "#8BBDD8",
     "Dark/Professional/Tablet": "#8BBDD8",
     "Dark/Professional/Mobile": "#8BBDD8"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "accent-soft",
@@ -879,7 +979,8 @@
     "Dark/Professional/Desktop": "#2D2A3B",
     "Dark/Professional/Tablet": "#2D2A3B",
     "Dark/Professional/Mobile": "#2D2A3B"
-   }
+   },
+   "collection": "Suite x Mode"
   },
   {
    "name": "fs-hero",
@@ -897,7 +998,8 @@
     "Light/Professional/Desktop": 56,
     "Dark/Vibrant/Desktop": 56,
     "Dark/Professional/Desktop": 56
-   }
+   },
+   "collection": "Device"
   },
   {
    "name": "type-hero-weight",
@@ -915,7 +1017,8 @@
     "Dark/Professional/Desktop": 700,
     "Dark/Professional/Tablet": 700,
     "Dark/Professional/Mobile": 700
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-hero-line-height",
@@ -933,7 +1036,8 @@
     "Dark/Professional/Desktop": 1.2,
     "Dark/Professional/Tablet": 1.2,
     "Dark/Professional/Mobile": 1.2
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-title",
@@ -951,7 +1055,8 @@
     "Light/Professional/Desktop": 32,
     "Dark/Vibrant/Desktop": 32,
     "Dark/Professional/Desktop": 32
-   }
+   },
+   "collection": "Device"
   },
   {
    "name": "type-title-weight",
@@ -969,7 +1074,8 @@
     "Dark/Professional/Desktop": 700,
     "Dark/Professional/Tablet": 700,
     "Dark/Professional/Mobile": 700
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-title-line-height",
@@ -987,7 +1093,8 @@
     "Dark/Professional/Desktop": 1.3,
     "Dark/Professional/Tablet": 1.3,
     "Dark/Professional/Mobile": 1.3
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-section",
@@ -1005,7 +1112,8 @@
     "Light/Professional/Desktop": 24,
     "Dark/Vibrant/Desktop": 24,
     "Dark/Professional/Desktop": 24
-   }
+   },
+   "collection": "Device"
   },
   {
    "name": "type-section-weight",
@@ -1023,7 +1131,8 @@
     "Dark/Professional/Desktop": 600,
     "Dark/Professional/Tablet": 600,
     "Dark/Professional/Mobile": 600
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-section-line-height",
@@ -1041,7 +1150,8 @@
     "Dark/Professional/Desktop": 1.4,
     "Dark/Professional/Tablet": 1.4,
     "Dark/Professional/Mobile": 1.4
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-card",
@@ -1059,7 +1169,8 @@
     "Light/Professional/Desktop": 18,
     "Dark/Vibrant/Desktop": 18,
     "Dark/Professional/Desktop": 18
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-card-weight",
@@ -1077,7 +1188,8 @@
     "Dark/Professional/Desktop": 600,
     "Dark/Professional/Tablet": 600,
     "Dark/Professional/Mobile": 600
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-card-line-height",
@@ -1095,7 +1207,8 @@
     "Dark/Professional/Desktop": 1.5,
     "Dark/Professional/Tablet": 1.5,
     "Dark/Professional/Mobile": 1.5
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-body",
@@ -1113,7 +1226,8 @@
     "Light/Professional/Desktop": 16,
     "Dark/Vibrant/Desktop": 16,
     "Dark/Professional/Desktop": 16
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-body-weight",
@@ -1131,7 +1245,8 @@
     "Dark/Professional/Desktop": 400,
     "Dark/Professional/Tablet": 400,
     "Dark/Professional/Mobile": 400
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-body-line-height",
@@ -1149,7 +1264,8 @@
     "Dark/Professional/Desktop": 1.75,
     "Dark/Professional/Tablet": 1.75,
     "Dark/Professional/Mobile": 1.75
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-control-size",
@@ -1167,7 +1283,8 @@
     "Light/Professional/Desktop": 16,
     "Dark/Vibrant/Desktop": 16,
     "Dark/Professional/Desktop": 16
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-control-weight",
@@ -1185,7 +1302,8 @@
     "Dark/Professional/Desktop": 500,
     "Dark/Professional/Tablet": 500,
     "Dark/Professional/Mobile": 500
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-control-line-height",
@@ -1203,7 +1321,8 @@
     "Dark/Professional/Desktop": 1.5,
     "Dark/Professional/Tablet": 1.5,
     "Dark/Professional/Mobile": 1.5
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-small",
@@ -1221,7 +1340,8 @@
     "Light/Professional/Desktop": 14,
     "Dark/Vibrant/Desktop": 14,
     "Dark/Professional/Desktop": 14
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-secondary-weight",
@@ -1239,7 +1359,8 @@
     "Dark/Professional/Desktop": 400,
     "Dark/Professional/Tablet": 400,
     "Dark/Professional/Mobile": 400
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-secondary-line-height",
@@ -1257,7 +1378,8 @@
     "Dark/Professional/Desktop": 1.6,
     "Dark/Professional/Tablet": 1.6,
     "Dark/Professional/Mobile": 1.6
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "fs-label",
@@ -1275,7 +1397,8 @@
     "Light/Professional/Desktop": 12,
     "Dark/Vibrant/Desktop": 12,
     "Dark/Professional/Desktop": 12
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-helper-weight",
@@ -1293,7 +1416,8 @@
     "Dark/Professional/Desktop": 500,
     "Dark/Professional/Tablet": 500,
     "Dark/Professional/Mobile": 500
-   }
+   },
+   "collection": "Base"
   },
   {
    "name": "type-helper-line-height",
@@ -1311,7 +1435,8 @@
     "Dark/Professional/Desktop": 1.5,
     "Dark/Professional/Tablet": 1.5,
     "Dark/Professional/Mobile": 1.5
-   }
+   },
+   "collection": "Base"
   }
  ]
 }

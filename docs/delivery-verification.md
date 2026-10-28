@@ -633,3 +633,15 @@ node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test
 - 驗證匯出與讀值在拿掉固定後是否正常；目前匯出本身會失敗。
 - 之後要改的文件與腳本：規格 §5.3 的 48 張矩陣、PR-FILE-04 與 `baseline.json`（302 個 frame）、`verify-split.js` 的 Light/Dark 顏色分布檢查、`verify-themes.js`、`apply-bindings.js` 的 frame 模式。
 - 本試驗**沒有**證明可行，也沒有證明不可行；比對只有一個 frame 的目視與數個讀值。
+
+## 合併為一份元件庫設計檔（ISSUE-004，PR-FILE-18）
+
+2026-10-28。`docs/mockup/luca-style-library.fig` 取代 `components-vibrant.fig` 與 `components-professional.fig`（ADR 0007）；舊檔與只為頁面、兩檔比對存在的腳本、基準資料已刪除（`paginate-fig`、`relayout-fig`、`verify-split`、`pages.js`、`layout-snippets.js`、`build-theme-data`、`verify-themes`、`extract-pen-themes.pen.js`、`theme-expected.js`、`themes/` 的 baseline、resolved、extract-raw、variables-raw、strokes），上文各節的指令是當時的紀錄。
+
+- **合併前提：** 兩檔母版只在綁定變數上不同。`check-masters.js`（舊版）全部相同；另以一次性腳本逐節點比對 23 個母版的節點樹、子節點數、`layoutMode`、sizing 與元件屬性定義，差異 0。兩檔的頂層非母版節點只有 `Library guide`、`00 / Canvas directory` 與兩個標題文字，皆為頁面或比對專用。
+- **檔案：** 23 個母版、110 個母版節點，文件節點數 112（含存放變數的空頁 `Internal Only Canvas`，OpenPencil 在檔案含變數時自動維持，無法刪除，所以「有內容的畫布頁」只有 1 個）。
+- **模式：** 五個集合 Base、Suite、Mode、Device、Suite x Mode；Suite x Mode 放 14 個同時依套系與明暗變化的變數。探測：`VARIABLE_ALIAS` 可儲存，但 `resolve*VariableForNode` 回傳 undefined，匯出退回儲存值（灰色方塊仍為灰），所以不能用別名拆進 Suite 與 Mode。集合與歸屬由 `npm run generate` 決定（`variables.json` 的 `collections`）。
+- **解析值：** `check-masters.js` 對 Vibrant／Professional × Light／Dark 四種組合設定模式後，245 筆綁定屬性的解析值都等於 `variables.json`。
+- **母版總覽 PNG：** 四種組合各一張（`-s 2`，臨時 frame 內 23 個實例，母版順序固定），與合併前兩檔以同方式匯出的基準逐列比對（不進版控）。Vibrant 兩張只在預期處不同：`C/Button/Hover`（改綁 `accent-hover`）、`C/Button/Focus` 與 `C/Field/Focus`（焦點框改綁 `focus-ring`）、`C/Card/Metric` 左邊框（改綁 `border`）、Dark 的 `C/Select/Open` 選單外框（原本是未綁定的日間色，改綁 `border`）。Professional 在這些之外，指標卡與表格因自動排版尺寸只存預設模式的值，總高度差 32px（6128 對 6096）。
+- **限制：** 圓角、內距、字級、字型、顏色隨模式解析；但沒有綁定欄位的陰影開關（`elevation-enabled`）與載入圖片透明度（`loading-*-opacity`），以及自動排版後的版面尺寸，只存預設模式的值。離線匯出不會因模式重排版，總覽 PNG 以匯出前把綁定的數值寫進實例的方式補上；App 內的行為未驗證。
+- **未綁定項：** 沒有按下態母版，`accent-pressed` 無處綁定，未新增母版。

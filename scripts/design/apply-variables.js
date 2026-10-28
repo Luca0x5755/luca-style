@@ -1,28 +1,29 @@
-// 在兩個套系設計檔建立變數集合與模式，值取自 docs/mockup/themes/variables.json。
+// 在元件庫設計檔建立變數集合與模式，值取自 docs/mockup/themes/variables.json。
 // variables.json 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生（ISSUE-003，ADR 0004），不要手改；
+// 集合與模式也由產生器決定（`collections` 與每個變數的 `collection`）；本腳本只照著建立並驗證。
 // 改設計變數的流程：改 DTCG 原始檔 → npm run generate → 本腳本套用 → --check。
-//   docs/mockup/components-vibrant.fig      套用 Vibrant 的值
-//   docs/mockup/components-professional.fig 套用 Professional 的值
+//   docs/mockup/luca-style-library.fig  唯一的設計檔（ADR 0007）：23 個母版加設計變數，沒有頁面 frame
 // 用法：
 //   node scripts/design/apply-variables.js           套用（已是最新就不寫檔；可重跑，不產生重複）
 //   node scripts/design/apply-variables.js --check   唯讀檢查檔案與 variables.json 逐筆一致，並檢查節點數
 //   node scripts/design/apply-variables.js --list    唯讀列出每個變數在每個模式的值（逐行：集合 | 變數 | 型別 | 模式 | 值）
 // 結束碼：0 一致；1 有差異或 variables.json 無法建模（逐行列出）；2 讀檔或 openpencil 執行失敗。
 //
-// 建模（見 docs/delivery-verification.md〈套系設計檔的變數集合與模式（ISSUE-008）〉的「建模」；Figma 的模式屬於集合，一個節點在每個集合只持有一個模式）：
-//   Mode   集合：Light、Dark。放依明暗變化的變數。
-//   Device 集合：Desktop、Tablet、Mobile。只放依裝置變化的變數。
-//   Base   集合：單一模式 Default。放不隨明暗與裝置變化的變數（常數，以及只依套系變化的變數）。
-//   suite 軸不建模式：每個檔案只取自己套系的值。
-//   分類看兩個套系合併後的變化軸，所以兩個檔案的集合結構完全相同。
-//   同一變數同時依 mode 與 device 變化時拒絕，須先改 variables.json（拆成各依單軸的變數）。
+// 建模（Figma 的模式屬於集合，一個節點在每個集合只持有一個模式，所以一個集合的模式只對應一組軸）：
+//   Base          單一模式 Default：不隨套系、明暗、裝置變化的常數。
+//   Suite         Vibrant、Professional：只依套系變化的變數（圓角、密度、外形）。
+//   Mode          Light、Dark：只依明暗變化的變數（背景、文字、邊界）。
+//   Device        Desktop、Tablet、Mobile：只依裝置變化的變數（標題字級）。
+//   Suite x Mode  Vibrant / Light 等四種組合：同時依套系與明暗變化的變數（主色、成功／警告／錯誤色等）。
+//     不用別名把它們拆進 Suite 與 Mode：離線 openpencil 的匯出與 resolve*VariableForNode 都不解別名（ISSUE-004 探測）。
+//   所以切換一個節點的套系與明暗，要同時設定 Suite、Mode、Suite x Mode 三個集合的模式。
 // 型別對應：color → COLOR（0..1 浮點）、number → FLOAT、string → STRING、boolean → BOOLEAN。
-// opacity 類變數維持 variables.json 的 0–100 原值，與 resolved.json 一致；綁定端若需要 0–1 自行換算。
+// opacity 類變數維持 variables.json 的 0–100 原值；綁定端若需要 0–1 自行換算。
 //
 // 全程以離線 `openpencil eval` 讀寫檔案，不經過 OpenPencil App。
 // Windows 的 openpencil 本機修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
-// 測試用環境變數：APPLY_VARIABLES_JSON、APPLY_VARIABLES_VIBRANT、APPLY_VARIABLES_PROFESSIONAL、
+// 測試用環境變數：APPLY_VARIABLES_JSON、APPLY_VARIABLES_LIBRARY、
 //   APPLY_VARIABLES_NODE_LIMIT（節點數上限，預設 10000）。
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -32,11 +33,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const jsonPath = resolve(process.env.APPLY_VARIABLES_JSON || join(root, 'docs/mockup/themes/variables.json'));
 const NODE_LIMIT = Number(process.env.APPLY_VARIABLES_NODE_LIMIT || 10000);
-
-const files = [
-  { suite: 'Vibrant', path: resolve(process.env.APPLY_VARIABLES_VIBRANT || join(root, 'docs/mockup/components-vibrant.fig')) },
-  { suite: 'Professional', path: resolve(process.env.APPLY_VARIABLES_PROFESSIONAL || join(root, 'docs/mockup/components-professional.fig')) },
-];
+const libraryPath = resolve(process.env.APPLY_VARIABLES_LIBRARY || join(root, 'docs/mockup/luca-style-library.fig'));
 
 const TYPE_MAP = { color: 'COLOR', number: 'FLOAT', string: 'STRING', boolean: 'BOOLEAN' };
 
@@ -49,18 +46,21 @@ const fail = (message, code) => {
 
 const keyOf = (mode, suite, device) => `${mode}/${suite}/${device}`;
 
+// 集合的某個模式對應 variables.json 的哪一個組合鍵：模式名稱以「 / 」分隔，依集合的軸順序對應；沒有涵蓋的軸取第一個值。
+const comboOf = (axes, collection, modeName) => {
+  const parts = modeName.split(' / ');
+  const pick = Object.fromEntries(Object.keys(axes).map((axis) => [axis, axes[axis][0]]));
+  collection.axes.forEach((axis, i) => { pick[axis] = parts[i]; });
+  return keyOf(pick.mode, pick.suite, pick.device);
+};
+
 // 變數在某一軸上是否變化：存在兩個只差這一軸的組合，值不同。
 const variesOn = (variable, axes, axis) => {
-  const others = Object.keys(axes).filter((a) => a !== axis);
-  const lists = Object.fromEntries(Object.keys(axes).map((a) => [a, axes[a]]));
-  const walk = (i, fixed) => {
-    if (i === others.length) {
-      const seen = lists[axis].map((v) => variable.values[keyOf(...['mode', 'suite', 'device'].map((a) => (a === axis ? v : fixed[a])))]);
-      return new Set(seen.map((v) => JSON.stringify(v))).size > 1;
-    }
-    return lists[others[i]].some((v) => walk(i + 1, { ...fixed, [others[i]]: v }));
-  };
-  return walk(0, {});
+  const [a, b] = Object.keys(axes).filter((x) => x !== axis);
+  return axes[a].some((x) => axes[b].some((y) => new Set(axes[axis].map((z) => {
+    const pick = { [a]: x, [b]: y, [axis]: z };
+    return JSON.stringify(variable.values[keyOf(pick.mode, pick.suite, pick.device)]);
+  })).size > 1));
 };
 
 const hexToColor = (hexText) => {
@@ -70,11 +70,13 @@ const hexToColor = (hexText) => {
 
 const toFigmaValue = (variable, value) => (variable.type === 'color' ? hexToColor(value) : value);
 
-// 回傳 { plans: { Vibrant: {collections}, ... }, errors: [] }。
-const buildPlans = (data) => {
+// 回傳 { plan: { collections }, errors: [] }。
+const buildPlan = (data) => {
   const errors = [];
   const { axes } = data;
-  const placed = { Mode: [], Device: [], Base: [] };
+  const collections = data.collections || [];
+  if (collections.length === 0) return { plan: { collections: [] }, errors: ['variables.json 沒有 collections；請先 npm run generate'] };
+  const placed = Object.fromEntries(collections.map((c) => [c.name, []]));
   for (const v of data.variables) {
     const bad = axes.mode.some((m) => axes.device.some((d) => axes.suite.some((x) => v.values[keyOf(m, x, d)] === undefined)));
     if (bad) {
@@ -89,36 +91,33 @@ const buildPlans = (data) => {
       errors.push(`${v.name}：不支援的型別 ${v.type}`);
       continue;
     }
-    const byMode = variesOn(v, axes, 'mode');
-    const byDevice = variesOn(v, axes, 'device');
-    if (byMode && byDevice) {
-      errors.push(`${v.name}：同時依 mode 與 device 變化，一個節點在每個集合只持有一個模式，無法用單一集合表示；請先把它拆成各依單軸的變數`);
+    const target = collections.find((c) => c.name === v.collection);
+    if (!target) {
+      errors.push(`${v.name}：集合 ${v.collection} 不存在於 variables.json 的 collections`);
       continue;
     }
-    placed[byMode ? 'Mode' : byDevice ? 'Device' : 'Base'].push(v);
+    // 變數變化的軸必須都被集合的模式涵蓋，否則切換模式時值會被吃掉。
+    const uncovered = Object.keys(axes).filter((axis) => variesOn(v, axes, axis) && !target.axes.includes(axis));
+    if (uncovered.length > 0) {
+      errors.push(`${v.name}：依 ${uncovered.join('、')} 變化，但集合 ${target.name} 的模式不涵蓋；一個節點在每個集合只持有一個模式，請改放涵蓋全部變化軸的集合`);
+      continue;
+    }
+    placed[target.name].push(v);
   }
-  const plans = {};
-  for (const suite of axes.suite) {
-    const dev0 = axes.device[0];
-    const mode0 = axes.mode[0];
-    const make = (name, modes, list, pick) => ({
-      name,
-      modes,
-      variables: list.map((v) => ({
-        name: v.name,
-        type: TYPE_MAP[v.type],
-        values: Object.fromEntries(modes.map((m) => [m, toFigmaValue(v, v.values[pick(m, suite)])])),
+  return {
+    plan: {
+      collections: collections.map((c) => ({
+        name: c.name,
+        modes: c.modes,
+        variables: placed[c.name].map((v) => ({
+          name: v.name,
+          type: TYPE_MAP[v.type],
+          values: Object.fromEntries(c.modes.map((m) => [m, toFigmaValue(v, v.values[comboOf(axes, c, m)])])),
+        })),
       })),
-    });
-    plans[suite] = {
-      collections: [
-        make('Mode', axes.mode, placed.Mode, (m, s) => keyOf(m, s, dev0)),
-        make('Device', axes.device, placed.Device, (d, s) => keyOf(mode0, s, d)),
-        make('Base', ['Default'], placed.Base, (_m, s) => keyOf(mode0, s, dev0)),
-      ],
-    };
-  }
-  return { plans, errors };
+    },
+    errors,
+  };
 };
 
 // ---------- openpencil 呼叫 ----------
@@ -181,6 +180,15 @@ for (const v of figma.getLocalVariables()) {
   }
 }
 let created = 0, updated = 0, removed = 0
+// 先清掉各集合內不在計畫裡的變數，再建立，避免變數換集合時同名衝突。
+for (const pc of plan.collections) {
+  const col = cols.find((c) => c.name === pc.name)
+  if (!col) continue
+  const planned = new Set(pc.variables.map((v) => v.name))
+  for (const v of figma.getLocalVariables().filter((x) => x.collectionId === col.id)) {
+    if (!planned.has(v.name)) { figma.deleteVariable(v.id); removed++ }
+  }
+}
 for (const pc of plan.collections) {
   let col = cols.find((c) => c.name === pc.name)
   if (!col) {
@@ -195,10 +203,6 @@ for (const pc of plan.collections) {
     if (!pc.modes.includes(m.name)) figma.graph.removeMode(col.id, m.modeId)
   }
   const modeId = (name) => fresh().modes.find((m) => m.name === name).modeId
-  const planned = new Set(pc.variables.map((v) => v.name))
-  for (const v of figma.getLocalVariables().filter((x) => x.collectionId === col.id)) {
-    if (!planned.has(v.name)) { figma.deleteVariable(v.id); removed++ }
-  }
   for (const pv of pc.variables) {
     let v = figma.getLocalVariables().find((x) => x.collectionId === col.id && x.name === pv.name)
     if (v && v.type !== pv.type) { figma.deleteVariable(v.id); v = undefined; removed++ }
@@ -226,9 +230,9 @@ const sameValue = (type, actual, expected) => {
   return actual === expected;
 };
 
-// 獨立於分類邏輯：對 variables.json 每個變數、本套系的每個 (mode, device) 組合，
-// 在檔案內找該變數，用「集合有沒有叫這個名字的模式」挑出對應的模式值，與 JSON 逐筆比。
-const compare = (data, suite, state, plan) => {
+// 獨立於建模：對 variables.json 每個變數、它所在集合的每個模式，
+// 在檔案內找該變數，取同名模式的值，與 JSON 對應組合的值逐筆比。
+const compare = (data, state, plan) => {
   const diffs = [];
   const { axes } = data;
   const byName = new Map();
@@ -247,7 +251,7 @@ const compare = (data, suite, state, plan) => {
       diffs.push(`[多餘集合] ${c.name} 含有 variables.json 的變數`);
     }
   }
-  // 只管本腳本的三個集合：其他集合裡的變數不是我們建的，不算差異，否則套用永遠清不掉。
+  // 只管 variables.json 宣告的集合：其他集合裡的變數不是我們建的，不算差異，否則套用永遠清不掉。
   for (const v of state.variables) {
     if (expectedCollections.includes(v.collection) && !expectedNames.has(v.name)) diffs.push(`[多餘變數] ${v.collection} / ${v.name}`);
   }
@@ -269,20 +273,15 @@ const compare = (data, suite, state, plan) => {
       diffs.push(`[型別] ${jv.name}：檔案為 ${fv.type}，應為 ${TYPE_MAP[jv.type]}`);
       continue;
     }
-    for (const mode of axes.mode) {
-      for (const device of axes.device) {
-        const expected = jv.values[keyOf(mode, suite, device)];
-        const modeNames = Object.keys(fv.values);
-        const pick = modeNames.includes(mode) && modeNames.length === axes.mode.length ? mode
-          : modeNames.includes(device) ? device
-            : modeNames.length === 1 ? modeNames[0] : null;
-        if (pick === null) {
-          diffs.push(`[模式] ${jv.name}：找不到對應 ${mode}/${device} 的模式（檔案模式 ${modeNames.join('、')}）`);
-          continue;
-        }
-        if (!sameValue(jv.type, fv.values[pick], expected)) {
-          diffs.push(`[值] ${jv.name} @ ${mode}/${suite}/${device}：檔案為 ${show(fv.values[pick])}，應為 ${show(expected)}`);
-        }
+    const collection = data.collections.find((c) => c.name === jv.collection);
+    for (const mode of collection.modes) {
+      const key = comboOf(axes, collection, mode);
+      if (!(mode in fv.values)) {
+        diffs.push(`[模式] ${jv.name}：找不到模式 ${mode}（檔案模式 ${Object.keys(fv.values).join('、')}）`);
+        continue;
+      }
+      if (!sameValue(jv.type, fv.values[mode], jv.values[key])) {
+        diffs.push(`[值] ${jv.name} @ ${collection.name}／${mode}（${key}）：檔案為 ${show(fv.values[mode])}，應為 ${show(jv.values[key])}`);
       }
     }
   }
@@ -301,42 +300,37 @@ try {
   fail(`讀不到 variables.json（${jsonPath}）：${error.message}`, 2);
 }
 
-const { plans, errors } = buildPlans(data);
+const { plan, errors } = buildPlan(data);
 if (errors.length > 0) fail(errors.map((e) => `[無法建模] ${e}`).join('\n'), 1);
 
-let exit = 0;
-const report = (file, diffs, nodes) => {
+const report = (diffs, nodes) => {
   const limit = nodes >= NODE_LIMIT ? [`[節點數] 節點數 ${nodes} 已達上限 ${NODE_LIMIT}`] : [];
   const all = [...diffs, ...limit];
-  console.log(`${file.suite}（${file.path}）：節點數 ${nodes}，${all.length === 0 ? '變數與 variables.json 逐筆一致' : `${all.length} 項差異`}`);
+  console.log(`元件庫（${libraryPath}）：節點數 ${nodes}，${all.length === 0 ? '變數與 variables.json 逐筆一致' : `${all.length} 項差異`}`);
   for (const d of all) console.log(`  ${d}`);
-  if (all.length > 0) exit = 1;
+  return all.length === 0 ? 0 : 1;
 };
 
-for (const file of files) {
-  const plan = plans[file.suite];
-  if (command === 'list') {
-    const state = readState(file.path);
-    console.log(`# ${file.suite}（${file.path}）節點數 ${state.nodes}`);
-    for (const pc of plan.collections) {
-      for (const v of state.variables.filter((x) => x.collection === pc.name)) {
-        for (const m of Object.keys(v.values)) console.log(`${pc.name} | ${v.name} | ${v.type} | ${m} | ${show(v.values[m])}`);
-      }
-    }
-    continue;
-  }
-  let state = readState(file.path);
-  let diffs = compare(data, file.suite, state, plan);
-  if (command === 'apply') {
-    if (diffs.length === 0) {
-      console.log(`${file.suite}：已是最新，不寫檔`);
-    } else {
-      const result = JSON.parse(evalOn(file.path, applyScript(plan), ['-w']));
-      console.log(`${file.suite}：已套用（新增 ${result.created}、更新 ${result.updated}、移除 ${result.removed}）`);
-      state = readState(file.path);
-      diffs = compare(data, file.suite, state, plan);
+if (command === 'list') {
+  const state = readState(libraryPath);
+  console.log(`# 元件庫（${libraryPath}）節點數 ${state.nodes}`);
+  for (const pc of plan.collections) {
+    for (const v of state.variables.filter((x) => x.collection === pc.name)) {
+      for (const m of Object.keys(v.values)) console.log(`${pc.name} | ${v.name} | ${v.type} | ${m} | ${show(v.values[m])}`);
     }
   }
-  report(file, diffs, state.nodes);
+  process.exit(0);
 }
-process.exit(exit);
+let state = readState(libraryPath);
+let diffs = compare(data, state, plan);
+if (command === 'apply') {
+  if (diffs.length === 0) {
+    console.log('已是最新，不寫檔');
+  } else {
+    const result = JSON.parse(evalOn(libraryPath, applyScript(plan), ['-w']));
+    console.log(`已套用（新增 ${result.created}、更新 ${result.updated}、移除 ${result.removed}）`);
+    state = readState(libraryPath);
+    diffs = compare(data, state, plan);
+  }
+}
+process.exit(report(diffs, state.nodes));

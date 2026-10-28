@@ -62,7 +62,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 
 ## OpenPencil 與程式同步
 
-設計稿是兩個以 OpenPencil 編輯的套系設計檔：`docs/mockup/components-vibrant.fig`（Vibrant／精緻活力）與 `docs/mockup/components-professional.fig`（Professional／精緻專業）。一個專案只選一套風格，因此只需開所選套系的那個檔案。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
+設計稿是一個以 OpenPencil 編輯的元件庫設計檔：`docs/mockup/luca-style-library.fig`，含設計變數與 23 個母版；兩套風格以 `Suite`（Vibrant／Professional）模式切換，明暗以 `Mode`（Light／Dark）切換，同時依兩者變化的角色色放在 `Suite x Mode` 集合（切換時三個集合的模式要一起設）。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
 
 | 設計稿名稱 | 程式公開對應 |
 | --- | --- |
@@ -73,7 +73,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 | C/Select、C/Checkbox、C/Status/*、C/State/* | Select、Checkbox、StatusMessage、ContentState |
 | C/Card/Metric、C/Table、C/Nav/* | MetricCard、DataTable、Navigation |
 
-人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 OpenPencil 工具同步相同角色與母版（兩個套系設計檔各帶一份相同的母版，兩邊都要改，本 repo 以 `scripts/design/check-masters.js` 比對）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與套系設計檔。元件命名對應不是自動同步或像素保證。
+人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 OpenPencil 工具同步相同角色與母版（母版只有一份，本 repo 以 `scripts/design/check-masters.js` 核對母版齊全、已綁定且四種套系與明暗組合的解析值等於 variables.json）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與元件庫設計檔。元件命名對應不是自動同步或像素保證。
 
 ## 內容載入動畫
 

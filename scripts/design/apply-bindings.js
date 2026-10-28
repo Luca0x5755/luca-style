@@ -1,34 +1,30 @@
-// 把變數綁到兩個套系設計檔的節點，並依頁面 frame 名稱設定它的模式。
-//   docs/mockup/components-vibrant.fig      綁定 Vibrant 的值
-//   docs/mockup/components-professional.fig 綁定 Professional 的值
-// 資料來源（docs/mockup/themes/）：bindings.json（哪個節點的哪個屬性綁哪個變數）、
-//   variables.json（變數值）、resolved.json（Pencil 端解析值，用來交叉比對）、strokes.json（描邊粗細）。
+// 把變數綁到元件庫設計檔的 23 個母版。
+//   docs/mockup/luca-style-library.fig  唯一的設計檔（ADR 0007）
+// 資料來源（docs/mockup/themes/）：bindings.json（哪個母版節點的哪個屬性綁哪個變數）、variables.json（變數值）。
 // 用法：
 //   node scripts/design/apply-bindings.js           套用（已一致就不寫檔；可重跑，不產生重複綁定）
-//   node scripts/design/apply-bindings.js --check   唯讀：逐筆比對綁定、儲存值、frame 模式與節點數
+//   node scripts/design/apply-bindings.js --check   唯讀：逐筆比對綁定、儲存值與節點數
 // 結束碼：0 一致；1 有差異（逐行列出）；2 讀檔或 openpencil 執行失敗。
 //
-// 節點對應：frame 名稱加索引路徑（根為 -，其下為各層 0 起算的子節點索引，以 . 相連），
-//   規則見 docs/delivery-verification.md「節點對應規則」。母版先處理，再處理頁面 frame。
-//   實例內的子節點也逐一明確綁定，不依賴母版繼承（離線 API 不會把母版的綁定同步到實例）。
+// 節點對應：母版名稱加索引路徑（根為 -，其下為各層 0 起算的子節點索引，以 . 相連），
+//   規則見 docs/delivery-verification.md「節點對應規則」。
 //
-// 屬性對應（.pen 屬性 → .fig 欄位）：
+// 屬性對應（bindings.json 的屬性 → .fig 欄位）：
 //   fill → fills/0/color；stroke → strokes/0/color；strokeWidth → strokeWeight；
 //   strokeWidth.left → borderLeftWeight；fontFamily、fontSize、cornerRadius 同名；
 //   gap → itemSpacing；padding → paddingLeft／Right／Top／Bottom 四個欄位。
 //   effect.enabled 與 fill[i].opacity 在 openpencil 沒有對應的綁定欄位（只有 visible 與整個節點的 opacity，
 //   後者會被限制在 0–1，不是 0–100），所以不綁定，只把儲存值設成解析值：
 //   effect 的 visible、第 i 個填色的 opacity（變數值 ÷ 100）。
-// 儲存值：綁定後把節點的固定值覆蓋為「該 frame 模式下的變數值」，不遺留矛盾。
+// 儲存值：綁定後把節點的固定值覆蓋為「預設模式（Vibrant、Light、Desktop）下的變數值」，不遺留矛盾。
+//   母版不設模式；切換套系與明暗時由使用它的節點（或總覽 frame）設定 Suite、Mode、Suite x Mode 三個集合的模式。
 //
-// 轉換遺失的東西（見 docs/delivery-verification.md ISSUE-009）：.fig 轉換丟掉所有描邊，所以需要綁描邊的節點會
-//   先補上一條描邊（INSIDE，粗細取自綁定或 strokes.json，其餘為 1）。
-// 懸空綁定：轉換留下指向已不存在變數的綁定（fills[0]、fontFamily），離線寫檔時基準版本無法序列化這些節點，
-//   所以套用前先在記憶體中清掉；套用後檔案內不再有懸空綁定（測試以真實檔斷言 0 筆）。
+// 懸空綁定：變數集合重建後，節點上會留下指向已不存在變數的綁定（fills[0]、fontFamily），離線寫檔時基準版本無法序列化這些節點，
+//   所以套用前先在記憶體中清掉；套用後檔案內不再有懸空綁定。
 //
 // 全程以離線 `openpencil eval` 讀寫檔案，不經過 OpenPencil App。Windows 修補事項見 docs/delivery-verification.md〈Windows 上執行 openpencil 的本機修補〉。
 //
-// 測試用環境變數：APPLY_BINDINGS_VIBRANT、APPLY_BINDINGS_PROFESSIONAL、APPLY_BINDINGS_DIR、
+// 測試用環境變數：APPLY_BINDINGS_LIBRARY、APPLY_BINDINGS_DIR、
 //   APPLY_BINDINGS_NODE_LIMIT（節點數上限，預設 10000）。
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -38,11 +34,10 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const dir = resolve(process.env.APPLY_BINDINGS_DIR || join(root, 'docs/mockup/themes'));
 const NODE_LIMIT = Number(process.env.APPLY_BINDINGS_NODE_LIMIT || 10000);
+const libraryPath = resolve(process.env.APPLY_BINDINGS_LIBRARY || join(root, 'docs/mockup/luca-style-library.fig'));
 
-const files = [
-  { suite: 'Vibrant', path: resolve(process.env.APPLY_BINDINGS_VIBRANT || join(root, 'docs/mockup/components-vibrant.fig')) },
-  { suite: 'Professional', path: resolve(process.env.APPLY_BINDINGS_PROFESSIONAL || join(root, 'docs/mockup/components-professional.fig')) },
-];
+// 母版儲存的是預設模式的值。
+const DEFAULT_COMBO = 'Light/Vibrant/Desktop';
 
 const fail = (message, code) => {
   console.log(message);
@@ -59,60 +54,24 @@ const readJson = (name) => {
 
 // ---------- 計畫（純資料，無 openpencil） ----------
 
-// 頁面 frame 名稱明寫的軸才設模式；名稱沒寫的軸沿用預設模式（Light、Desktop）。
-// 規則與 build-theme-data.js 的 themeOf 相同：另有 `Mobile …`、`Tablet …` 開頭的頁名帶裝置。
-const explicitModes = (name) => {
-  const parts = name.split('/').map((p) => p.trim());
-  const mode = ['Light', 'Dark'].find((m) => parts.includes(m));
-  let device = ['Desktop', 'Tablet', 'Mobile'].find((d) => parts.includes(d));
-  if (parts.some((p) => p.startsWith('Mobile '))) device = 'Mobile';
-  if (parts.some((p) => p.startsWith('Tablet '))) device = 'Tablet';
-  return { Mode: mode, Device: device };
-};
-
-const strokeSpecs = (strokes) => {
-  const map = new Map();
-  for (const g of strokes.groups) for (const f of g.frames) map.set(f, g.strokes);
-  return map;
-};
-
-// 回傳 { plans: { Vibrant: [entry...], ... }, crossCheck: { same, differs, errors } }。
-// entry = { name, master, modes: {Mode?, Device?}, nodes: [{ path, props: { 屬性: { v: 變數名, value: 值 } }, strokeSpec }] }
-const buildPlans = (bindings, variables, resolved, strokes) => {
+// 回傳 { plan: [entry...], errors }。
+// entry = { name, nodes: [{ path, props: { 屬性: { v: 變數名, value: 值 } } }] }
+const buildPlan = (bindings, variables) => {
   const byName = new Map(variables.variables.map((v) => [v.name, v]));
-  const specs = strokeSpecs(strokes);
   const errors = [];
-  const plans = {};
-  const cross = { same: 0, differs: 0 };
-  for (const suite of variables.axes.suite) {
-    const entries = [];
-    for (const kind of ['masters', 'frames']) {
-      bindings[kind].forEach((g, gi) => {
-        const parts = g.frame.split('/').map((p) => p.trim());
-        const own = variables.axes.suite.find((s) => parts.includes(s));
-        if (kind === 'frames' && own && own !== suite) return;
-        const exact = g.theme.suite === suite;
-        const nodes = g.nodes.map((n, ni) => {
-          const props = {};
-          for (const [prop, name] of Object.entries(n.bind)) {
-            const variable = byName.get(name);
-            const value = variable?.values[`${g.theme.mode}/${suite}/${g.theme.device}`];
-            if (value === undefined) errors.push(`${g.frame} ${n.path} ${prop}：變數 ${name} 沒有 ${g.theme.mode}/${suite}/${g.theme.device} 的值`);
-            props[prop] = { v: name, value };
-            const pencil = resolved[kind][gi].nodes[ni].values[prop];
-            if (exact) {
-              if (pencil === value) cross.same++;
-              else errors.push(`${g.frame} ${n.path} ${prop}：variables.json 為 ${value}，resolved.json 為 ${pencil}`);
-            } else cross.differs++;
-          }
-          return { path: n.path, props, strokeSpec: specs.get(g.frame)?.[n.path] };
-        });
-        entries.push({ name: g.frame, master: kind === 'masters', modes: kind === 'masters' ? {} : explicitModes(g.frame), nodes });
-      });
-    }
-    plans[suite] = entries;
-  }
-  return { plans, cross, errors };
+  const plan = bindings.masters.map((g) => ({
+    name: g.frame,
+    nodes: g.nodes.map((n) => {
+      const props = {};
+      for (const [prop, name] of Object.entries(n.bind)) {
+        const value = byName.get(name)?.values[DEFAULT_COMBO];
+        if (value === undefined) errors.push(`${g.frame} ${n.path} ${prop}：變數 ${name} 沒有 ${DEFAULT_COMBO} 的值`);
+        props[prop] = { v: name, value };
+      }
+      return { path: n.path, props };
+    }),
+  }));
+  return { plan, errors };
 };
 
 // ---------- openpencil 呼叫 ----------
@@ -139,8 +98,6 @@ const apply = ${apply}
 // 頂層節點散在各畫布頁，統一攤平後依名稱找。
 const tops = figma.root.children.flatMap((p) => p.children)
 const vars = figma.getLocalVariables()
-const cols = figma.getLocalVariableCollections()
-const colByName = Object.fromEntries(cols.map((c) => [c.name, c]))
 const V = Object.fromEntries(vars.map((v) => [v.name, v]))
 const ids = new Set(vars.map((v) => v.id))
 const diffs = []
@@ -176,29 +133,9 @@ const ensureBound = (where, node, field, name) => {
   if (apply) { figma.bindVariable(node.id, field, v.id); changes++ }
 }
 
-const wantMode = (collection, modeName) => {
-  const c = colByName[collection]
-  const m = c && c.modes.find((x) => x.name === modeName)
-  return c && m ? [c.id, m.modeId] : null
-}
-
 for (const entry of plan) {
   const frame = tops.find((f) => f.name === entry.name)
-  if (!frame) { note('[缺少] ' + entry.name + '：設計檔內沒有這個 frame'); continue }
-  const gf = figma.graph.getNode(frame.id)
-  const wanted = {}
-  for (const [collection, modeName] of Object.entries(entry.modes)) {
-    if (!modeName) continue
-    const pair = wantMode(collection, modeName)
-    if (!pair) { note('[模式] ' + entry.name + '：找不到 ' + collection + '／' + modeName); continue }
-    wanted[pair[0]] = pair[1]
-  }
-  const current = gf.variableModes || {}
-  const modeOk = Object.entries(wanted).every(([c, m]) => current[c] === m)
-  if (!modeOk) {
-    note('[模式] ' + entry.name + '：模式應為 ' + JSON.stringify(entry.modes))
-    if (apply) { figma.graph.updateNode(frame.id, { variableModes: { ...current, ...wanted } }); changes++ }
-  }
+  if (!frame) { note('[缺少] ' + entry.name + '：設計檔內沒有這個母版'); continue }
   for (const n of entry.nodes) {
     const node = at(frame, n.path)
     const where = entry.name + ' ' + n.path
@@ -222,21 +159,21 @@ for (const entry of plan) {
         if (apply) { node.strokes = [{ ...cur, color: rgb(p.stroke.value) }, ...node.strokes.slice(1)]; changes++ }
       }
       ensureBound(where, node, 'strokes/0/color', p.stroke.v)
-      // 粗細：綁定值優先；只綁左邊時其餘三邊為 1；否則取 strokes.json；都沒有就是 1。
+      // 粗細：只在綁了粗細變數時檢查（綁定值優先；只綁左邊時其餘三邊為 1）；沒綁的粗細沿用檔內現值，補描邊時為 1。
       let w
       if (p.strokeWidth) w = [p.strokeWidth.value, p.strokeWidth.value, p.strokeWidth.value, p.strokeWidth.value]
       else if (p['strokeWidth.left']) w = [1, 1, 1, p['strokeWidth.left'].value]
-      else if (typeof n.strokeSpec === 'string' && n.strokeSpec.includes(',')) w = n.strokeSpec.split(',').map(Number)
-      else w = Array(4).fill(n.strokeSpec === undefined ? 1 : Number(n.strokeSpec))
       const g = figma.graph.getNode(node.id)
-      const uniform = w.every((x) => x === w[0])
-      const have = g.independentStrokeWeights ? [g.borderTopWeight, g.borderRightWeight, g.borderBottomWeight, g.borderLeftWeight] : Array(4).fill(g.strokeWeight)
-      if (!w.every((x, i) => near(have[i], x)) || g.independentStrokeWeights === uniform) {
-        note('[儲存值] ' + where + ' 描邊粗細：' + have.join(',') + '，應為 ' + w.join(','))
-        if (apply) {
-          if (uniform) node.strokeWeight = w[0]
-          else { node.strokeTopWeight = w[0]; node.strokeRightWeight = w[1]; node.strokeBottomWeight = w[2]; node.strokeLeftWeight = w[3] }
-          changes++
+      if (w) {
+        const uniform = w.every((x) => x === w[0])
+        const have = g.independentStrokeWeights ? [g.borderTopWeight, g.borderRightWeight, g.borderBottomWeight, g.borderLeftWeight] : Array(4).fill(g.strokeWeight)
+        if (!w.every((x, i) => near(have[i], x)) || g.independentStrokeWeights === uniform) {
+          note('[儲存值] ' + where + ' 描邊粗細：' + have.join(',') + '，應為 ' + w.join(','))
+          if (apply) {
+            if (uniform) node.strokeWeight = w[0]
+            else { node.strokeTopWeight = w[0]; node.strokeRightWeight = w[1]; node.strokeBottomWeight = w[2]; node.strokeLeftWeight = w[3] }
+            changes++
+          }
         }
       }
     }
@@ -296,30 +233,24 @@ return { nodes, diffs, changes, dangling }
 const args = process.argv.slice(2);
 const command = args.includes('--check') ? 'check' : 'apply';
 
-const { plans, cross, errors } = buildPlans(readJson('bindings.json'), readJson('variables.json'), readJson('resolved.json'), readJson('strokes.json'));
+const { plan, errors } = buildPlan(readJson('bindings.json'), readJson('variables.json'));
 if (errors.length > 0) fail(errors.slice(0, 20).map((e) => `[資料] ${e}`).join('\n') + (errors.length > 20 ? `\n……共 ${errors.length} 項` : ''), 1);
 
-let exit = 0;
-for (const file of files) {
-  const plan = plans[file.suite];
-  const bindingTotal = plan.reduce((a, e) => a + e.nodes.reduce((b, n) => b + Object.keys(n.props).length, 0), 0);
-  let result = JSON.parse(evalOn(file.path, RUN_SCRIPT(plan, false)));
-  if (command === 'apply') {
-    if (result.diffs.length === 0) {
-      console.log(`${file.suite}：已是最新，不寫檔`);
-    } else {
-      const done = JSON.parse(evalOn(file.path, RUN_SCRIPT(plan, true), ['-w']));
-      console.log(`${file.suite}：已套用（修改 ${done.changes} 處）`);
-      result = JSON.parse(evalOn(file.path, RUN_SCRIPT(plan, false)));
-    }
+const bindingTotal = plan.reduce((a, e) => a + e.nodes.reduce((b, n) => b + Object.keys(n.props).length, 0), 0);
+let result = JSON.parse(evalOn(libraryPath, RUN_SCRIPT(plan, false)));
+if (command === 'apply') {
+  if (result.diffs.length === 0) {
+    console.log('已是最新，不寫檔');
+  } else {
+    const done = JSON.parse(evalOn(libraryPath, RUN_SCRIPT(plan, true), ['-w']));
+    console.log(`已套用（修改 ${done.changes} 處）`);
+    result = JSON.parse(evalOn(libraryPath, RUN_SCRIPT(plan, false)));
   }
-  const all = [...result.diffs];
-  if (result.nodes >= NODE_LIMIT) all.push(`[節點數] 節點數 ${result.nodes} 已達上限 ${NODE_LIMIT}`);
-  console.log(`${file.suite}（${file.path}）：節點數 ${result.nodes}，${plan.length} 個 frame／母版、${bindingTotal} 筆綁定，${all.length === 0 ? '綁定、儲存值與模式全部一致' : `${all.length} 項差異`}`);
-  if (result.dangling > 0) console.log(`  （仍有 ${result.dangling} 個節點帶有指向不存在變數的綁定）`);
-  for (const d of all.slice(0, 30)) console.log(`  ${d}`);
-  if (all.length > 30) console.log(`  ……另有 ${all.length - 30} 項`);
-  if (all.length > 0) exit = 1;
 }
-console.log(`資料自洽：與 resolved.json 逐筆相同 ${cross.same} 筆；Professional 檔內不含套系字樣的 frame 與母版（resolved.json 以 Vibrant 解析）以本套系的 variables.json 值取代 ${cross.differs} 筆（含值相同者）`);
-process.exit(exit);
+const all = [...result.diffs];
+if (result.nodes >= NODE_LIMIT) all.push(`[節點數] 節點數 ${result.nodes} 已達上限 ${NODE_LIMIT}`);
+console.log(`元件庫（${libraryPath}）：節點數 ${result.nodes}，${plan.length} 個母版、${bindingTotal} 筆綁定，${all.length === 0 ? '綁定與儲存值全部一致' : `${all.length} 項差異`}`);
+if (result.dangling > 0) console.log(`  （仍有 ${result.dangling} 個節點帶有指向不存在變數的綁定）`);
+for (const d of all.slice(0, 30)) console.log(`  ${d}`);
+if (all.length > 30) console.log(`  ……另有 ${all.length - 30} 項`);
+process.exit(all.length > 0 ? 1 : 0);

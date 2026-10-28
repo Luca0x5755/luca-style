@@ -5,10 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { makeWorkspace, readJson, readText, runGenerator } from './tokens-helpers';
 
 // ISSUE-003／PR-FILE-16：npm run generate 由 DTCG 原始檔另外產生設計檔變數資料，
-// 內容是程式變數與原設計檔 48 個變數的聯集；apply-variables.js 讀這份資料寫入套系設計檔。
+// 內容是程式變數與原設計檔 48 個變數的聯集；apply-variables.js 讀這份資料寫入元件庫設計檔（含集合與每個變數所在的集合）。
 
-type FigVariable = { name: string; type: string; values: Record<string, unknown> };
-type FigData = { $generated?: string; axes: Record<string, string[]>; count: number; variables: FigVariable[] };
+type FigVariable = { name: string; type: string; collection?: string; values: Record<string, unknown> };
+type FigCollection = { name: string; axes: string[]; modes: string[] };
+type FigData = { $generated?: string; axes: Record<string, string[]>; collections?: FigCollection[]; count: number; variables: FigVariable[] };
 
 // 0.1.0 時設計檔的 48 個變數（由 .pen 擷取的 variables.json 原樣保存）。
 const legacyFixture = fileURLToPath(new URL('./fixtures/fig-variables-0.1.0.json', import.meta.url));
@@ -162,6 +163,28 @@ test('no design-file variable varies by both mode and device, which apply-variab
     return byMode && byDevice;
   });
   expect(both.map(variable => variable.name)).toEqual([]);
+});
+
+// ISSUE-004：設計檔的集合與模式由產生器決定（Figma 一個節點在每個集合只持有一個模式）。
+// 同時依套系與明暗變化的變數，沒有別名可用（匯出不解別名），所以放進 4 個模式的「Suite x Mode」集合。
+test('every design-file variable is placed in the collection whose modes cover exactly the axes it varies on', async () => {
+  const { data } = await generateFig();
+  expect(data!.collections).toEqual([
+    { name: 'Base', axes: [], modes: ['Default'] },
+    { name: 'Suite', axes: ['suite'], modes: ['Vibrant', 'Professional'] },
+    { name: 'Mode', axes: ['mode'], modes: ['Light', 'Dark'] },
+    { name: 'Device', axes: ['device'], modes: ['Desktop', 'Tablet', 'Mobile'] },
+    { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: ['Vibrant / Light', 'Vibrant / Dark', 'Professional / Light', 'Professional / Dark'] },
+  ]);
+  const placed = (name: string) => data!.variables.find(variable => variable.name === name)?.collection;
+  expect(placed('font-zh')).toBe('Base');
+  expect(placed('radius-card')).toBe('Suite');
+  expect(placed('bg')).toBe('Mode');
+  expect(placed('fs-hero')).toBe('Device');
+  for (const name of ['accent', 'accent-hover', 'accent-pressed', 'focus-ring', 'success', 'card-highlight']) expect(placed(name)).toBe('Suite x Mode');
+  expect(data!.variables.filter(variable => !variable.collection).map(variable => variable.name)).toEqual([]);
+  const counts = Object.fromEntries(data!.collections!.map(({ name }) => [name, data!.variables.filter(variable => variable.collection === name).length]));
+  expect(counts).toEqual({ Base: 39, Suite: 8, Mode: 8, Device: 3, 'Suite x Mode': 14 });
 });
 
 test('the committed docs/mockup/themes/variables.json is generated output, identical to a fresh npm run generate', async () => {
