@@ -15,7 +15,7 @@ import './styles.css';
 function App() {
   const [override, setOverride] = useState(false);
   const [suite, setSuite] = useState<StyleSuite>('vibrant');
-  return <ThemeProvider target="document" suite={suite} accent={override ? {light:{primary:"#9A4C32",secondary:"#BD7454",soft:"#F7F1EB",ink:"#FFFFFF"},dark:{primary:"#E8A18B",secondary:"#E6BE70",soft:"#382820",ink:"#151A18"}} : undefined}><Content suite={suite} setSuite={setSuite} override={override} setOverride={setOverride}/></ThemeProvider>;
+  return <ThemeProvider target="document" suite={suite} accent={override ? {light:"#9A4C32",dark:"#E8A18B",secondary:"#BD7454",soft:{light:"#F7F1EB",dark:"#382820"}} : undefined}><Content suite={suite} setSuite={setSuite} override={override} setOverride={setOverride}/></ThemeProvider>;
 }
 function Content({suite,setSuite,override,setOverride}: {suite:StyleSuite; setSuite:(suite:StyleSuite)=>void; override:boolean; setOverride:(value:boolean)=>void}) {
   const {mode,resolvedMode,setMode} = useTheme();

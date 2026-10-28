@@ -1,16 +1,17 @@
 .luca-button { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
-.luca-button:hover { filter:brightness(.94); }
-.luca-button:focus-visible { outline:3px solid var(--text); outline-offset:3px; }
+/* 滑過、按下用推算出的強調色角色（PR-STYLE-45），不再用 brightness 濾鏡。 */
+.luca-button-primary:not(:disabled):hover { background:var(--accent-hover); }
+.luca-button-primary:not(:disabled):active { background:var(--accent-pressed); }
 .luca-button:disabled { opacity:.5; cursor:not-allowed; }
 [data-luca-theme] { min-height:100vh; background:var(--bg); color:var(--text); transition:background-color var(--motion-standard), color var(--motion-standard); }
-.luca-button { transition:background-color var(--motion-feedback), filter var(--motion-feedback); }
+.luca-button { transition:background-color var(--motion-feedback), border-color var(--motion-feedback), color var(--motion-feedback); }
 @media (prefers-reduced-motion: reduce) { [data-luca-theme], [data-luca-theme] *, [data-luca-theme] *::before, [data-luca-theme] *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 .luca-button-secondary { background:var(--surface); color:var(--accent); border-color:var(--accent); }
-.luca-button:disabled:hover { filter:none; }
+.luca-button-secondary:not(:disabled):hover { color:var(--accent-hover); border-color:var(--accent-hover); }
+.luca-button-secondary:not(:disabled):active { color:var(--accent-pressed); border-color:var(--accent-pressed); }
 .luca-field { display:grid; gap:var(--space-2); min-width:0; }
 .luca-field > label { font:500 1rem/1.5 var(--font-body); }
 .luca-input { width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-3) var(--space-4); font:500 1rem/1.5 var(--font-body); color:var(--text); background:var(--surface); border:1px solid var(--control-border); border-radius:var(--radius-control); }
-.luca-input:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 .luca-input[aria-invalid=true] { border-color:var(--error); }
 .luca-input:disabled { opacity:.6; cursor:not-allowed; }
 .luca-field-helper, .luca-field-error { font:400 .875rem/1.6 var(--font-body); }
@@ -18,7 +19,6 @@
 .luca-field-error { color:var(--error); }
 .luca-checkbox { display:flex; gap:var(--space-3); align-items:center; min-height:var(--control-height); cursor:pointer; }
 .luca-checkbox input { flex:none; width:1.25rem; height:1.25rem; accent-color:var(--accent); margin:0; }
-.luca-checkbox input:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 .luca-checkbox input:disabled { opacity:.6; cursor:not-allowed; }
 .luca-status { padding:var(--space-3) var(--space-4); border:1px solid currentColor; border-radius:var(--radius-control); background:var(--surface); font:400 .875rem/1.6 var(--font-body); overflow-wrap:anywhere; }
 .luca-status-success { color:var(--success); } .luca-status-warning { color:var(--warning); } .luca-status-error { color:var(--error); }
@@ -36,7 +36,6 @@
 .luca-navigation > div { display:flex; flex-wrap:wrap; gap:var(--space-4); }
 .luca-navigation a { color:var(--muted); font-size:.875rem; text-underline-offset:4px; }
 .luca-navigation a[aria-current=page] { color:var(--accent); font-weight:600; }
-.luca-navigation a:focus-visible,.luca-table-region:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
 .luca-metric { min-width:0; padding:var(--card-padding); border:var(--border-width) solid var(--border); border-left-width:var(--metric-border-left); border-radius:var(--radius-card); background:var(--surface); }
 .luca-metric-highlight { background:var(--metric-background); box-shadow:var(--metric-shadow); }
 .luca-metric h2 { margin:var(--space-2) 0; font:600 1.125rem/1.5 var(--font-body); }
@@ -48,3 +47,5 @@
 .luca-table caption { text-align:left; margin-bottom:var(--space-4); color:var(--text); font:600 1.125rem/1.5 var(--font-body); }
 .luca-table th { color:var(--muted); font-weight:500; }
 .luca-table th,.luca-table td { padding:var(--space-3) var(--space-2); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
+/* 所有元件共用的雙圈焦點框（PR-STYLE-46）：外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
+.luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox input:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }

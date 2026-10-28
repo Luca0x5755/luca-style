@@ -3,6 +3,7 @@ import { cp, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { AccentNeutrals } from '../packages/tokens/accent.js';
 
 // 設計變數產生器與原始檔的位置；測試只透過指令列與輸出檔觀察行為。
 export const tokensPackage = fileURLToPath(new URL('../packages/tokens/', import.meta.url));
@@ -32,4 +33,23 @@ export async function listJsonFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { recursive: true, withFileTypes: true });
   return entries.filter(entry => entry.isFile() && entry.name.endsWith('.json'))
     .map(entry => join(entry.parentPath, entry.name).slice(dir.length + 1).replace(/\\/g, '/')).sort();
+}
+
+// WCAG 2.x 對比（與 theme.spec 指標卡測試同一條公式）；輸入為 0–255 的 RGB 通道。
+// 刻意不用 packages/tokens/accent.js 的版本，測試才不會拿被測程式驗自己。
+export function wcagContrast(a: number[], b: number[]) {
+  const luminance = (rgb: number[]) => {
+    const [r, g, bl] = rgb.map(value => value / 255).map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4);
+    return .2126 * r + .7152 * g + .0722 * bl;
+  };
+  const [x, y] = [luminance(a), luminance(b)];
+  return (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
+}
+export const hexChannels = (hex: string) => [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16));
+
+// 某明暗模式的中性色，直接讀 DTCG 原始檔的 mode 分層，與建置、ThemeProvider 推算時使用的值同源。
+export async function neutralsOf(mode: 'light' | 'dark'): Promise<AccentNeutrals> {
+  const tokens = await readJson(join(sourceDir, `mode/${mode}.tokens.json`));
+  const value = (name: string) => tokens[name].$value as string;
+  return { bg: value('bg'), surface: value('surface'), 'surface-subtle': value('surface-subtle'), text: value('text'), muted: value('muted'), 'accent-ink': value('accent-ink') };
 }

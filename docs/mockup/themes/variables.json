@@ -15,7 +15,7 @@
    "Mobile"
   ]
  },
- "count": 67,
+ "count": 70,
  "variables": [
   {
    "name": "control-height",
@@ -375,6 +375,60 @@
     "Dark/Professional/Desktop": 100,
     "Dark/Professional/Tablet": 100,
     "Dark/Professional/Mobile": 100
+   }
+  },
+  {
+   "name": "accent-hover",
+   "type": "color",
+   "values": {
+    "Light/Vibrant/Desktop": "#007072",
+    "Light/Vibrant/Tablet": "#007072",
+    "Light/Vibrant/Mobile": "#007072",
+    "Dark/Vibrant/Desktop": "#75D2CC",
+    "Dark/Vibrant/Tablet": "#75D2CC",
+    "Dark/Vibrant/Mobile": "#75D2CC",
+    "Light/Professional/Desktop": "#544E74",
+    "Light/Professional/Tablet": "#544E74",
+    "Light/Professional/Mobile": "#544E74",
+    "Dark/Professional/Desktop": "#BBB4E8",
+    "Dark/Professional/Tablet": "#BBB4E8",
+    "Dark/Professional/Mobile": "#BBB4E8"
+   }
+  },
+  {
+   "name": "accent-pressed",
+   "type": "color",
+   "values": {
+    "Light/Vibrant/Desktop": "#006062",
+    "Light/Vibrant/Tablet": "#006062",
+    "Light/Vibrant/Mobile": "#006062",
+    "Dark/Vibrant/Desktop": "#85E3DC",
+    "Dark/Vibrant/Tablet": "#85E3DC",
+    "Dark/Vibrant/Mobile": "#85E3DC",
+    "Light/Professional/Desktop": "#474065",
+    "Light/Professional/Tablet": "#474065",
+    "Light/Professional/Mobile": "#474065",
+    "Dark/Professional/Desktop": "#CBC4F9",
+    "Dark/Professional/Tablet": "#CBC4F9",
+    "Dark/Professional/Mobile": "#CBC4F9"
+   }
+  },
+  {
+   "name": "focus-ring",
+   "type": "color",
+   "values": {
+    "Light/Vibrant/Desktop": "#147F82",
+    "Light/Vibrant/Tablet": "#147F82",
+    "Light/Vibrant/Mobile": "#147F82",
+    "Dark/Vibrant/Desktop": "#64C2BC",
+    "Dark/Vibrant/Tablet": "#64C2BC",
+    "Dark/Vibrant/Mobile": "#64C2BC",
+    "Light/Professional/Desktop": "#625C83",
+    "Light/Professional/Tablet": "#625C83",
+    "Light/Professional/Mobile": "#625C83",
+    "Dark/Professional/Desktop": "#ABA4D7",
+    "Dark/Professional/Tablet": "#ABA4D7",
+    "Dark/Professional/Mobile": "#ABA4D7"
    }
   },
   {

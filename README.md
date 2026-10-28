@@ -31,7 +31,7 @@ import '@luca-style/tokens/css';
 import '@luca-style/react/fonts.css';
 import '@luca-style/react/css';
 // …
-  return <ThemeProvider suite={suite} accent={custom ? {primary:'#275A83',secondary:'#6995B8',soft:'#E7F0F7',ink:'#FFFFFF'} : undefined}>
+  return <ThemeProvider suite={suite} accent={custom ? {light:'#275A83',secondary:'#6995B8',soft:{light:'#E7F0F7'}} : undefined}>
 // …
   </ThemeProvider>;
 ```

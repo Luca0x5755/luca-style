@@ -128,5 +128,35 @@
         "designFileOnly": true
       }
     }
+  },
+  "accent-hover": {
+    "$value": "{accent}",
+    "$type": "color",
+    "$description": "主要強調色的滑過狀態：建置時由該套系與明暗的 accent 以 deriveAccent 推算（OKLCH 明度日間 -0.05、暗黑 +0.05，不過文字對比門檻再加深／加亮），此處的參照只是占位",
+    "$extensions": {
+      "luca-style": {
+        "derive": "accent-hover"
+      }
+    }
+  },
+  "accent-pressed": {
+    "$value": "{accent}",
+    "$type": "color",
+    "$description": "主要強調色的按下狀態：建置時由 accent 以 deriveAccent 推算（OKLCH 明度位移 0.10，且至少比滑過多 0.05），此處的參照只是占位",
+    "$extensions": {
+      "luca-style": {
+        "derive": "accent-pressed"
+      }
+    }
+  },
+  "focus-ring": {
+    "$value": "{accent}",
+    "$type": "color",
+    "$description": "焦點框外圈色（內圈為 surface）：建置時以 deriveAccent 推算，與 bg、surface、surface-subtle 對比至少 3:1 時即為 accent，此處的參照只是占位",
+    "$extensions": {
+      "luca-style": {
+        "derive": "focus-ring"
+      }
+    }
   }
 }

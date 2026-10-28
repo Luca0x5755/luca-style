@@ -72,7 +72,7 @@ declare function themeInitScript(options?: { suite?: StyleSuite }): string; // s
 - `persist` 為 `true` 時，偏好存於瀏覽器儲存鍵 `luca-style-mode`；為 `false` 時不讀寫瀏覽器儲存。
 - `target` 為 `"document"` 時，主題屬性（`data-luca-theme`、`data-suite`、`data-mode`）與強調色變數套在 `<html>`，不另包外層元素；卸載時移除。`themeInitScript()` 回傳不依賴任何 import 的首屏腳本字串，放在 `<head>`，在 React 掛載前依已存偏好設定 `<html>` 的三個主題屬性；`suite` 須與 `ThemeProvider` 相同。首屏腳本會讀取儲存，只與 `persist` 為 `true` 搭配。
 - 未指定 `density`、`shape` 時沿用風格套系的預設值；各等級的數值由前端規格定義。
-- `AccentInput` 只有 `light` 必填；`dark`、`soft` 未給時由 `ThemeProvider` 推算，`secondary` 未給時沿用主色。滑過、按下與焦點框由主色推算；風格套系預設色的推算值在建置時產生。
+- `AccentInput` 只有 `light` 必填；`dark`、`soft` 未給時由 `ThemeProvider` 推算，`secondary` 未給時沿用該模式的主色，有給則兩種模式共用。滑過、按下與焦點框（CSS 變數 `--accent-hover`、`--accent-pressed`、`--focus-ring`）由主色推算；風格套系預設色的推算值在建置時產生，也寫入設計檔變數。推算函式 `deriveAccent(input, mode, neutrals)` 只有一份，由 `@luca-style/tokens/accent` 匯出，建置、`ThemeProvider` 與設計檔匯入腳本共用。
 - 元件透過語意設計變數取色，不直接綁定色票數值；專案強調色覆寫不改變語意狀態色的意思。
 - 樣張與頁面範本使用正式套件的公開介面，展示內容與使用端專案沿用相同契約。
 - 本範圍的公開合約為套件輸出及元件介面，沒有伺服器資料或 HTTP API。

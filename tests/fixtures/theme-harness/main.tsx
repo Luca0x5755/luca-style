@@ -1,11 +1,12 @@
-// ThemeProvider 測試載具：以 query string 選擇 persist 與 target，頁上提供切換明暗與卸載的按鈕。
+// ThemeProvider 測試載具：以 query string 選擇 persist、target 與 accent（JSON），頁上提供切換明暗與卸載的按鈕。
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider, useTheme, type ThemeTarget } from '@luca-style/react';
+import { ThemeProvider, useTheme, type AccentInput, type ThemeTarget } from '@luca-style/react';
 
 const params = new URLSearchParams(window.location.search);
 const persist = params.get('persist') !== '0';
 const target:ThemeTarget = params.get('target') === 'document' ? 'document' : 'self';
+const accent:AccentInput = JSON.parse(params.get('accent') ?? '{"light":"#9A4C32"}');
 
 function ModeButtons() {
   const {resolvedMode, setMode} = useTheme();
@@ -21,7 +22,7 @@ function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={{primary:'#9A4C32'}}><ModeButtons/></ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent}><ModeButtons/></ThemeProvider>}
   </>;
 }
 

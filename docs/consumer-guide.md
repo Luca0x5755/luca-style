@@ -46,7 +46,7 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 - `target="document"`：主題屬性與強調色變數套在 `<html>`，整頁底色跟著明暗變化；卸載時移除。
 - 防閃爍：把 `themeInitScript({suite})` 的回傳字串放進 `<head>` 的行內 `<script>`（例如 Vite 的 `transformIndexHtml`，參考 `apps/showcase/vite.config.ts`），React 掛載前就依已存偏好設定 `<html>`。`suite` 要與 `ThemeProvider` 相同，未傳為 `vibrant`；不一致時掛載瞬間會換一次套系。首屏腳本會讀 localStorage，不要與 `persist={false}` 一起用；它要搭配 `target="document"`，否則 `<html>` 上的屬性停在首屏值，不隨後續切換更新。
 
-`accent={{primary,secondary,soft,ink}}` 覆寫專案強調色；primary 必填，其他選填。可用 `accent={{light: lightPalette, dark: darkPalette}}` 提供成對色票，ThemeProvider 依實際明暗模式即時選用；單一色票仍適用兩種模式，呼叫端須確認對比。Showcase 日間覆寫使用暖銅色與淺暖底，暗黑使用亮珊瑚色與深暖底。覆寫不改 success／warning／error。業務資料另定 `--data-positive` 等專案變數，使用文字、符號或圖例；不要引用 `--success`／`--error` 代表漲跌。
+`accent={{light, dark?, secondary?, soft?:{light?, dark?}}}` 覆寫專案強調色（`AccentInput`）；只有日間主色 `light` 必填。暗黑主色、柔和底色沒給時由 ThemeProvider 推算（同色相，通過文字對比 4.5:1）；點綴色沒給時沿用該模式的主色，有給則兩種模式都用同一值。滑過 `--accent-hover`、按下 `--accent-pressed` 與焦點框外圈 `--focus-ring` 一律由主色推算（OKLCH 明度位移，色相不變）。推算函式 `deriveAccent` 由 `@luca-style/tokens/accent` 匯出，建置與設計檔匯入用的是同一份。有給的顏色原樣使用、不做對比檢查：主按鈕文字在日間固定為白色，太淺的日間主色會讓按鈕文字看不清，請自行確認對比。Showcase 日間覆寫使用暖銅色與淺暖底，暗黑使用亮珊瑚色與深暖底。覆寫不改 success／warning／error。業務資料另定 `--data-positive` 等專案變數，使用文字、符號或圖例；不要引用 `--success`／`--error` 代表漲跌。
 
 套系預設透過 `--card-padding`、`--gap-section` 控制密度。特定頁面可用 CSS 在自身區域覆寫這些變數，例如 `.dense-section { --card-padding:var(--space-4); --gap-section:var(--space-4); }`；不改文字角色或全域套系。自行版面使用 `--space-*`，欄位設定 `min-width:0`，窄版堆疊，表格保留可聚焦的水平捲動區。
 
@@ -103,3 +103,21 @@ npm run test:consumer
 - `persist={false}` 時不要放首屏腳本：腳本會讀 localStorage，與「不讀寫儲存」矛盾，屬於誤用。
 - 偏好鍵名仍是 `luca-style-mode`，值仍為 `light`／`dark` 純字串；0.1.0 存下的選擇不需遷移。
 - `target="document"` 後頁面上符合 `[data-luca-theme]` 的元素是 `<html>`，不再有外層 `div`；以該選擇器找主題容器的測試仍可用，但依賴外層 `div` 結構的 CSS 或測試要調整。
+
+### 專案強調色改為 `AccentInput`（ISSUE-006）
+
+舊的兩種寫法已移除，傳入會造成型別錯誤。新舊對照：
+
+| 0.1.0 | 0.2.0 |
+| --- | --- |
+| `{primary, secondary, soft, ink}` | `{light: primary, secondary, soft: {light: soft}}`；`ink` 移除 |
+| `{light: {primary, secondary, soft, ink}, dark: {primary, secondary, soft, ink}}` | `{light: light.primary, dark: dark.primary, secondary: light.secondary, soft: {light: light.soft, dark: dark.soft}}`；`dark.secondary`、兩個 `ink` 移除 |
+
+注意事項：
+
+- 顏色須為 `#RRGGBB`，其他寫法（`red`、`#abc`）會讓推算在 render 時拋錯。
+- 點綴色只有一個值，兩種模式共用；0.1.0 的暗黑專屬點綴色無法表達（樣張原本的暗黑點綴 `#E6BE70` 因此不再使用）。沒給時沿用該模式的主色。
+- `accent-ink`（填色按鈕上的文字）不再可覆寫，固定為日間白色、暗黑炭黑。有給的顏色原樣使用、不做對比檢查；日間主色很淺（例如亮黃）時白字對比會不足，請改用較深的主色。
+- 推算的只有沒給的角色：暗黑主色、柔和底色、點綴色，以及一律推算的滑過、按下、焦點框色。推算值都通過文字對比 4.5:1（焦點框 3:1）；位移後不足時會再加深／加亮。
+- 按鈕滑過不再用 `filter:brightness(.94)`，改為 `--accent-hover`；測試若斷言 `filter` 或焦點框粗細（舊為 3px 文字色單圈，現為 2px 表面色內圈＋2px 主色外圈）需調整。
+- 新增的 CSS 變數：`--accent-hover`、`--accent-pressed`、`--focus-ring`；套系預設值在建置時算好，也寫進設計檔變數。

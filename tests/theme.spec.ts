@@ -155,7 +155,7 @@ test('project accent override preserves status colors and reduced motion cancels
     }
   }
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('transition-duration','0.12s, 0.12s');
+  await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('transition-duration','0.12s, 0.12s, 0.12s');
   await page.emulateMedia({reducedMotion:'reduce'});
   await expect(page.getByRole('button',{name:'探索設計基礎 →'})).toHaveCSS('transition-duration','0s');
 });

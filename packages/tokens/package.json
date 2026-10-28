@@ -4,7 +4,9 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "accent.js",
+    "accent.d.ts"
   ],
   "exports": {
     "./css": {
@@ -12,7 +14,11 @@
       "default": "./dist/tokens.css"
     },
     "./data": "./dist/tokens.json",
-    "./typography": "./dist/typography.json"
+    "./typography": "./dist/typography.json",
+    "./accent": {
+      "types": "./accent.d.ts",
+      "default": "./accent.js"
+    }
   },
   "scripts": {
     "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",

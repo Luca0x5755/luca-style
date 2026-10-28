@@ -69,9 +69,9 @@ test('every published CSS variable is in the design-file data, under its legacy 
     expect(new Set(names).size).toBe(names.length);
     expect([...cssNames].map(name => merged[name] ?? name).filter(name => !names.includes(name))).toEqual([]);
     expect(names.filter(name => name in merged)).toEqual([]);
-    // 48 個舊變數＋19 個程式獨有變數。
-    expect(data.count).toBe(67);
-    expect(names.length).toBe(67);
+    // 48 個舊變數＋22 個程式獨有變數（含 ISSUE-006 建置時推算的 accent-hover、accent-pressed、focus-ring）。
+    expect(data.count).toBe(70);
+    expect(names.length).toBe(70);
   } finally {
     await workspace.dispose();
   }

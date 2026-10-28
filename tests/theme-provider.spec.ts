@@ -5,6 +5,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
 import { themeInitScript } from '../packages/react/src/theme-init.js';
+import { deriveAccent, type AccentInput } from '../packages/tokens/accent.js';
+import { neutralsOf } from './tokens-helpers';
+
+// 舊的 accent 寫法已移除（decision-log 2026-10-28）：若又能編譯，npm run typecheck 會因 @ts-expect-error 未被用到而失敗。
+const acceptsAccent = (accent:AccentInput) => accent;
+// @ts-expect-error 0.1.0 的單一色票 {primary, secondary, soft, ink}
+acceptsAccent({primary:'#9A4C32', secondary:'#BD7454', soft:'#F7F1EB', ink:'#FFFFFF'});
+// @ts-expect-error 0.1.0 的成對色票 {light: 色票, dark: 色票}
+acceptsAccent({light:{primary:'#9A4C32'}, dark:{primary:'#E8A18B'}});
 
 // 假 origin：localStorage 需要真實 origin，about:blank 會拒絕存取。
 const origin = 'http://harness.test';
@@ -88,11 +97,36 @@ test.describe('ThemeProvider', () => {
     await expect(html).toHaveAttribute('data-suite', 'vibrant');
     await expect(html).toHaveAttribute('data-mode', 'dark');
     await expect(page.locator('[data-luca-theme]')).toHaveCount(1);
-    expect(await html.evaluate(element => element.style.getPropertyValue('--accent'))).toBe('#9A4C32');
+    // 只給日間主色、系統為暗黑：<html> 上是推算出的暗黑主色。
+    const expectedDark = deriveAccent({light:'#9A4C32'}, 'dark', await neutralsOf('dark')).accent;
+    expect(await html.evaluate(element => element.style.getPropertyValue('--accent'))).toBe(expectedDark);
     await page.getByRole('button', {name:'卸載'}).click();
     for (const name of ['data-luca-theme','data-suite','data-mode']) await expect(html).not.toHaveAttribute(name);
     expect(await html.evaluate(element => element.style.getPropertyValue('--accent'))).toBe('');
   });
+
+  // PR-STYLE-32、45、47：容器上的強調色變數就是同一份 deriveAccent 對目前明暗的結果，切換明暗即重算。
+  const accentVariables = ['accent','accent-secondary','accent-soft','accent-hover','accent-pressed','focus-ring'] as const;
+  const appliedAccent = (page:Page, target:string) => page.locator(target === 'document' ? 'html' : '[data-luca-theme]')
+    .evaluate((element, names) => Object.fromEntries(names.map(name => [name, (element as HTMLElement).style.getPropertyValue(`--${name}`)])), [...accentVariables]);
+  for (const target of ['self','document']) {
+    for (const accent of [
+      {light:'#9A4C32'},
+      {light:'#9A4C32', dark:'#E8A18B', secondary:'#BD7454', soft:{light:'#F7F1EB', dark:'#382820'}},
+      {light:'#275A83', soft:{dark:'#1B2A38'}},
+    ] satisfies AccentInput[]) {
+      test(`target ${target} applies the derived accent roles for ${JSON.stringify(accent)} in each mode`, async ({page}) => {
+        await page.emulateMedia({colorScheme:'light'});
+        await serveHarness(page, outDir);
+        await page.goto(`${origin}/?persist=0&target=${target}&accent=${encodeURIComponent(JSON.stringify(accent))}`);
+        for (const mode of ['light','dark'] as const) {
+          await page.getByRole('button', {name:mode === 'light' ? '日間' : '暗黑'}).click();
+          await expect(page.getByLabel('目前明暗')).toHaveText(mode);
+          expect(await appliedAccent(page, target)).toEqual(deriveAccent(accent, mode, await neutralsOf(mode)));
+        }
+      });
+    }
+  }
 });
 
 // 只含首屏腳本的頁面：沒有 React、沒有外部資源，用來單獨驗證腳本字串本身。

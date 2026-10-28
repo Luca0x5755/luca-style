@@ -78,10 +78,11 @@ test('component samples remain operable across suite mode and width combinations
     }
   }
   const interactive=page.getByRole('button',{name:'移入或聚焦',exact:true});
+  // 滑過改用推算的 accent-hover（PR-STYLE-45），焦點框為雙圈（PR-STYLE-46）；細節見 focus-ring.spec。
   await interactive.hover();
-  await expect(interactive).toHaveCSS('filter','brightness(0.94)');
+  await expect(interactive).toHaveCSS('filter','none');
   await interactive.focus();
-  await expect(interactive).toHaveCSS('outline-width','3px');
+  await expect(interactive).toHaveCSS('outline-width','2px');
   await page.getByLabel('聚焦欄位').focus();
   await expect(page.getByLabel('聚焦欄位')).toHaveCSS('outline-width','2px');
 });

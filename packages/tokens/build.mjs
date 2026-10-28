@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import StyleDictionary from 'style-dictionary';
+import { deriveAccent } from './accent.js';
 
 // 設計變數產生器：讀 DTCG 分層原始檔，經 Style Dictionary 產生與 0.1.0 相同結構的 css、data、typography。
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
@@ -49,7 +50,8 @@ const formats = {
 const createDictionary = (files, platforms) => new StyleDictionary({
   source: files.map(file => toGlob(join(source, file))),
   usesDtcg: true,
-  log: { verbosity: 'silent', warnings: 'disabled' },
+  // 參照斷掉（例如某組合缺 accent）時不在解析階段拋錯，交給下面的完整性檢查指出缺的變數與組合。
+  log: { verbosity: 'silent', warnings: 'disabled', errors: { brokenReferences: 'console' } },
   hooks: { formats },
   platforms,
 });
@@ -83,15 +85,11 @@ const themes = [];
 for (const suite of suites) {
   for (const mode of modes) {
     const isDefault = suite === suites[0] && mode === modes[0];
-    const dictionary = createDictionary(layersOf(suite, mode), {
-      css: { files: [{ destination: 'tokens.css', format: 'luca/css-theme', options: {
-        mode, selector: `${isDefault ? ':root, ' : ''}[data-luca-theme][data-suite="${suite}"][data-mode="${mode}"]`,
-      } }] },
-      data: { files: [{ destination: 'tokens.json', format: 'luca/json-theme' }] },
-    });
+    const selector = `${isDefault ? ':root, ' : ''}[data-luca-theme][data-suite="${suite}"][data-mode="${mode}"]`;
+    const dictionary = createDictionary(layersOf(suite, mode), { css: {} });
     const { allTokens } = await dictionary.getPlatformTokens('css');
     for (const file of layersOf(suite, mode)) for (const name of await declaredNames(file)) expected.add(name);
-    themes.push({ suite, mode, dictionary, allTokens, valued: new Set(allTokens.map(nameOf)) });
+    themes.push({ suite, mode, selector, allTokens, valued: new Set(allTokens.map(nameOf)) });
   }
 }
 
@@ -103,12 +101,28 @@ if (missing.length) {
   process.exit(1);
 }
 
-// 第三步：輸出。data 以「套系 → 明暗 → 變數」三層索引。
+// 第三步：推算角色。標了 derive 的變數（滑過、按下、焦點框）以 accent.js 的 deriveAccent 改寫值，
+// 輸入是同一套系兩種明暗的人工主色與該組合的中性色；與 ThemeProvider 推算專案強調色是同一份函式（PR-STYLE-32、45）。
+const valueIn = (allTokens, name) => allTokens.find(token => nameOf(token) === name)?.$value;
+for (const { suite, mode, allTokens } of themes) {
+  const accentOf = other => valueIn(themes.find(theme => theme.suite === suite && theme.mode === other).allTokens, 'accent');
+  const neutrals = Object.fromEntries(['bg', 'surface', 'surface-subtle', 'text', 'muted', 'accent-ink'].map(name => [name, valueIn(allTokens, name)]));
+  const roles = deriveAccent({ light: accentOf('light'), dark: accentOf('dark') }, mode, neutrals);
+  for (const token of allTokens) {
+    const role = ours(token).derive;
+    if (!role) continue;
+    // derive 寫錯時直接失敗，否則 undefined 會被寫進輸出。
+    if (!(role in roles)) { console.error(`不認得的推算角色：${nameOf(token)} 的 derive 為 ${role}`); process.exit(1); }
+    token.$value = roles[role];
+  }
+}
+
+// 第四步：輸出。data 以「套系 → 明暗 → 變數」三層索引。format 直接吃已改寫的 allTokens。
 const css = [];
 const data = {};
-for (const { suite, mode, dictionary } of themes) {
-  css.push(await formatOne(dictionary, 'css'));
-  (data[suite] ??= {})[mode] = await formatOne(dictionary, 'data');
+for (const { suite, mode, selector, allTokens } of themes) {
+  css.push(formats['luca/css-theme']({ dictionary: { allTokens }, options: { mode, selector } }));
+  (data[suite] ??= {})[mode] = formats['luca/json-theme']({ dictionary: { allTokens } });
 }
 
 const typographyDictionary = createDictionary(['typography.tokens.json'], {
@@ -124,7 +138,7 @@ css.push(`:root, [data-luca-theme] {\n${declarations(roleVariables('mobile'))}\n
 css.push(`@media(min-width:600px) { :root, [data-luca-theme] {\n${declarations(roleVariables('tablet'))}\n} }`);
 css.push(`@media(min-width:1024px) { :root, [data-luca-theme] {\n${declarations(roleVariables('desktop'))}\n} }`);
 
-// 第四步：設計檔變數資料。程式變數與設計檔變數的聯集，以設計檔的軸（mode × suite × device）展開成 12 個組合。
+// 第五步：設計檔變數資料。程式變數與設計檔變數的聯集，以設計檔的軸（mode × suite × device）展開成 12 個組合。
 // 名稱：$extensions["luca-style"].figName（字體角色字級為群組上的 figSizeName）有給就用設計檔名稱，否則沿用 CSS 變數名。
 // 任何無法轉換的值都讓建置失敗並指出變數，不寫任何輸出。
 const figAxes = { mode: ['Light', 'Dark'], suite: ['Vibrant', 'Professional'], device: ['Desktop', 'Tablet', 'Mobile'] };
