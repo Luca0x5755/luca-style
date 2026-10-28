@@ -29,3 +29,9 @@
 2026-10-19 — 日間次要文字由 #6B796F 加深至 #626F65，修正暖白及柔和強調表面的文字對比；輸入區與選單另設 control-border，提升控制邊界辨識。
 2026-10-24 — 設計稿正本改為依套系拆分的兩個 OpenPencil .fig 套系設計檔，推翻 2026-10-19 集中於單一 components.pen 的決定，因單檔節點數超過 MCP 可編輯上限；見 ADR 0003。
 2026-10-24 — 套系設計檔內依產品頁面開畫布頁（Library guide、Home、Foundations、Components、Product、Intro、NotFound），Light 與 Dark、各裝置同頁，frame 名稱不變，驗收檢查名稱第一段等於畫布頁名；因單頁 176 個 frame 使 OpenPencil 常當掉。分頁複本在 App 內仍曾當機，使用者判斷是 OpenPencil 本身的問題、對方修復中，仍照分頁；分頁是否減少當機未驗證。拆檔仍延後；每頁節點上限暫不設。
+2026-10-28 — 對標七個高星設計系統（報告見 docs/research/design-system-benchmark.md），採納結論寫入 ADR 0004–0006 與以下各行。
+2026-10-28 — 專案強調色改為給一個主色，自動算出整組角色（滑過、按下、柔和底色、邊框、焦點框），且每個角色須通過對比檢查；目前只覆寫 4 個變數，互動狀態色不會跟著換。
+2026-10-28 — 明暗偏好仍由 ThemeProvider 保存，但提供可關閉的開關；鍵名 luca-style-mode 不改，因 badminton 的遷移程式依賴此鍵。
+2026-10-28 — ThemeProvider 提供把主題屬性套在整頁（<html>）的選項，並提供現成的防閃爍首屏腳本；兩個使用端專案目前各自重複補寫這兩件事。
+2026-10-28 — 優先導入 axe 無障礙檢查、逐頁 × 套系 × 明暗截圖比對、設計變數用途說明與代理用規格文件、llms.txt 與 DESIGN.md、組合完整性檢查；changesets 延後至有外部使用者。
+2026-10-28 — 上述變更以 0.2.0 發布並在 consumer-guide 寫升級說明；automated_trading 與 badminton 各自另開議題升級，不在本次範圍。
