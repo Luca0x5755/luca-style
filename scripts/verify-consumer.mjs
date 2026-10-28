@@ -53,7 +53,8 @@ try {
   await choose('風格套系','精緻活力');
   // 開啟明暗選單時套系已切到 vibrant，選單所在容器同步顯示。
   assert.deepEqual(await choose('明暗模式','暗黑'),['vibrant','light']);
-  await page.getByLabel('專案強調色').check();
+  // Checkbox 是 Base UI 的 role=checkbox 節點（ISSUE-010），旁邊的隱藏 input 也會被 getByLabel 找到，所以用角色定位。
+  await page.getByRole('checkbox',{name:'專案強調色'}).check();
   const theme=page.locator('[data-luca-theme]');
   assert.equal(await theme.getAttribute('data-suite'),'vibrant');
   assert.equal(await theme.getAttribute('data-mode'),'dark');

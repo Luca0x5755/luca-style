@@ -24,8 +24,11 @@ const components: [string, (page: Page) => Locator][] = [
   ['secondary button', page => page.getByRole('button', { name: '次要操作', exact: true })],
   ['text field', page => page.getByLabel('預設欄位')],
   ['select', page => page.getByLabel('選單示例')],
-  ['checkbox', page => page.getByLabel('接收更新通知')],
+  // 核取方塊是 Base UI 的 role=checkbox 節點；用角色定位，避免 getByLabel 落到旁邊隱藏的 input。
+  ['checkbox', page => page.getByRole('checkbox', { name: '接收更新通知' })],
   ['navigation link', page => page.getByRole('navigation', { name: '範例導覽' }).getByRole('link', { name: '設計基礎' })],
+  ['navigation brand link', page => page.getByRole('navigation', { name: '範例導覽' }).locator('.luca-brand')],
+  ['content state retry button', page => page.getByRole('region', { name: '內容狀態' }).getByRole('button', { name: '重試', exact: true })],
   ['table region', page => page.getByRole('region', { name: '表格示例，可水平捲動' })],
 ];
 

@@ -1,4 +1,6 @@
 import {Select as BaseSelect} from '@base-ui/react/select';
+import {Checkbox as BaseCheckbox} from '@base-ui/react/checkbox';
+import {Input as BaseInput} from '@base-ui/react/input';
 import {Button} from './button.js';
 import {usePortalContainer} from './theme.js';
 import {Children, Fragment, isValidElement, useId, type ChangeEvent, type HTMLAttributes, type InputHTMLAttributes, type OptionHTMLAttributes, type SelectHTMLAttributes, type ReactNode} from 'react';
@@ -10,7 +12,7 @@ export function TextField({label,error,helper,id:providedId,className='',...prop
   const id=providedId ?? generatedId;
   const description=error ?? helper;
   const describedBy=[props['aria-describedby'],description ? `${id}-description` : undefined].filter(Boolean).join(' ') || undefined;
-  return <div className="luca-field"><label htmlFor={id}>{label}</label><input {...props} className={`luca-input ${className}`.trim()} id={id} aria-invalid={error ? true : props['aria-invalid']} aria-describedby={describedBy}/>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
+  return <div className="luca-field"><label htmlFor={id}>{label}</label><BaseInput {...props} className={`luca-input ${className}`.trim()} id={id} aria-invalid={error ? true : props['aria-invalid']} aria-describedby={describedBy}/>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
 }
 // Select 以 Base UI 的 Select 實作（ADR 0006），公開 props 沿用 0.1.0 原生 select 的寫法：
 // 選項仍以 <option> 子元素描述，onChange 仍收到 event.target.value。多選與列高沒有對應的自訂選單行為，故移除（升級說明有列）。
@@ -66,13 +68,23 @@ export function Select({label,error,helper,id:providedId,className='',children,v
     </BaseSelect.Root>
     {description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
 }
+// Checkbox 以 Base UI 的 Checkbox 實作（ADR 0006）：可見的方框是 role="checkbox" 的節點，旁邊另有隱藏的 <input> 負責表單送出。
+// 公開 props 沿用 0.1.0 原生 input 的寫法，onChange 仍收到 event.target.checked；與原生事件的差異見升級說明。
 export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>,'type'> & FieldDetails;
-export function Checkbox({label,error,helper,id:providedId,className='',...props}:CheckboxProps) {
+export function Checkbox({label,error,helper,id:providedId,className='',checked,defaultChecked,disabled,required,readOnly,name,form,value,onChange,...props}:CheckboxProps) {
   const generatedId=useId();
   const id=providedId ?? generatedId;
   const description=error ?? helper;
   const describedBy=[props['aria-describedby'],description ? `${id}-description` : undefined].filter(Boolean).join(' ') || undefined;
-  return <div className="luca-field"><label className="luca-checkbox" htmlFor={id}><input {...props} type="checkbox" id={id} className={className} aria-invalid={error ? true : props['aria-invalid']} aria-describedby={describedBy}/>{label}</label>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
+  const change=(next:boolean) => {
+    const target={checked:next, value:value === undefined ? 'on' : String(value), name:name ?? '', id};
+    onChange?.({target, currentTarget:target, type:'change'} as unknown as ChangeEvent<HTMLInputElement>);
+  };
+  return <div className="luca-field"><label className="luca-checkbox" htmlFor={id}>
+    {/* 其餘屬性（aria-*、data-*、焦點事件等）交給方框節點；事件的 currentTarget 因此是該節點而不是 input。 */}
+    <BaseCheckbox.Root {...props as HTMLAttributes<HTMLSpanElement>} id={id} className={`luca-checkbox-box ${className}`.trim()} checked={checked} defaultChecked={defaultChecked} disabled={disabled} required={required} readOnly={readOnly} name={name} form={form} value={value === undefined ? undefined : String(value)} onCheckedChange={change} aria-invalid={error ? true : props['aria-invalid']} aria-describedby={describedBy}>
+      <BaseCheckbox.Indicator className="luca-checkbox-indicator"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></BaseCheckbox.Indicator>
+    </BaseCheckbox.Root>{label}</label>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
 }
 export type StatusTone = 'success' | 'warning' | 'error';
 const statusLabels={success:'成功',warning:'警告',error:'錯誤'};

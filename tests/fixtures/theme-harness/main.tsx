@@ -4,7 +4,7 @@ import '@luca-style/tokens/css';
 import '../../../packages/react/src/styles.css';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, ContentState, DataTable, MetricCard, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
+import { Button, Checkbox, ContentState, DataTable, MetricCard, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
 
 const params = new URLSearchParams(window.location.search);
 const persist = params.get('persist') !== '0';
@@ -54,11 +54,37 @@ function SelectCompatibility() {
   </form>;
 }
 
+// 0.1.0 寫法的相容樣本（ISSUE-010）：Button、TextField、Checkbox 的受控值、事件、name 送出、aria-*、data-*。
+function ControlCompatibility() {
+  const [text, setText] = useState('初值');
+  const [agreed, setAgreed] = useState(false);
+  const [events, setEvents] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState('');
+  const log = (entry:string) => setEvents(list => [...list, entry]);
+  return <form aria-label="控制項相容性" onSubmit={event => { event.preventDefault(); setSubmitted(JSON.stringify([...new FormData(event.currentTarget)])); }}>
+    <TextField label="受控欄位" name="title" value={text} onChange={event => setText(event.target.value)} onFocus={() => log('欄位 focus')} onBlur={() => log('欄位 blur')} helper="提示文字" data-sample="text" required placeholder="輸入" maxLength={20}/>
+    <output aria-label="欄位值">{text}</output>
+    <TextField label="錯誤欄位" error="格式不對" aria-describedby="control-note"/>
+    <p id="control-note">補充說明</p>
+    <TextField label="預設值欄位" defaultValue="甲" className="extra"/>
+    <Checkbox label="受控核取" name="agree" value="yes" checked={agreed} onChange={event => setAgreed(event.target.checked)} onFocus={() => log('核取 focus')} helper="勾選說明" data-sample="box"/>
+    <output aria-label="核取值">{String(agreed)}</output>
+    <Checkbox label="預設勾選" name="opt" defaultChecked className="extra"/>
+    <Checkbox label="錯誤核取" error="必須勾選" aria-describedby="control-note"/>
+    <Checkbox label="停用核取" name="off" disabled defaultChecked/>
+    <Button type="submit" onClick={() => log('按鈕 click')} data-sample="button" aria-label="送出控制項">送出</Button>
+    <Button type="button" variant="secondary" className="extra" title="次要提示">次要</Button>
+    <Button loading>處理</Button>
+    <output aria-label="事件紀錄">{events.join(',')}</output>
+    <output aria-label="控制項送出內容">{submitted}</output>
+  </form>;
+}
+
 function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/></ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/></ThemeProvider>}
   </>;
 }
 

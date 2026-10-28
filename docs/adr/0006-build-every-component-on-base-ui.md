@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # Build every component on Base UI, including Select
 

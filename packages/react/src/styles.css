@@ -30,8 +30,13 @@
 .luca-field-helper { color:var(--muted); }
 .luca-field-error { color:var(--error); }
 .luca-checkbox { display:flex; gap:var(--space-3); align-items:center; min-height:var(--control-height); cursor:pointer; }
-.luca-checkbox input { flex:none; width:1.25rem; height:1.25rem; accent-color:var(--accent); margin:0; }
-.luca-checkbox input:disabled { opacity:.6; cursor:not-allowed; }
+.luca-checkbox-box { display:flex; flex:none; align-items:center; justify-content:center; box-sizing:border-box; width:1.25rem; height:1.25rem; margin:0; padding:0; border:1px solid var(--control-border); border-radius:calc(var(--radius-control) / 2); background:var(--surface); color:var(--accent-ink); cursor:pointer; }
+/* 勾選或不確定時填主色，打勾圖示用填色按鈕的文字色；未勾選時圖示不渲染。 */
+.luca-checkbox-box[data-checked], .luca-checkbox-box[data-indeterminate] { background:var(--accent); border-color:var(--accent); }
+.luca-checkbox-box[aria-invalid=true] { border-color:var(--error); }
+.luca-checkbox-box[data-disabled] { opacity:.6; cursor:not-allowed; }
+.luca-checkbox-indicator { display:flex; }
+.luca-checkbox-indicator[data-unchecked] { display:none; }
 .luca-status { padding:var(--space-3) var(--space-4); border:1px solid currentColor; border-radius:var(--radius-control); background:var(--surface); font:400 .875rem/1.6 var(--font-body); overflow-wrap:anywhere; }
 .luca-status-success { color:var(--success); } .luca-status-warning { color:var(--warning); } .luca-status-error { color:var(--error); }
 .luca-content-state { padding:var(--card-padding); border:var(--border-width) solid var(--border); border-radius:var(--radius-card); background:var(--surface); min-width:0; }
@@ -45,7 +50,7 @@
 @media (prefers-reduced-motion: reduce) { .luca-loading-animation { background-image:var(--loading-static,url('../loading/tide-light.png')); } }
 .luca-navigation { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-4); padding:var(--space-4) var(--space-6); background:var(--surface); border-bottom:var(--border-width) solid var(--border); }
 .luca-navigation .luca-brand { margin-right:auto; color:var(--text); text-decoration:none; font:600 1.125rem/1.5 var(--font-body); }
-.luca-navigation > div { display:flex; flex-wrap:wrap; gap:var(--space-4); }
+.luca-navigation-list { display:flex; flex-wrap:wrap; gap:var(--space-4); margin:0; padding:0; list-style:none; }
 .luca-navigation a { color:var(--muted); font-size:.875rem; text-underline-offset:4px; }
 .luca-navigation a[aria-current=page] { color:var(--accent); font-weight:600; }
 .luca-metric { min-width:0; padding:var(--card-padding); border:var(--border-width) solid var(--border); border-left-width:var(--metric-border-left); border-radius:var(--radius-card); background:var(--surface); }
@@ -61,4 +66,4 @@
 /* 儲存格內距隨資訊密度改變（§5.4.1），standard 即 0.1.0 的 12px／8px。 */
 .luca-table th,.luca-table td { padding:var(--table-cell-padding-block) var(--table-cell-padding-inline); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
 /* 所有元件共用的雙圈焦點框（PR-STYLE-46）：外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
-.luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox input:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }
+.luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox-box:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }

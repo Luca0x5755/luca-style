@@ -191,3 +191,27 @@ await page.getByRole('option', {name:'暗黑'}).click();
 - 停用的選項在選單中顯示為「名稱（不可選）」，可以用方向鍵移到它，但無法選取。
 - 以 `select` 標籤選擇器寫的 CSS 或 DOM 查詢（例如 `document.querySelectorAll('select')`）不再找得到 `Select`；改用 `.luca-select-trigger`。
 - Vite 建置時，Base UI 檔案開頭的 `'use client'` 會產生「module level directive may not be preserved」警告，不影響輸出，可以忽略。
+
+### 其餘共用元件改用 Base UI（ISSUE-010）
+
+`Button`、`TextField`、`Checkbox`、`Navigation` 也由 Base UI 處理互動、鍵盤與焦點，所有元件的焦點樣式都是 ISSUE-006 的雙圈。`MetricCard`、`StatusMessage`、`ContentState`、`DataTable` 沒有對應的 Base UI 元件，維持原樣；`ContentState` 的重試按鈕就是新的 `Button`。公開 props 與 class 名稱（`.luca-button`、`.luca-input`、`.luca-brand` 等）都保留。
+
+`Button`、`TextField` 完全相容：仍是原生 `<button>`、`<input>`，事件、`ref` 與其他屬性照舊。`Button` 的 `disabled`、`loading` 仍使停用、不可聚焦。
+
+`Checkbox` 不相容處：
+
+- DOM 改變：可見的方框是 `role="checkbox"` 的 `<span class="luca-checkbox-box">`，旁邊另有 `aria-hidden` 的隱藏 `<input type="checkbox">` 負責表單送出（有給 `name` 時仍會進入 `FormData`，沒給 `value` 時為 `on`；停用時不送出，與原生相同）。`input[type=checkbox]`、`.luca-checkbox input` 的選擇器或 CSS 不再命中可見的方框；改用 `[role=checkbox]` 或 `.luca-checkbox-box`。
+- `getByLabel('…')` 會同時找到方框與隱藏的 input（兩個元素，Playwright 的 strict mode 會報錯）。端對端測試改為 `getByRole('checkbox', {name:'…'})`，`check()`、`uncheck()`、`toBeChecked()`、`toBeDisabled()` 都照常可用。
+- `onChange` 收到的不是瀏覽器原生的 change 事件，只有 `type: 'change'` 與 `target`／`currentTarget` 上的 `checked`、`value`（沒給 `value` 時為 `on`）、`name`、`id`。`preventDefault()`、`nativeEvent` 等都不存在。
+- 其他屬性（`className`、`title`、`data-*`、`aria-*`、`onFocus`、`onBlur`、`onKeyDown` 等）套在方框上，不是 `<input>`；型別仍宣告為 `HTMLInputElement` 的事件，但執行時的 `currentTarget` 是方框。`className` 因此加在方框上，不再是 input。
+- 原生 `<input>` 專屬的屬性（例如 `autoFocus`、`tabIndex`）落在方框節點，不是隱藏的 input。
+- 外觀：方框改為依主題自繪（邊界 `control-border`、勾選時填主色、打勾用 `accent-ink`），不再用瀏覽器的 `accent-color`。
+- 在原生 `<fieldset disabled>` 內時，Base UI 的方框不會被瀏覽器自動停用；樣張的「儲存中」流程是自己傳 `disabled`。使用端若靠 fieldset 一次停用，請改為對每個 `Checkbox` 傳 `disabled`。
+- 空白鍵切換，Enter 不切換也不會送出表單（原生核取方塊按 Enter 會送出所在表單）。
+
+`Navigation` 不相容處：
+
+- 連結列由 `<div>` 改為 `<ul class="luca-navigation-list">` 加 `<li>`；`.luca-navigation > div` 的 CSS 或查詢要改為 `.luca-navigation-list`。連結仍是 `<a>`，目前頁面仍有 `aria-current="page"`，`.luca-brand` 仍是 `<nav>` 下的第一個 `<a>`。
+- 外層 `<nav>` 由 Base UI 的 NavigationMenu 渲染，會多帶 Base UI 自己的 `data-*` 屬性。
+
+另外，Vite 建置時多出幾個 Base UI 檔案的 `'use client'` 警告，與 Select 相同，可以忽略。
