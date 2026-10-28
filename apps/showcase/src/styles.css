@@ -90,9 +90,11 @@ code { overflow-wrap:anywhere; }
 .editorial-page .luca-metric { margin-bottom:var(--space-4); }
 .editorial-statements { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--gap-section); }
 .editorial-statements section { min-width:0; }
-.editorial-statements small { display:block; color:var(--accent); margin-bottom:var(--space-3); }
+/* 精緻活力日間的強調色在頁面底色上只有約 4.45:1，未達小字 4.5:1；序號改用正文色。 */
+.editorial-statements small { display:block; color:var(--text); margin-bottom:var(--space-3); }
 .editorial-explore > div { display:flex; flex-wrap:wrap; gap:var(--space-4); }
-.editorial-explore a,.intro-panel > a,.intro-close > a,.not-found-action { display:inline-flex; align-items:center; min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--accent); border-radius:var(--radius-control); color:var(--accent); font-weight:500; text-decoration:none; }
+/* 強調色文字的外框連結一律放在表面色上，四種套系 × 明暗組合都達 4.5:1。 */
+.editorial-explore a,.intro-panel > a,.intro-close > a,.not-found-action { display:inline-flex; align-items:center; min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--accent); border-radius:var(--radius-control); background:var(--surface); color:var(--accent); font-weight:500; text-decoration:none; }
 .not-found-action { background:var(--accent); color:var(--accent-ink); }
 .editorial-page a:focus-visible { outline:3px solid var(--text); outline-offset:3px; }
 .editorial-hero,.intro-detail { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:var(--gap-section); align-items:start; }
