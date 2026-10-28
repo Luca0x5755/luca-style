@@ -75,6 +75,35 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 
 人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 OpenPencil 工具同步相同角色與母版（母版只有一份，本 repo 以 `scripts/design/check-masters.js` 核對母版齊全、已綁定且四種套系與明暗組合的解析值等於 variables.json）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與元件庫設計檔。元件命名對應不是自動同步或像素保證。
 
+## 複製元件庫設計檔並匯入專案強調色
+
+使用端的設計稿從元件庫設計檔複製開始（ADR 0007）：檔案含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準。
+
+前提：需要一份 luca-style 檢出，並先在檢出內執行 `npm ci` 與 `npm run generate`（匯入腳本從 `packages/tokens/dist/tokens.json` 取各套系的中性色）。腳本與設計檔都不在 npm 套件內，不能只靠安裝 `@luca-style/react`。另需安裝 `openpencil` CLI（離線編輯，不需開 App）。
+
+### 第一次：複製並匯入強調色
+
+1. 把檢出內的 `docs/mockup/luca-style-library.fig` 複製到自己專案，例如 `docs/mockup/my-library.fig`。之後在這份複本上畫稿，不要改 luca-style 的原檔。
+2. 在 luca-style 檢出內執行。第一個參數是你複製出來的 .fig 路徑；`--accent` 與 `ThemeProvider` 的 `accent` 屬性是同一種 `AccentInput`（只有 `light` 必填）：
+
+```sh
+node scripts/design/import-accent.js /path/to/my-project/docs/mockup/my-library.fig --accent '{"light":"#B5179E"}'
+```
+
+腳本呼叫與 `ThemeProvider` 同一份 `deriveAccent`，把 `Suite x Mode` 集合內的 `accent`、`secondary`（點綴色）、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring` 寫成推算值；Vibrant／Professional × Light／Dark 四個模式各以該套系該明暗的中性色推算。成功、警告、錯誤色與其他變數不動（ADR 0002）。重跑同樣的輸入會回報「已是最新」而不寫檔。
+
+匯入後母版畫面會顯示這組強調色（主要按鈕、滑過、焦點框、Select 選單等）。`accent-pressed` 沒有對應的按下狀態母版，只存在於變數；畫稿需要按下色時綁這個變數。
+
+### luca-style 更新後：重新匯入設計變數
+
+複本裡的母版與變數不會自動更新。luca-style 有新版（設計變數或母版變動）時：
+
+1. 更新 luca-style 檢出並重新 `npm run generate`。
+2. 要取得新版變數與母版：把新版 `luca-style-library.fig` 重新複製成你的複本（會覆蓋複本上的畫稿，先備份），再重跑上面的 `import-accent.js`。
+3. 只是專案換了主色：直接對現有複本重跑 `import-accent.js` 並給新的 `--accent`。
+
+沒有把新版母版合併進舊設計稿的腳本；舊設計稿上的畫面需要時自行比對新母版調整。
+
 ## 內容載入動畫
 
 `ContentState state="loading"` 會隨 `ThemeProvider` 的套系與明暗模式顯示專屬載入 GIF（活力：潮汐波紋；專業：方序循環）。載入套件 CSS 即可；GIF 與減少動態使用的靜態 PNG 位於套件 `loading/`，由建置工具解析 CSS 相對路徑，不需複製到網站 public。動畫顯示 72px，保留文字與 `aria-busy`；離開 loading 狀態後移除。

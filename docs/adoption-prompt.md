@@ -24,7 +24,7 @@
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
    - packages/tokens/src/（DTCG 分層檔）：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 OpenPencil 工具開啟元件庫設計檔 docs/mockup/luca-style-library.fig（只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準），以 Suite、Mode、Suite x Mode 三個集合的模式切換套系與明暗。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。
+3. 需要核對視覺設計時，使用 OpenPencil 工具開啟元件庫設計檔 docs/mockup/luca-style-library.fig（只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準），以 Suite、Mode、Suite x Mode 三個集合的模式切換套系與明暗。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，複製此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/import-accent.js；luca-style 更新後的重新匯入也寫在該節。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】
