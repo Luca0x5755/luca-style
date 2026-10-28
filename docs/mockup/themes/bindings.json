@@ -119,11 +119,9 @@
   {"path":"3","type":"text","bind":{"fill":"muted","fontFamily":"font-zh"}},
   {"path":"4","type":"icon","bind":{"fill":"text"}}
  ]},
- {"frame":"C/Nav/Mobile","nodeCount":4,"nodes":[
+ {"frame":"C/Nav/Mobile","nodeCount":2,"nodes":[
   {"path":"-","type":"frame","bind":{"fill":"surface","stroke":"border"}},
-  {"path":"0","type":"text","bind":{"fill":"text","fontFamily":"font-en"}},
-  {"path":"1","type":"icon","bind":{"fill":"text"}},
-  {"path":"2","type":"icon","bind":{"fill":"text"}}
+  {"path":"0","type":"text","bind":{"fill":"text","fontFamily":"font-en"}}
  ]},
  {"frame":"C/Select","nodeCount":5,"nodes":[
   {"path":"-","type":"frame","bind":{"fill":"surface","cornerRadius":"radius-card","stroke":"border"}},

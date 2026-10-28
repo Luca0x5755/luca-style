@@ -198,7 +198,7 @@ test('--check 輸出節點數，達到上限時失敗', () => {
   t.run();
   // 23 個母版共 110 個節點，加上畫布頁與存放變數的空白 Internal Only Canvas 頁。
   const ok = t.run(['--check']);
-  assert.match(ok.out, /節點數 112/);
+  assert.match(ok.out, /節點數 110/);
   const over = t.run(['--check'], { APPLY_VARIABLES_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
   assert.match(over.out, /節點數/);

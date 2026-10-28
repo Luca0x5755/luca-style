@@ -113,10 +113,10 @@ test('--check 在綁定與儲存值被改壞時結束碼 1 並指名母版與節
 
 test('--check 輸出節點數，達到上限時失敗', () => {
   const t = setup();
-  assert.match(t.run(['--check']).out, /節點數 112/);
+  assert.match(t.run(['--check']).out, /節點數 110/);
   const over = t.run(['--check'], { APPLY_BINDINGS_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
-  assert.match(over.out, /節點數 112 已達上限 100/);
+  assert.match(over.out, /節點數 110 已達上限 100/);
 });
 
 test('bindings.json 指名的變數不在 variables.json 時以結束碼 1 拒絕，不改檔', () => {
@@ -143,7 +143,7 @@ test('資料檔缺漏時以結束碼 2 拒絕，不改檔', () => {
 // 與 bindings.json 的 23 個母版逐類型計數推得的字面數字比對。
 test('真實設計檔：各欄位的綁定筆數等於 bindings.json 的獨立計數，且沒有懸空綁定', () => {
   const expected = {
-    'fills/0/color': 104, 'strokes/0/color': 35, fontFamily: 56, cornerRadius: 34,
+    'fills/0/color': 102, 'strokes/0/color': 35, fontFamily: 56, cornerRadius: 34,
     strokeWeight: 7, borderLeftWeight: 1, paddingLeft: 2, paddingRight: 2, paddingTop: 2, paddingBottom: 2,
   };
   const got = JSON.parse(evalOn(library, `
