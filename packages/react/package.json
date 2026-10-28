@@ -1,6 +1,6 @@
 {
   "name": "@luca-style/react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "files": [
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@luca-style/tokens": "0.1.0"
+    "@luca-style/tokens": "0.2.0"
   },
   "scripts": {
     "prepack": "node -e \"const fs=require('node:fs');fs.copyFileSync('../../LICENSE','LICENSE');fs.copyFileSync('../../DESIGN.md','DESIGN.md');fs.copyFileSync('../../llms.txt','llms.txt')\"",

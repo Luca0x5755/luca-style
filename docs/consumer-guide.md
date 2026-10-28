@@ -18,7 +18,7 @@ npm pack ./packages/react --pack-destination .
 把兩份 `.tgz` 移到使用端可存取位置。在獨立 React 專案執行（路徑依環境替換）：
 
 ```sh
-npm install /path/to/luca-style-tokens-0.1.0.tgz /path/to/luca-style-react-0.1.0.tgz react@^19 react-dom@^19
+npm install /path/to/luca-style-tokens-0.2.0.tgz /path/to/luca-style-react-0.2.0.tgz react@^19 react-dom@^19
 ```
 
 兩個套件版本須一致；React 為 peer dependency。沒有公開 npm 發布要求。不可引用 `packages/*/src`；`dist` 是產物，不提交手改。
@@ -118,9 +118,33 @@ npm run test:consumer
 
 驗證會封裝 tarball，在作業系統暫存目錄建立獨立專案、從 registry 安裝工具依賴、型別檢查、production build，於獨立 4174 port 啟動預覽，再以 Chromium 操作主題與元件並取得字體／授權。完成後關閉瀏覽器與伺服器並清除其暫存目錄。需網路及可用 4174 port；不發布 npm，不使用 workspace alias。
 
-## 0.2.0 升級說明（草稿，待 ISSUE-014 完成）
+## 0.2.0 升級說明
 
-### 整頁主題與防閃爍（ISSUE-007）
+從 0.1.0 升級時，依〈建置、封裝與安裝〉重新封裝並安裝兩個 0.2.0 tarball（兩個套件版本須一致）。`@luca-style/react` 新增執行期依賴 `@base-ui/react` ^1.9，隨 tarball 一起安裝；`react-dom` 19 列為 peer。沒給 `accent`、沒覆寫 `density`／`shape` 的專案，版面、色彩與 0.1.0 相同，但所有元件的焦點框改為雙圈、主按鈕滑過改用推算色（見〈專案強調色〉），Checkbox 的方框改為依主題自繪、不再用瀏覽器的 `accent-color`（見〈其餘共用元件改用 Base UI〉）。
+
+摘要：
+
+- **必改**：有傳 `accent` 的專案改成 `AccentInput`（舊寫法會造成型別錯誤）；傳給 `Select` 的 `multiple`、`size` 或陣列值要拿掉。
+- **可刪**：手寫的首屏防閃爍腳本、把 `resolvedMode` 同步到 `<html>` 的 effect、只為整頁底色加的 `html` 背景規則（見〈整頁主題與防閃爍〉）。
+- **可能要調整的測試**：見〈要調整的測試〉；最常見的是 Select 不再是原生 `<select>`，`selectOption()` 不能用。
+- **不相容處**：Select、Checkbox、Navigation 的 DOM 與事件物件改變，逐條列在各元件小節。
+- **設計稿**：0.1.0 的 `components.pen` 與依套系拆開的 `.fig` 已移除，改從元件庫設計檔複製開始，見〈複製元件庫設計檔並匯入專案強調色〉。
+
+### 要調整的測試
+
+| 0.1.0 的寫法 | 0.2.0 的寫法 | 原因 |
+| --- | --- | --- |
+| `getByLabel('…').selectOption('dark')` | `getByLabel('…').click()` 後 `getByRole('option', {name:'暗黑'}).click()` | Select 改為自訂選單 |
+| Select 上的 `toHaveValue('dark')` | `toHaveText('暗黑')`（比對顯示文字） | 欄位是 `<button>`，沒有 `value` |
+| `select`、`document.querySelectorAll('select')` | `.luca-select-trigger` 或 `getByRole('combobox')` | 同上 |
+| Checkbox 的 `getByLabel('…')` | `getByRole('checkbox', {name:'…'})` | `getByLabel` 會同時找到方框與隱藏的 input，strict mode 報錯 |
+| `input[type=checkbox]`、`.luca-checkbox input` | `[role=checkbox]` 或 `.luca-checkbox-box` | 可見的方框改為 `<span>` |
+| 斷言按鈕滑過的 `filter: brightness(...)` | 斷言背景色等於 `--accent-hover` | 滑過改用推算色 |
+| 斷言焦點框為 3px 文字色單圈 | 2px 表面色內圈＋2px `--focus-ring` 外圈 | 焦點框改為雙圈 |
+| `.luca-navigation > div` | `.luca-navigation-list` | 連結列改為 `<ul>`／`<li>` |
+| 依賴主題外層 `div` 結構（`target="document"` 時） | 主題容器 `[data-luca-theme]` 是 `<html>` | 主題套在整頁 |
+
+### 整頁主題與防閃爍
 
 使用端可刪掉的自補程式：
 
@@ -135,13 +159,13 @@ npm run test:consumer
 - 偏好鍵名仍是 `luca-style-mode`，值仍為 `light`／`dark` 純字串；0.1.0 存下的選擇不需遷移。
 - `target="document"` 後頁面上符合 `[data-luca-theme]` 的元素是 `<html>`，不再有外層 `div`；以該選擇器找主題容器的測試仍可用，但依賴外層 `div` 結構的 CSS 或測試要調整。
 
-### 資訊密度與元件外形可單獨覆寫（ISSUE-008）
+### 資訊密度與元件外形可單獨覆寫
 
 - 沒給 `density`、`shape` 時畫面與 0.1.0 相同，不需修改。
 - 新增 CSS 變數 `--table-cell-padding-block`、`--table-cell-padding-inline`（預設 12px／8px，即 0.1.0 表格儲存格內距），也寫進設計檔變數。
 - `--control-height` 改由密度等級提供，精緻專業 comfortable 為 52px；直接在頁面覆寫這些變數的寫法仍有效。
 
-### 專案強調色改為 `AccentInput`（ISSUE-006）
+### 專案強調色改為 `AccentInput`
 
 舊的兩種寫法已移除，傳入會造成型別錯誤。新舊對照：
 
@@ -159,7 +183,7 @@ npm run test:consumer
 - 按鈕滑過不再用 `filter:brightness(.94)`，改為 `--accent-hover`；測試若斷言 `filter` 或焦點框粗細（舊為 3px 文字色單圈，現為 2px 表面色內圈＋2px 主色外圈）需調整。
 - 新增的 CSS 變數：`--accent-hover`、`--accent-pressed`、`--focus-ring`；套系預設值在建置時算好，也寫進設計檔變數。
 
-### Select 改為自訂選單（ISSUE-009）
+### Select 改為自訂選單
 
 `Select` 改由 Base UI 的 Select 實作，選單外觀跟著風格套系、明暗模式與元件外形。`@luca-style/react` 新增依賴 `@base-ui/react` ^1.9，`react-dom` 19 列為 peer。
 
@@ -192,9 +216,9 @@ await page.getByRole('option', {name:'暗黑'}).click();
 - 以 `select` 標籤選擇器寫的 CSS 或 DOM 查詢（例如 `document.querySelectorAll('select')`）不再找得到 `Select`；改用 `.luca-select-trigger`。
 - Vite 建置時，Base UI 檔案開頭的 `'use client'` 會產生「module level directive may not be preserved」警告，不影響輸出，可以忽略。
 
-### 其餘共用元件改用 Base UI（ISSUE-010）
+### 其餘共用元件改用 Base UI
 
-`Button`、`TextField`、`Checkbox`、`Navigation` 也由 Base UI 處理互動、鍵盤與焦點，所有元件的焦點樣式都是 ISSUE-006 的雙圈。`MetricCard`、`StatusMessage`、`ContentState`、`DataTable` 沒有對應的 Base UI 元件，維持原樣；`ContentState` 的重試按鈕就是新的 `Button`。公開 props 與 class 名稱（`.luca-button`、`.luca-input`、`.luca-brand` 等）都保留。
+`Button`、`TextField`、`Checkbox`、`Navigation` 也由 Base UI 處理互動、鍵盤與焦點，所有元件的焦點樣式都是上述雙圈。`MetricCard`、`StatusMessage`、`ContentState`、`DataTable` 沒有對應的 Base UI 元件，維持原樣；`ContentState` 的重試按鈕就是新的 `Button`。公開 props 與 class 名稱（`.luca-button`、`.luca-input`、`.luca-brand` 等）都保留。
 
 `Button`、`TextField` 完全相容：仍是原生 `<button>`、`<input>`，事件、`ref` 與其他屬性照舊。`Button` 的 `disabled`、`loading` 仍使停用、不可聚焦。
 

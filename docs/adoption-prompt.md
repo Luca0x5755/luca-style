@@ -52,7 +52,7 @@
 
 ## 已套用舊版的專案：升級提示詞
 
-適用於已依舊版（設計稿為單一 `docs/mockup/components.pen`）套用過 Luca Style 的專案。設計來源這次的差異是設計稿正本：改為兩個依套系拆開的 OpenPencil `.fig`，`components.pen` 已移除；tokens 與 React 套件的公開 API、版本號（0.1.0）都沒有變，所以升級以文件、設計稿比對與資產核對為主，不需要重寫元件。若專案連 tokens 數值也沒更新，才依步驟 4 處理。
+適用於已依 0.1.0 套用過 Luca Style 的專案。設計稿正本改為元件庫設計檔 `docs/mockup/luca-style-library.fig`（只含設計變數與母版），舊的 `components.pen` 已移除。tokens 與 React 套件升為 0.2.0，有不相容處（專案強調色寫法、Select 與 Checkbox 的 DOM、使用端測試的寫法），逐條列在 docs/consumer-guide.md〈0.2.0 升級說明〉；整頁主題與防閃爍的自補程式可以刪掉。套件升級依步驟 4 處理。
 
 先在設計來源 `git pull`（或重新 clone）取得最新內容，再複製下方提示詞。
 
@@ -70,7 +70,7 @@
 
 【已知差異與處理】
 3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.fig，透過 OpenPencil 工具讀取。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。
-4. tokens 與套件：比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔與專案目前使用的數值。公開 API 與 0.1.0 版本沒有變，若數值一致就不重新安裝；不一致才依 docs/consumer-guide.md 重新建置、封裝並安裝同版 tarball（兩個套件版本須一致），或同步其他框架的自建 tokens。
+4. tokens 與套件：仍是 0.1.0 時，依 docs/consumer-guide.md 重新建置、封裝並安裝 0.2.0 tarball（兩個套件版本須一致），再逐條處理〈0.2.0 升級說明〉：改寫 `accent` 寫法、刪掉整頁主題與防閃爍的自補程式、調整操作 Select 與 Checkbox 的測試。其他框架則比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔，同步自建 tokens。
 5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.fig` 的路徑。
 6. 若專案在第 1 步記錄的 commit 之前就有自訂覆寫（強調色、密度、資料色），確認它們沒有被新的套系預設取代；覆寫值不變。
 
