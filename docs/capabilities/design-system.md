@@ -104,5 +104,5 @@ PR-FILE-14 — 兩個套系設計檔內沒有 NaN 行高、自動排版內相鄰
 - [前端 §5.1 字體與響應式字級](../05_frontend_spec.md#51-字體與響應式字級能力設計系統)，包含 §5.1.1 字體角色及 §5.1.2 響應式規則；對應 `PR-STYLE-08`、`PR-STYLE-09`。
 - [前端 §5.2 路由](../05_frontend_spec.md#52-路由能力設計系統)；路徑相對於部署 base path，對應 `PR-STYLE-15` 至 `PR-STYLE-18`、`PR-STYLE-24`。
 - [前端 §5.3 頁面與狀態](../05_frontend_spec.md#53-頁面與狀態能力設計系統)，包含 §5.3.1 入口、§5.3.2 設計基礎、§5.3.3 共用元件、§5.3.4 產品介面範本、§5.3.5 介紹頁範本、§5.3.6 找不到頁面；對應 `PR-STYLE-12` 至 `PR-STYLE-14`。
-- [前端 §5.4 共用風格角色](../05_frontend_spec.md#54-共用風格角色能力設計系統)；對應 `PR-STYLE-01` 至 `PR-STYLE-07`、`PR-STYLE-09` 至 `PR-STYLE-11`。
-- [前端 §5.5 共用 OpenPencil 元件](../05_frontend_spec.md#55-共用-openpencil-元件能力設計系統)，包含 §5.5.1 母版元件與檢視板、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。
+- [前端 §5.4 共用風格角色](../05_frontend_spec.md#54-共用風格角色能力設計系統)，包含 §5.4.1 資訊密度、§5.4.2 元件外形；對應 `PR-STYLE-01` 至 `PR-STYLE-07`、`PR-STYLE-09` 至 `PR-STYLE-11`。
+- [前端 §5.5 共用 OpenPencil 元件](../05_frontend_spec.md#55-共用-openpencil-元件能力設計系統)，包含 §5.5.1 母版元件、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。

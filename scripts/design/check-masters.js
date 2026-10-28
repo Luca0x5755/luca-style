@@ -5,7 +5,7 @@
 // 結束碼：0 全部相同；1 有差異（逐行列出）；2 讀檔失敗。
 //
 // 比對單元（以名稱配對，兩檔各一份）：
-//   - 22 個 COMPONENT 母版（名稱 C/...，名單寫死於 EXPECTED_MASTERS）
+//   - 23 個 COMPONENT 母版（名稱 C/...，名單寫死於 EXPECTED_MASTERS）
 //   - 共用 frame：Library guide、00 / Canvas directory
 //   - 2 個頂層 TEXT：Vibrant / Style zone heading、Professional / Style zone heading
 // 「相同」的定義：單元內所有節點依樹序、以子節點索引路徑配對，逐節點比對 PROPS 列出的屬性：
@@ -59,7 +59,7 @@ const EXPECTED_MASTERS = [
   'C/Field/Default', 'C/Field/Focus', 'C/Field/Error', 'C/Field/Disabled',
   'C/Status/Success', 'C/Status/Warning', 'C/Status/Error',
   'C/State/Loading', 'C/State/Empty', 'C/State/Error',
-  'C/Card/Metric', 'C/Table', 'C/Nav/Desktop', 'C/Nav/Mobile', 'C/Select', 'C/Checkbox',
+  'C/Card/Metric', 'C/Table', 'C/Nav/Desktop', 'C/Nav/Mobile', 'C/Select', 'C/Select/Open', 'C/Checkbox',
 ];
 const SHARED_FRAMES = ['Library guide', '00 / Canvas directory'];
 const SHARED_TEXTS = ['Vibrant / Style zone heading', 'Professional / Style zone heading'];

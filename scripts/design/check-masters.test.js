@@ -14,7 +14,7 @@ test('已提交的兩檔通過：母版結構相同，套系專屬值由各自�
   const r = exec(professionalFig);
   assert.equal(r.code, 0, r.out);
   assert.match(r.out, /全部相同/);
-  assert.match(r.out, /母版：vibrant 22、professional 22/);
+  assert.match(r.out, /母版：vibrant 23、professional 23/);
 });
 
 test('母版的文字內容被改 → 失敗', () => {
