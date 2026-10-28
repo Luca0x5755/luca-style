@@ -19,8 +19,8 @@ export async function makeWorkspace() {
 }
 
 // 以相對於 cwd 的路徑呼叫產生器，同時驗證 --source／--out 依 cwd 解析。
-export function runGenerator(cwd: string, source = 'src', out = 'out') {
-  const result = spawnSync(process.execPath, [generator, '--source', source, '--out', out], { cwd, encoding: 'utf8' });
+export function runGenerator(cwd: string, source = 'src', out = 'out', extra: string[] = []) {
+  const result = spawnSync(process.execPath, [generator, '--source', source, '--out', out, ...extra], { cwd, encoding: 'utf8' });
   return { status: result.status, stderr: result.stderr, stdout: result.stdout };
 }
 

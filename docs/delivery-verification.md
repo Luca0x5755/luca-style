@@ -284,18 +284,17 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 
 輸出（皆在 `docs/mockup/themes/`）：
 
-- `variables.json`：48 個變數的型別、原始定義，以及在 12 個主題組合（mode × suite × device，鍵為 `Light/Vibrant/Desktop` 這種格式）下的值。
+- `variables.json`：擷取當時是 48 個變數的型別、原始定義，以及在 12 個主題組合（mode × suite × device，鍵為 `Light/Vibrant/Desktop` 這種格式）下的值。ISSUE-003 起改由 `npm run generate` 自 DTCG 原始檔產生（程式變數與這 48 個的聯集；格式相同但不含原始定義 `definition`，沒有腳本讀它），本腳本不再寫出它；擷取當時的 48 個變數保存在 `tests/fixtures/fig-variables-0.1.0.json`。
 - `bindings.json`：每個頁面 frame 的每個被綁定屬性：frame 名稱、節點索引路徑、節點類型、屬性、變數名稱；母版另存在 `masters`。
 - `resolved.json`：每個頁面 frame 在自己的主題下，每個被綁定屬性解析後的實際值；母版以預設主題（Vibrant／Light／Desktop）解析。opacity 類變數保留原值 0–100，不做 Pencil 內部的 0–1 正規化。
-- `extract-raw.txt`、`variables-raw.txt`：從 Pencil 抽出的原始文字，是上面三份 JSON 的唯一輸入。
+- `extract-raw.txt`、`variables-raw.txt`：從 Pencil 抽出的原始文字，是 `bindings.json`、`resolved.json` 的唯一輸入；`variables-raw.txt` 的值只在建置時用來解析 `resolved.json`。
 
 ### 檔案大小與筆數
 
-「筆數」：variables.json 為變數數；bindings.json 與 resolved.json 為展開後的綁定總數（頁面 frame 20,846＋母版 212）。三份都遠低於 5 MB，所以維持單檔，不分套系。
+「筆數」：bindings.json 與 resolved.json 為展開後的綁定總數（頁面 frame 20,846＋母版 212）。兩份都遠低於 5 MB，所以維持單檔，不分套系。
 
 | 檔案 | bytes | 筆數 |
 | --- | --- | --- |
-| variables.json | 34718 | 48 |
 | bindings.json | 906116 | 21058 |
 | resolved.json | 765053 | 21058 |
 
@@ -312,7 +311,7 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 5. 執行：
 
 ```sh
-node scripts/design/build-theme-data.js              # 建置三份 JSON
+node scripts/design/build-theme-data.js              # 建置 bindings.json 與 resolved.json
 node scripts/design/build-theme-data.js --check      # 內部一致性、型別、逐類型獨立計數、5 MB 上限
 node scripts/design/build-theme-data.js --check-fig  # 與兩個 .fig 比對節點數、名稱序列、路徑與類型（約 8 秒）
 node scripts/design/build-theme-data.js --check-doc  # 本節的大小、筆數與抽樣表
@@ -328,7 +327,7 @@ node --test scripts/design/build-theme-data.test.js                          # �
 ### Pencil 與 Pencil 之外的限制
 
 - Pencil 解析後的輸出會省略預設值：opacity 100、`effect.enabled` 為 true、四邊相同的 strokeWidth。比對時對這三類做了明確的等價處理，其他屬性是逐值比對。
-- `resolved.json` 的值由 `variables.json` 加主題推導；與 Pencil 的 `resolveVariables` 結果一致這件事，是在 Pencil 內對 304 個頁面項目與 22 個母版逐筆比對得到的（BAD total 0），該結果記在 `extract-raw.txt` 檔頭。`.pen` 刪除後這項比對無法重跑，只能用片段 2 重現當時的做法。
+- `resolved.json` 的值由 `variables-raw.txt` 加主題推導；與 Pencil 的 `resolveVariables` 結果一致這件事，是在 Pencil 內對 304 個頁面項目與 22 個母版逐筆比對得到的（BAD total 0），該結果記在 `extract-raw.txt` 檔頭。`.pen` 刪除後這項比對無法重跑，只能用片段 2 重現當時的做法。
 
 ### 抽樣核對（5 個 Dark、5 個 Light）
 

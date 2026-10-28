@@ -1,9 +1,11 @@
-// 主題資料建置與檢查：把從 .pen 抽出的原始文字轉成三份 JSON，並提供唯讀檢查。
+// 主題資料建置與檢查：把從 .pen 抽出的原始文字轉成兩份 JSON（bindings.json、resolved.json），並提供唯讀檢查。
+// variables.json 不由本腳本寫出：它改由 npm run generate 自 DTCG 原始檔產生（ISSUE-003）；
+// 這裡只在記憶體內用 variables-raw.txt 的值解析 resolved.json，保留 .pen 擷取當時的基準。
 //   docs/mockup/themes/variables-raw.txt  變數定義（Pencil GetVariables 的輸出）
 //   docs/mockup/themes/extract-raw.txt    綁定抽取結果（見 docs/delivery-verification.md 的擷取片段）
 // 用法：
-//   node scripts/design/build-theme-data.js               建置 variables.json / bindings.json / resolved.json
-//   node scripts/design/build-theme-data.js --check       檢查三份 JSON 的內部一致性與獨立計數
+//   node scripts/design/build-theme-data.js               建置 bindings.json / resolved.json
+//   node scripts/design/build-theme-data.js --check       檢查兩份 JSON 的內部一致性與獨立計數
 //   node scripts/design/build-theme-data.js --check-fig   與兩個套系設計檔比對節點數、名稱雜湊與節點類型
 //   node scripts/design/build-theme-data.js --check-doc   檢查 docs/delivery-verification.md 的記載
 // 結束碼：0 通過；1 有差異（逐行列出）；2 讀檔或格式錯誤。
@@ -54,7 +56,6 @@ const buildVariables = ({ axes, variables }) => {
     variables: variables.map((v) => ({
       name: v.name,
       type: v.type,
-      definition: v.raw,
       values: Object.fromEntries(combos.map((c) => [comboKey(c), valueIn(v.raw, c)])),
     })),
   };
@@ -209,7 +210,7 @@ const stringifyResolved = (key, groups) =>
     .join(',\n') +
   '\n]';
 
-// 由原始檔產生三份 JSON 的文字內容（建置與檢查共用，檢查時用來比對磁碟上的檔案）。
+// 由原始檔產生兩份 JSON 的文字內容（建置與檢查共用，檢查時用來比對磁碟上的檔案）。
 const generate = () => {
   const { variables, extract } = loadBuild();
   const all = bindingsOf(extract.entries);
@@ -221,7 +222,6 @@ const generate = () => {
     frames,
     masters,
     files: {
-      'variables.json': JSON.stringify(variables, null, 1) + '\n',
       'bindings.json': '{\n' + stringifyGroups('frames', frames) + ',\n' + stringifyGroups('masters', masters) + '\n}\n',
       'resolved.json':
         '{\n' + stringifyResolved('frames', resolveGroups(frames, variables)) + ',\n' + stringifyResolved('masters', resolveGroups(masters, variables)) + '\n}\n',
@@ -408,7 +408,7 @@ const checkDoc = () => {
   }
   if (snippet && !snippet.includes('resolveInstances')) problems.push('[文件] 擷取片段沒有使用 resolveInstances');
   const total = countKinds(gen.frames).total + countKinds(gen.masters).total;
-  const expectCount = { 'variables.json': gen.variables.count, 'bindings.json': total, 'resolved.json': total };
+  const expectCount = { 'bindings.json': total, 'resolved.json': total };
   for (const [file, count] of Object.entries(expectCount)) {
     const m = doc.match(new RegExp('^\\| ' + file.replace('.', '\\.') + ' \\| (\\d+) \\| (\\d+) \\|', 'm'));
     if (!m) {

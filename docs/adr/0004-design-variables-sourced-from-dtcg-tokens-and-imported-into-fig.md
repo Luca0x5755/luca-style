@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # Source design variables from DTCG tokens in code and import them into the suite design files
 

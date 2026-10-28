@@ -186,9 +186,9 @@ test('同一變數同時依 mode 與 device 變化時拒絕，並指出變數名
 test('--check 輸出節點數，達到上限時失敗', () => {
   const t = setup();
   t.run();
-  // 基準 5825 個節點，加上寫入變數後 .fig 多出的一個空白 Internal Only Canvas 頁（存放變數用）。
+  // 含存放變數的空白 Internal Only Canvas 頁；原本的 5832 加上 0e3954f 手工加入的 C/Select/Open 母版 16 個節點。
   const ok = t.run(['--check']);
-  assert.match(ok.out, /節點數 5832/);
+  assert.match(ok.out, /節點數 5848/);
   const over = t.run(['--check'], { APPLY_VARIABLES_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
   assert.match(over.out, /節點數/);
@@ -202,6 +202,32 @@ test('--list 逐變數逐模式列出一行', () => {
   assert.match(r.out, /components-vibrant\.fig|v\.fig/);
   assert.match(r.out, /Mode\s*\|\s*bg\s*\|\s*COLOR\s*\|\s*Dark\s*\|\s*#151A18/);
   assert.match(r.out, /Device\s*\|\s*fs-hero\s*\|\s*FLOAT\s*\|\s*Mobile\s*\|\s*32/);
+});
+
+// .fig 的 FLOAT 變數以 32 位元浮點數儲存，1.2 讀回是 1.2000000476837158；比對須以同精度判斷，否則套用後永遠有差異。
+test('非二進位整分的小數（如行高 1.2）套用後 --check 一致，重跑不再寫檔', () => {
+  const t = setup(miniVariables({ 'fs-hero': { values: expand((m, s, d) => ({ Desktop: 1.2, Tablet: 1.3, Mobile: 1.6 })[d]) } }));
+  assert.equal(t.run().code, 0);
+  const check = t.run(['--check']);
+  assert.equal(check.code, 0, check.out);
+  assert.match(t.run().out, /已是最新/);
+  // 精度內真的不同的值仍要報差異。
+  writeFileSync(t.json, JSON.stringify(miniVariables({ 'fs-hero': { values: expand((m, s, d) => ({ Desktop: 1.25, Tablet: 1.3, Mobile: 1.6 })[d]) } })));
+  const bad = t.run(['--check']);
+  assert.equal(bad.code, 1);
+  assert.match(bad.out, /fs-hero/);
+});
+
+// PR-FILE-16：進版控的兩份套系設計檔，變數值與 npm run generate 產生的 variables.json 逐筆一致
+// （每檔 2 明暗 × 3 裝置，兩檔合起來涵蓋每種「套系 × 明暗」組合）。與其他測試一樣直接呼叫 openpencil，不略過。
+test('真實的兩份套系設計檔與產生的 variables.json 逐筆一致', () => {
+  const env = { ...process.env };
+  for (const key of ['APPLY_VARIABLES_JSON', 'APPLY_VARIABLES_VIBRANT', 'APPLY_VARIABLES_PROFESSIONAL', 'APPLY_VARIABLES_NODE_LIMIT']) delete env[key];
+  const r = spawnSync('node', [script, '--check'], { env, encoding: 'utf8' });
+  const out = (r.stdout || '') + (r.stderr || '');
+  assert.equal(r.status, 0, `設計檔變數與 docs/mockup/themes/variables.json 不一致；請先 npm run generate，再執行 node scripts/design/apply-variables.js 重新寫入兩份設計檔。\n${out}`);
+  assert.match(out, /Vibrant.*逐筆一致/);
+  assert.match(out, /Professional.*逐筆一致/);
 });
 
 test('variables.json 的顏色不是 #RRGGBB 或缺少組合的值時，以結束碼 1 拒絕並指出變數名稱', () => {

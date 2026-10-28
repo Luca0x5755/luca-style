@@ -22,11 +22,26 @@
   "accent-secondary": {
     "$value": "#8BBDD8",
     "$type": "color",
-    "$description": "點綴色，用於次要強調與裝飾"
+    "$description": "點綴色，用於次要強調與裝飾。設計檔中名為 secondary",
+    "$extensions": {
+      "luca-style": {
+        "figName": "secondary"
+      }
+    }
   },
   "accent-soft": {
     "$value": "#2D2A3B",
     "$type": "color",
     "$description": "柔和強調底色，用於選取列、標籤與指標卡底"
+  },
+  "loading-square-dark-opacity": {
+    "$value": 100,
+    "$type": "number",
+    "$description": "載入動畫「方序・暗黑」圖層在設計檔中的不透明度（0–100）；只有對應的套系與明暗為 100，其餘為 0",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
   }
 }

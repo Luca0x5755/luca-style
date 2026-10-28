@@ -172,13 +172,14 @@ test('--check 在已套用時結束碼 0；儲存值被改壞時結束碼 1 並�
   assert.equal(t.run(['--check']).code, 0);
 });
 
+// 節點數 5848：原本的 5832 加上 0e3954f 手工加入的 C/Select/Open 母版 16 個節點。
 test('--check 輸出節點數，達到上限時失敗', () => {
   const t = setup();
   t.run();
-  assert.match(t.run(['--check']).out, /節點數 5832/);
+  assert.match(t.run(['--check']).out, /節點數 5848/);
   const over = t.run(['--check'], { APPLY_BINDINGS_NODE_LIMIT: '100' });
   assert.equal(over.code, 1);
-  assert.match(over.out, /節點數 5832 已達上限 100/);
+  assert.match(over.out, /節點數 5848 已達上限 100/);
 });
 
 test('資料檔缺漏時以結束碼 1 或 2 拒絕，不改檔', () => {
@@ -191,10 +192,11 @@ test('資料檔缺漏時以結束碼 1 或 2 拒絕，不改檔', () => {
 });
 
 // 與腳本邏輯無關的獨立計數：直接讀回兩個真實 .fig，依欄位計數 boundVariables，
-// 與 bindings.json 逐類型計數推得的字面數字比對（兩檔相同：各含 22 個母版與其餘 frame）。
+// 與 bindings.json 逐類型計數推得的字面數字比對（兩檔相同：各含 22 個母版與其餘 frame），
+// 再加上 0e3954f 手工加入、不在 bindings.json 裡的 C/Select/Open 母版的綁定（填色 14、描邊 3、字型 6、圓角 8）。
 test('真實設計檔：各欄位的綁定筆數等於 bindings.json 的獨立計數，且沒有懸空綁定', () => {
   const expected = {
-    'fills/0/color': 4890, 'strokes/0/color': 957, fontFamily: 3092, fontSize: 254, itemSpacing: 144, cornerRadius: 730,
+    'fills/0/color': 4890 + 14, 'strokes/0/color': 957 + 3, fontFamily: 3092 + 6, fontSize: 254, itemSpacing: 144, cornerRadius: 730 + 8,
     strokeWeight: 229, borderLeftWeight: 43, paddingLeft: 86, paddingRight: 86, paddingTop: 86, paddingBottom: 86,
   };
   for (const name of ['components-vibrant.fig', 'components-professional.fig']) {

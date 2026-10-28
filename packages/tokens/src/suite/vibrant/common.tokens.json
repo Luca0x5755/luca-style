@@ -32,11 +32,31 @@
   "metric-shadow": {
     "$value": "0 4px 16px #00000008",
     "$type": "shadow",
-    "$description": "指標卡的陰影；none 表示不加陰影"
+    "$description": "指標卡的陰影；none 表示不加陰影。設計檔以布林變數 elevation-enabled 表示（none 為 false，其他為 true）",
+    "$extensions": {
+      "luca-style": {
+        "figName": "elevation-enabled"
+      }
+    }
   },
   "metric-background": {
     "$value": "var(--accent-soft)",
     "$type": "color",
-    "$description": "指標卡的底色，可參照其他變數"
+    "$description": "指標卡的底色，可參照其他變數。設計檔中名為 card-highlight",
+    "$extensions": {
+      "luca-style": {
+        "figName": "card-highlight"
+      }
+    }
+  },
+  "suite-label": {
+    "$value": "精緻活力 · 潮汐",
+    "$type": "string",
+    "$description": "設計檔中標示目前風格套系的文字。$type string 不是 DTCG 標準型別，只供設計檔使用",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
   }
 }

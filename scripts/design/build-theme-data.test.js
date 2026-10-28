@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -50,20 +50,12 @@ const runWith = (dir, env, ...args) =>
   });
 const readJson = (dir, name) => JSON.parse(readFileSync(join(dir, name), 'utf8'));
 
-test('variables.json 為每個變數列出 12 個主題組合的值', () => {
+// variables.json 改由 npm run generate 自 DTCG 產生（ISSUE-003）；本腳本只在記憶體內用 variables-raw.txt 解析 resolved.json。
+test('不寫出 variables.json，以免蓋掉由 DTCG 產生的設計檔變數資料', () => {
   const dir = setup();
   const r = run(dir);
   assert.equal(r.status, 0, r.stdout + r.stderr);
-  const v = readJson(dir, 'variables.json');
-  assert.equal(v.variables.length, 4);
-  const bg = v.variables.find((x) => x.name === 'bg');
-  assert.equal(bg.type, 'color');
-  assert.equal(Object.keys(bg.values).length, 12);
-  assert.equal(bg.values['Dark/Vibrant/Desktop'], '#151A18');
-  assert.equal(bg.values['Light/Professional/Mobile'], '#F7F7F2');
-  const hero = v.variables.find((x) => x.name === 'fs-hero');
-  assert.equal(hero.values['Light/Vibrant/Tablet'], 44);
-  assert.equal(v.variables.find((x) => x.name === 'font-zh').values['Dark/Professional/Mobile'], 'Noto Sans TC');
+  assert.deepEqual(readdirSync(dir).sort(), ['bindings.json', 'extract-raw.txt', 'resolved.json', 'variables-raw.txt']);
 });
 
 
@@ -195,8 +187,7 @@ const docFor = (dir, { value = '#151A18', bytes } = {}) => {
     '擷取腳本 scripts/design/extract-pen-themes.pen.js，建置腳本 scripts/design/build-theme-data.js，輸入 extract-raw.txt。',
     '| 檔案 | bytes | 筆數 |',
     '| --- | --- | --- |',
-    `| variables.json | ${bytes ?? size('variables.json')} | 4 |`,
-    `| bindings.json | ${size("bindings.json")} | 11 |`,
+    `| bindings.json | ${bytes ?? size('bindings.json')} | 11 |`,
     `| resolved.json | ${size("resolved.json")} | 11 |`,
     '| frame | 路徑 | 屬性 | resolved.json 值 | Pencil 畫面所見 |',
     '| --- | --- | --- | --- | --- |',
@@ -229,7 +220,7 @@ test('--check-doc 在記載的檔案大小與實際不符時失敗', () => {
   writeFileSync(join(dir, 'snippet.js'), 'x');
   const r = checkDoc(dir, docFor(dir, { bytes: 1 }));
   assert.equal(r.status, 1);
-  assert.match(r.stdout, /variables\.json.*bytes/);
+  assert.match(r.stdout, /bindings\.json.*bytes/);
 });
 
 test('--check-doc 在抽樣的 Dark 或 Light frame 數不足時失敗', () => {

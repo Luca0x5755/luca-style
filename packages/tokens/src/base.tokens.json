@@ -4,8 +4,28 @@
     "$type": "dimension",
     "$description": "操作元件（按鈕、輸入框、下拉選單）的最小高度"
   },
+  "font-en": {
+    "$value": "Inter",
+    "$type": "fontFamily",
+    "$description": "英文與數字的主要字族；設計檔用它設定拉丁字型，程式透過 font-body 堆疊使用",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  },
+  "font-zh": {
+    "$value": "Noto Sans TC",
+    "$type": "fontFamily",
+    "$description": "中文字族；設計檔用它設定中文字型，程式透過 font-body 堆疊使用",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  },
   "font-body": {
-    "$value": "Inter, 'Noto Sans TC', sans-serif",
+    "$value": "{font-en}, '{font-zh}', sans-serif",
     "$type": "fontFamily",
     "$description": "內文與介面文字的字型堆疊"
   },
@@ -68,5 +88,45 @@
     "$value": "240ms",
     "$type": "duration",
     "$description": "區塊展開、收合等大範圍變化的動效時長"
+  },
+  "loading-tide-light-opacity": {
+    "$value": 0,
+    "$type": "number",
+    "$description": "載入動畫「潮汐・日間」圖層在設計檔中的不透明度（0–100）；只有對應的套系與明暗為 100，其餘為 0",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  },
+  "loading-tide-dark-opacity": {
+    "$value": 0,
+    "$type": "number",
+    "$description": "載入動畫「潮汐・暗黑」圖層在設計檔中的不透明度（0–100）；只有對應的套系與明暗為 100，其餘為 0",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  },
+  "loading-square-light-opacity": {
+    "$value": 0,
+    "$type": "number",
+    "$description": "載入動畫「方序・日間」圖層在設計檔中的不透明度（0–100）；只有對應的套系與明暗為 100，其餘為 0",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  },
+  "loading-square-dark-opacity": {
+    "$value": 0,
+    "$type": "number",
+    "$description": "載入動畫「方序・暗黑」圖層在設計檔中的不透明度（0–100）；只有對應的套系與明暗為 100，其餘為 0",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
   }
 }

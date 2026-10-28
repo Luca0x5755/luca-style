@@ -1,5 +1,10 @@
 {
   "hero": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-hero"
+      }
+    },
     "mobile": {
       "$value": "2rem",
       "$type": "dimension",
@@ -27,6 +32,11 @@
     }
   },
   "title": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-title"
+      }
+    },
     "mobile": {
       "$value": "1.5rem",
       "$type": "dimension",
@@ -54,6 +64,11 @@
     }
   },
   "section": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-section"
+      }
+    },
     "mobile": {
       "$value": "1.25rem",
       "$type": "dimension",
@@ -81,6 +96,11 @@
     }
   },
   "card": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-card"
+      }
+    },
     "mobile": {
       "$value": "1.125rem",
       "$type": "dimension",
@@ -108,6 +128,11 @@
     }
   },
   "body": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-body"
+      }
+    },
     "mobile": {
       "$value": "1rem",
       "$type": "dimension",
@@ -162,6 +187,11 @@
     }
   },
   "secondary": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-small"
+      }
+    },
     "mobile": {
       "$value": ".875rem",
       "$type": "dimension",
@@ -189,6 +219,11 @@
     }
   },
   "helper": {
+    "$extensions": {
+      "luca-style": {
+        "figSizeName": "fs-label"
+      }
+    },
     "mobile": {
       "$value": ".75rem",
       "$type": "dimension",

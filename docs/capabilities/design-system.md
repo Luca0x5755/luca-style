@@ -70,6 +70,7 @@ PR-FILE-14 — 兩個套系設計檔內沒有 NaN 行高、自動排版內相鄰
 
 - 部署輸出目錄為 `apps/showcase/dist-pages`（`npm run build:pages`，base 為 `/luca-style/`），內含每個路由的 `index.html` 與 `404.html`；一般 `npm run build` 的輸出不變。
 - 路由清單單一來源為 `apps/showcase/src/route-table.json`，應用路由與 `build:pages` 共用，測試比對兩者一致。
+- 套系設計檔的變數資料 `docs/mockup/themes/variables.json` 由 `npm run generate` 自 `packages/tokens/src` 的 DTCG 原始檔產生（ADR 0004），內容是程式變數與原設計檔 48 個變數的聯集；重複者沿用設計檔舊名（例如 `accent-secondary` 在設計檔叫 `secondary`，對照寫在原始檔的 `$extensions["luca-style"].figName`），只給設計檔用的變數標 `designFileOnly`，不進公開的 css 與 data。改值流程：改原始檔 → `npm run generate` → `node scripts/design/apply-variables.js` → `--check`；`scripts/design/apply-variables.test.js` 對兩份真實設計檔執行 `--check`，沒有重新套用就失敗。
 - 承諾 PR-STYLE-15 的線上部分（網址實際回應 200）需要使用者 push 到 `main` 並把 repo Settings → Pages 的來源設為「GitHub Actions」，尚未線上驗證；見[交付驗證](../delivery-verification.md#公開樣張與-readme)。
 
 承諾沿用已核可總規格的凍結 ID 與原文（PR-STYLE-15 至 24 於公開樣張票新增，文字依最終實作補充）；無 retired 承諾。驗收證據見[交付驗證](../delivery-verification.md)。

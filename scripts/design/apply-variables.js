@@ -1,4 +1,6 @@
 // 在兩個套系設計檔建立變數集合與模式，值取自 docs/mockup/themes/variables.json。
+// variables.json 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生（ISSUE-003，ADR 0004），不要手改；
+// 改設計變數的流程：改 DTCG 原始檔 → npm run generate → 本腳本套用 → --check。
 //   docs/mockup/components-vibrant.fig      套用 Vibrant 的值
 //   docs/mockup/components-professional.fig 套用 Professional 的值
 // 用法：
@@ -217,8 +219,10 @@ const show = (value) => {
   return String(value);
 };
 
+// FLOAT 變數在 .fig 內以 32 位元浮點數儲存（1.2 讀回 1.2000000476837158），數值以同精度比對。
 const sameValue = (type, actual, expected) => {
   if (type === 'color') return !!actual && typeof actual === 'object' && hexOf(actual) === expected.toUpperCase() && actual.a === 1;
+  if (type === 'number') return typeof actual === 'number' && Math.fround(actual) === Math.fround(expected);
   return actual === expected;
 };
 
