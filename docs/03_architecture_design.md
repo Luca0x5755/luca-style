@@ -9,7 +9,7 @@
 | 套件管理 | npm workspaces | [決策紀錄](decision-log.md) |
 | 設計變數 | DTCG 格式的單一來源，經 Style Dictionary 產生 CSS、程式資料、元件庫設計檔變數與代理用規格文件 | [ADR 0004](adr/0004-design-variables-sourced-from-dtcg-tokens-and-imported-into-fig.md) |
 | 樣張網站 | 引用正式套件，展示元件、雙風格、明暗模式及頁面範本；頁面範本以此為準 | [決策紀錄](decision-log.md) |
-| 設計資產 | 一份元件庫設計檔（OpenPencil .fig），只含設計變數與 22 個母版，以「套系」「明暗」模式切換；使用端設計稿由它複製開始 | [ADR 0007](adr/0007-keep-one-component-library-design-file-without-pages.md) |
+| 設計資產 | 一份元件庫設計檔（OpenPencil .fig），只含設計變數與 23 個母版，以「套系」「明暗」模式切換；使用端設計稿由它複製開始 | [ADR 0007](adr/0007-keep-one-component-library-design-file-without-pages.md) |
 | 品質檢查 | Playwright 搭配 `@axe-core/playwright`，並逐頁 × 套系 × 明暗截圖比對 | [決策紀錄](decision-log.md) |
 
 | 目錄 | 責任 |
@@ -83,6 +83,6 @@ declare function themeInitScript(): string;
 
 前端規格定義電腦、平板與手機的字級角色、行高、字重、間距、元件狀態及版面響應規則。套系間以色彩、密度與元件外形形成差異，共用字體角色與元件行為。
 
-設計變數的程式輸出、CSS 與元件庫設計檔的變數由同一份 DTCG 來源產生；元件庫設計檔的變數以離線腳本 `scripts/design/apply-variables.js` 寫入，22 個母版人工維護並綁定設計變數。使用端的設計稿複製元件庫設計檔開始，設計變數可重新匯入。範本涵蓋產品介面與介紹頁的桌面、手機呈現，以樣張網站為準。
+設計變數的程式輸出、CSS 與元件庫設計檔的變數由同一份 DTCG 來源產生；元件庫設計檔的變數以離線腳本 `scripts/design/apply-variables.js` 寫入，23 個母版人工維護並綁定設計變數。使用端的設計稿複製元件庫設計檔開始，設計變數可重新匯入。範本涵蓋產品介面與介紹頁的桌面、手機呈現，以樣張網站為準。
 
 能力對照見 [設計系統](capabilities/design-system.md)。

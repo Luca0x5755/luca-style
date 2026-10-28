@@ -70,7 +70,7 @@ PR-STYLE-40 — 既有元件的公開 props 在 0.2.0 保持相容；做不到�
 
 **品質與文件**
 
-PR-STYLE-41 — 樣張的每一頁、每種風格套系、每種明暗模式都跑 axe 檢查，並通過門檻（門檻見 Open questions）。
+PR-STYLE-41 — 樣張的每一頁、每種風格套系、每種明暗模式都跑 axe 檢查，沒有 serious 或 critical 等級的違規；其餘等級列在報告中。
 PR-STYLE-42 — 樣張的每一頁、每種風格套系、每種明暗模式都有截圖基準；畫面與基準不符時測試失敗。
 PR-STYLE-43 — 提供 `llms.txt` 與 `DESIGN.md`，說明套件、主題軸、元件與設計變數的用法。
 
@@ -102,13 +102,16 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 - changesets 延後；`llms.txt` 與 `DESIGN.md` 這次就做。見 decision-log。
 - 設計檔只保留一份元件庫（設計變數與母版），以模式切換套系，沒有頁面；使用端複製它開始畫設計稿。不採用：維持兩份含頁面的套系設計檔；完全不要設計檔；OpenPencil 發布元件庫。見 [ADR 0007](../adr/0007-keep-one-component-library-design-file-without-pages.md)。
 - 設計變數以離線腳本 `apply-variables.js` 寫入設計檔，取程式與設計檔變數的聯集。不採用：`import_design_tokens`（需開 App）；只放程式既有變數。見 ADR 0004。
+- 專案強調色的舊寫法（`{primary, secondary, soft, ink}`、`{light, dark}`）不保留，直接換成 `AccentInput`，在升級說明寫清楚。不採用：保留舊寫法相容。見 decision-log。
+- axe 只擋 serious 和 critical 等級，其餘列在報告。不採用：零違規。見 decision-log。
+- 截圖基準用 Playwright 官方 Linux Docker 映像產生並存進 repo，CI 與本機更新都用同一映像。不採用：本機 Windows 產生；各平台各存一份。見 decision-log。
 - 技術選擇（Base UI 套件為 `@base-ui/react` ^1.9、Style Dictionary、密度與外形用具名等級、強調色計算位置）與公開合約見 [架構 §3.1、§3.3](../03_architecture_design.md) 與 decision-log。
 
 ## Open questions
 
 1. ~~Base UI 的套件名稱、版本，以及能否搭配 React 19~~：已定，見 Decisions。
-2. **專案強調色的舊寫法（直接給 4 個變數）在 0.2.0 是否保留相容**：對話中沒有決定。兩個使用端專案都沒用到這個寫法。
-3. **axe 的通過門檻**：要「零違規」，還是只擋 serious 和 critical 等級？
-4. **截圖基準在哪個環境產生**：CI 跑 Linux、本機是 Windows，字型渲染不同；基準存在哪裡、在哪個環境產生，都還沒定。
+2. ~~專案強調色的舊寫法是否保留相容~~：已定為不保留，見 Decisions。
+3. ~~axe 的通過門檻~~：已定為只擋 serious 和 critical，見 Decisions。
+4. ~~截圖基準在哪個環境產生~~：已定為 Playwright 官方 Linux Docker 映像，見 Decisions。
 5. ~~密度覆寫的形式~~：已定為具名等級，各等級數值由前端規格定義。
 6. ~~元件外形覆寫的形式~~：已定為具名等級，同上。

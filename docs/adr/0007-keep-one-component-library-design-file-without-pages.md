@@ -2,7 +2,7 @@ Status: Proposed
 
 # Keep one component library design file, without page frames
 
-The design source becomes a single OpenPencil file, `docs/mockup/luca-style-library.fig`. It holds the design variables and the 22 component masters, nothing else. The two style suites are a `Suite` variable mode beside the existing `Light`/`Dark` modes, so each master exists once. Page templates are no longer drawn in a design file; the showcase site is their reference.
+The design source becomes a single OpenPencil file, `docs/mockup/luca-style-library.fig`. It holds the design variables and the 23 component masters, nothing else. The two style suites are a `Suite` variable mode beside the existing `Light`/`Dark` modes, so each master exists once. Page templates are no longer drawn in a design file; the showcase site is their reference.
 
 Consumer projects start their own mockup by copying this file, then importing their project accent. When luca-style changes, a consumer re-imports the design variables; the masters in its copy do not update by themselves.
 

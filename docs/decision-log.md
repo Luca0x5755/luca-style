@@ -41,3 +41,6 @@
 2026-10-28 — 風格套系預設色的滑過、按下等狀態色在建置時算好寫入 CSS 與設計檔；專案強調色由 ThemeProvider 以 JavaScript 計算，不依賴 CSS 相對色彩語法，對比檢查可在測試中執行。
 2026-10-28 — 使用端設計稿從元件庫設計檔複製開始，設計變數可重新匯入；不採用 OpenPencil 發布元件庫（需人工發布），也暫不做同步舊設計稿的腳本。
 2026-10-28 — Base UI 套件名稱為 @base-ui/react（舊名 @base-ui-components/react 已停用），採 ^1.9，支援 React 19。
+2026-10-28 — 專案強調色的舊寫法（{primary, secondary, soft, ink}、{light, dark}）在 0.2.0 不保留相容；仍是 0.x 版且兩個使用端專案都沒用 accent，保留只會多出程式分支。
+2026-10-28 — axe 檢查只擋 serious 和 critical 等級，其餘列在報告；先擋住真正影響使用的問題，較輕微的之後逐一處理。
+2026-10-28 — 截圖基準用 Playwright 官方 Linux Docker 映像產生並存進 repo，CI 與本機更新都用同一映像；Windows 與 Linux 字型渲染不同，同一環境才比得準。
