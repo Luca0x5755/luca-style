@@ -258,13 +258,13 @@ for (const token of typographyTokens) {
   }
 }
 // 設計檔的集合與模式：Figma 一個節點在每個集合只持有一個模式，所以一個集合的模式只對應一組軸。
-// 變數依「實際變化的軸」放進對應集合；套系與明暗同時變化的變數沒有別名可用（匯出不解別名，ISSUE-004），
-// 放進模式為「套系 / 明暗」四種組合的 Suite x Mode 集合。其他跨軸組合（例如明暗加裝置）無法建模，直接失敗。
+// 變數放進第一個涵蓋它「實際變化的軸」的集合：只依套系、只依明暗或兩者都依的，都放進模式為「套系 / 明暗」
+// 四種組合的 Suite x Mode，切換套系與明暗只設這一個集合（ISSUE-015）；不用別名拆集合，因匯出不解別名（ISSUE-004）。
+// 其他跨軸組合（例如明暗加裝置）無法建模，直接失敗。
 const figKey = (mode, suite, device) => `${mode}/${suite}/${device}`;
+// 順序有意義：find 取第一個涵蓋的集合，所以軸少的在前（Base 必須第一個，否則常數會落進別的集合）。
 const figCollections = [
   { name: 'Base', axes: [], modes: ['Default'] },
-  { name: 'Suite', axes: ['suite'], modes: figAxes.suite },
-  { name: 'Mode', axes: ['mode'], modes: figAxes.mode },
   { name: 'Device', axes: ['device'], modes: figAxes.device },
   { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: figAxes.suite.flatMap(suite => figAxes.mode.map(mode => `${suite} / ${mode}`)) },
 ];
@@ -279,7 +279,7 @@ const variesOn = (variable, axis) => {
 };
 for (const variable of figVariables.values()) {
   const varying = Object.keys(figAxes).filter(axis => variesOn(variable, axis));
-  const target = figCollections.find(collection => collection.axes.length === varying.length && varying.every(axis => collection.axes.includes(axis)));
+  const target = figCollections.find(collection => varying.every(axis => collection.axes.includes(axis)));
   if (!target) figProblems.push(`無法轉成設計檔變數：${variable.name}（同時依 ${varying.join('、')} 變化，沒有對應的集合）`);
   else variable.collection = target.name;
 }

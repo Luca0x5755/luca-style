@@ -98,14 +98,14 @@ figma.setVariableValue(v.id, mode.modeId, { r: 1, g: 0, b: 0, a: 1 })`);
   assert.ok(!/@ Vibrant/.test(r.out), r.out);
 });
 
-test('變數被放進沒有涵蓋其變化軸的集合（把 accent 移到只有明暗的 Mode）→ 解析值不符而失敗', () => {
-  // 以 variables.json 為準：accent 在 Suite x Mode；若設計檔把它放進 Mode，Professional 的值就解不出來。
+test('變數被放進沒有涵蓋其變化軸的集合（把 accent 移到只依裝置的 Device）→ 解析值不符而失敗', () => {
+  // 以 variables.json 為準：accent 在 Suite x Mode；若設計檔把它放進 Device，各組合都只解出同一個值，Professional 對不上。
   const r = broken(`
 const v = figma.getLocalVariables().find((x) => x.name === 'accent')
-const mode = figma.getLocalVariableCollections().find((x) => x.name === 'Mode')
+const device = figma.getLocalVariableCollections().find((x) => x.name === 'Device')
 figma.deleteVariable(v.id)
-const nv = figma.createVariable('accent', 'COLOR', mode.id, { r: 0.08, g: 0.5, b: 0.51, a: 1 })
-figma.setVariableValue(nv.id, mode.modes[1].modeId, { r: 0.39, g: 0.76, b: 0.74, a: 1 })`);
+const nv = figma.createVariable('accent', 'COLOR', device.id, { r: 0.08, g: 0.5, b: 0.51, a: 1 })
+for (const m of device.modes) figma.setVariableValue(nv.id, m.modeId, { r: 0.08, g: 0.5, b: 0.51, a: 1 })`);
   assert.equal(r.code, 1, r.out);
   assert.match(r.out, /@ Professional/);
 });

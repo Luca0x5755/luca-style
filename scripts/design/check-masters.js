@@ -9,7 +9,7 @@
 //   2. 綁定：docs/mockup/themes/bindings.json 列出的每個母版節點的每個屬性都綁了指定的變數（有綁定欄位的屬性）；
 //      每個母版至少有一個綁定的填色；有圓角的母版至少有一個綁定的圓角（導覽列沒有圓角；Checkbox 的勾選框是兩套系共用的 3px 常數，不綁）；
 //      沒有指向不存在變數的懸空綁定。
-//   3. 解析值：對「Vibrant、Professional × Light、Dark」四種組合，把母版的 Suite、Mode、Suite x Mode、Device 模式設成該組合，
+//   3. 解析值：對「Vibrant、Professional × Light、Dark」四種組合，把母版的 Suite x Mode、Device 模式設成該組合，
 //      每個綁定屬性解析出來的值必須等於 variables.json 該組合的值（顏色以 1/255 容差、數值以 float32 精度）。
 //      所以綁定被移除、換成別的變數、變數被放進沒有涵蓋其變化軸的集合，或模式被改壞，都會失敗。
 //   各變數本身的值是否與 DTCG 原始檔一致，由 apply-variables.js --check 負責；儲存值由 apply-bindings.js --check 負責。

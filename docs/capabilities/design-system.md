@@ -90,7 +90,7 @@ PR-STYLE-28 — 建置會產生一份設計變數規格文件，列出每個變�
 
 PR-FILE-16 — 程式產生的設計變數寫入元件庫設計檔後，每種「套系 × 明暗」組合的值都與程式一致。
 PR-FILE-17 — 元件庫設計檔的 Select 母版有「選單展開」狀態。
-PR-FILE-18 — 元件庫設計檔只有一份，內容是設計變數與 23 個母版（含 `C/Select/Open`），以「套系」「明暗」兩組模式切換；母版的填色、描邊、字型、圓角綁定設計變數；沒有頁面 frame，節點數低於 10,000。
+PR-FILE-18 — 元件庫設計檔只有一份，內容是設計變數與 23 個母版（含 `C/Select/Open`），以 `Suite x Mode` 一個集合的四個模式（套系 / 明暗）切換；母版的填色、描邊、字型、圓角綁定設計變數；沒有頁面 frame，節點數低於 10,000。
 PR-FILE-19 — 使用端複製元件庫設計檔並匯入自己的強調色後，母版顯示該強調色；`docs/consumer-guide.md` 記錄此步驟，以及 luca-style 更新後如何重新匯入設計變數。
 
 **密度與外形**
@@ -132,7 +132,6 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 
 實作補充與已知缺口：
 
-- PR-FILE-18 原文寫以「套系」「明暗」兩組模式切換；實際有 Base、Suite、Mode、Device、Suite x Mode 五個變數集合，同時依套系與明暗變化的 14 個變數放在 Suite x Mode，切換時三個集合要一起設。原因是離線 openpencil 匯出不解別名（decision-log 2026-10-28）。
 - 元件庫設計檔另有一個 OpenPencil 為存放變數自動維持的空畫布頁 `Internal Only Canvas`，無法刪除；`check-masters.js` 要求它保持空白。
 - 母版的自動排版尺寸、陰影開關與載入圖片透明度沒有綁定欄位，只存預設模式（Vibrant／Light）的值；Professional 的母版總覽因此與 ADR 0007 合併前的總覽總高度差 32px（指標卡、表格）。App 內切換模式後的版面未驗證；細節見[交付驗證](../delivery-verification.md#合併為一份元件庫設計檔issue-004pr-file-18)。
 - PR-FILE-06 的人眼抽查：元件庫設計檔只做過四種組合的母版總覽 PNG 比對，尚未有人在 OpenPencil App 內逐一抽查，待補。

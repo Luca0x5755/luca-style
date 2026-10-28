@@ -17,7 +17,7 @@ _避免_：用高彩度覆蓋所有內容、把每個元件都做成裝飾焦點
 _避免_：縮小文字到難以閱讀、以密度取代清楚的資訊層次。
 
 **元件庫設計檔**：
-唯一的設計檔 `docs/mockup/luca-style-library.fig`（ADR 0007），只含設計變數與 23 個母版，沒有頁面 frame。變數以 Suite、Mode、Device 模式切換；同時依套系與明暗變化的變數放在 Suite x Mode 集合。使用端的設計稿複製此檔開始，頁面範本以樣張網站為準。設計稿正本是這個檔案，不是 `.pen`。
+唯一的設計檔 `docs/mockup/luca-style-library.fig`（ADR 0007），只含設計變數與 23 個母版，沒有頁面 frame。套系與明暗只以 `Suite x Mode` 一個集合的四個模式（例如 `Vibrant / Dark`）切換，裝置以 `Device` 切換，不變的常數在 `Base`。使用端的設計稿複製此檔開始，頁面範本以樣張網站為準。設計稿正本是這個檔案，不是 `.pen`。
 _避免_：套系設計檔、兩份設計檔、components-vibrant.fig、components-professional.fig、components.pen。
 
 **畫布頁**：

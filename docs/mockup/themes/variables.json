@@ -24,26 +24,6 @@
    ]
   },
   {
-   "name": "Suite",
-   "axes": [
-    "suite"
-   ],
-   "modes": [
-    "Vibrant",
-    "Professional"
-   ]
-  },
-  {
-   "name": "Mode",
-   "axes": [
-    "mode"
-   ],
-   "modes": [
-    "Light",
-    "Dark"
-   ]
-  },
-  {
    "name": "Device",
    "axes": [
     "device"
@@ -505,7 +485,7 @@
     "Dark/Professional/Tablet": "#151A18",
     "Dark/Professional/Mobile": "#151A18"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "surface",
@@ -524,7 +504,7 @@
     "Dark/Professional/Tablet": "#1D2420",
     "Dark/Professional/Mobile": "#1D2420"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "surface-subtle",
@@ -543,7 +523,7 @@
     "Dark/Professional/Tablet": "#252E28",
     "Dark/Professional/Mobile": "#252E28"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "text",
@@ -562,7 +542,7 @@
     "Dark/Professional/Tablet": "#EDF3ED",
     "Dark/Professional/Mobile": "#EDF3ED"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "muted",
@@ -581,7 +561,7 @@
     "Dark/Professional/Tablet": "#A5B5A8",
     "Dark/Professional/Mobile": "#A5B5A8"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "border",
@@ -600,7 +580,7 @@
     "Dark/Professional/Tablet": "#354139",
     "Dark/Professional/Mobile": "#354139"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "control-border",
@@ -619,7 +599,7 @@
     "Dark/Professional/Tablet": "#65766B",
     "Dark/Professional/Mobile": "#65766B"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "accent-ink",
@@ -638,7 +618,7 @@
     "Dark/Professional/Tablet": "#151A18",
     "Dark/Professional/Mobile": "#151A18"
    },
-   "collection": "Mode"
+   "collection": "Suite x Mode"
   },
   {
    "name": "suite-label",
@@ -657,7 +637,7 @@
     "Dark/Professional/Tablet": "精緻專業 · 石墨紫",
     "Dark/Professional/Mobile": "精緻專業 · 石墨紫"
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "control-height",
@@ -695,7 +675,7 @@
     "Dark/Professional/Tablet": 20,
     "Dark/Professional/Mobile": 20
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "gap-section",
@@ -714,7 +694,7 @@
     "Dark/Professional/Tablet": 24,
     "Dark/Professional/Mobile": 24
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "table-cell-padding-block",
@@ -771,7 +751,7 @@
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "radius-control",
@@ -790,7 +770,7 @@
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "border-width",
@@ -809,7 +789,7 @@
     "Dark/Professional/Tablet": 1.5,
     "Dark/Professional/Mobile": 1.5
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "metric-border-left",
@@ -828,7 +808,7 @@
     "Dark/Professional/Tablet": 3,
     "Dark/Professional/Mobile": 3
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "elevation-enabled",
@@ -847,7 +827,7 @@
     "Dark/Professional/Tablet": false,
     "Dark/Professional/Mobile": false
    },
-   "collection": "Suite"
+   "collection": "Suite x Mode"
   },
   {
    "name": "card-highlight",

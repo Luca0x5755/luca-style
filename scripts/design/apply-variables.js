@@ -11,12 +11,11 @@
 //
 // 建模（Figma 的模式屬於集合，一個節點在每個集合只持有一個模式，所以一個集合的模式只對應一組軸）：
 //   Base          單一模式 Default：不隨套系、明暗、裝置變化的常數。
-//   Suite         Vibrant、Professional：只依套系變化的變數（圓角、密度、外形）。
-//   Mode          Light、Dark：只依明暗變化的變數（背景、文字、邊界）。
 //   Device        Desktop、Tablet、Mobile：只依裝置變化的變數（標題字級）。
-//   Suite x Mode  Vibrant / Light 等四種組合：同時依套系與明暗變化的變數（主色、成功／警告／錯誤色等）。
-//     不用別名把它們拆進 Suite 與 Mode：離線 openpencil 的匯出與 resolve*VariableForNode 都不解別名（ISSUE-004 探測）。
-//   所以切換一個節點的套系與明暗，要同時設定 Suite、Mode、Suite x Mode 三個集合的模式。
+//   Suite x Mode  Vibrant / Light 等四種組合：依套系或明暗變化的變數（圓角、背景、文字、主色、成功／警告／錯誤色等）。
+//     只依其中一軸的變數在另一軸的兩個模式寫同樣的值，切換一個節點的套系與明暗只設這一個集合（ISSUE-015）。
+//     不用別名拆成套系、明暗兩個集合：離線 openpencil 的匯出與 resolve*VariableForNode 都不解別名（ISSUE-004 探測）。
+//   舊版的 Suite、Mode 集合在套用時移除，其變數改建在 Suite x Mode；母版綁定隨後以 apply-bindings.js 重綁。
 // 型別對應：color → COLOR（0..1 浮點）、number → FLOAT、string → STRING、boolean → BOOLEAN。
 // opacity 類變數維持 variables.json 的 0–100 原值；綁定端若需要 0–1 自行換算。
 //
@@ -169,8 +168,19 @@ for (const pc of plan.collections) {
   if (same[0]) managedIds.add(same[0].id)
 }
 const planNames = new Set(plan.collections.flatMap((c) => c.variables.map((v) => v.name)))
+const allVars = figma.getLocalVariables()
+const varsOf = (id) => allVars.filter((v) => v.collectionId === id)
+// ISSUE-015 之前的版面留下的 Suite、Mode 集合：只認這兩個名稱，且變數全是計畫內的名稱，才視為我們先前建的而整個移除；
+// 混有其他變數或名稱不同的集合可能是使用端自建的，不動它，照樣拒絕。
+const RETIRED_NAMES = ['Suite', 'Mode']
+const retired = cols.filter((c) => !managedIds.has(c.id) && RETIRED_NAMES.includes(c.name)).filter((c) => {
+  const vs = varsOf(c.id)
+  return vs.length > 0 && vs.every((v) => planNames.has(v.name))
+})
+const retiredIds = new Set(retired.map((c) => c.id))
 const seen = new Map()
-for (const v of figma.getLocalVariables()) {
+for (const v of allVars) {
+  if (retiredIds.has(v.collectionId)) continue
   if (managedIds.has(v.collectionId)) {
     const key = v.collectionId + '/' + v.name
     if (seen.has(key)) throw new Error('集合內有重複的同名變數：' + v.name)
@@ -180,6 +190,10 @@ for (const v of figma.getLocalVariables()) {
   }
 }
 let created = 0, updated = 0, removed = 0
+for (const c of retired) {
+  for (const v of varsOf(c.id)) { figma.deleteVariable(v.id); removed++ }
+  figma.deleteVariableCollection(c.id)
+}
 // 先清掉各集合內不在計畫裡的變數，再建立，避免變數換集合時同名衝突。
 for (const pc of plan.collections) {
   const col = cols.find((c) => c.name === pc.name)
@@ -211,7 +225,7 @@ for (const pc of plan.collections) {
     for (const m of pc.modes) figma.setVariableValue(v.id, modeId(m), pv.values[m])
   }
 }
-return { created, updated, removed }
+return { created, updated, removed, retired: retired.map((c) => c.name) }
 `;
 
 // ---------- 比對 ----------
@@ -328,7 +342,7 @@ if (command === 'apply') {
     console.log('已是最新，不寫檔');
   } else {
     const result = JSON.parse(evalOn(libraryPath, applyScript(plan), ['-w']));
-    console.log(`已套用（新增 ${result.created}、更新 ${result.updated}、移除 ${result.removed}）`);
+    console.log(`已套用（新增 ${result.created}、更新 ${result.updated}、移除 ${result.removed}${result.retired.length ? `；移除舊集合 ${result.retired.join('、')}` : ''}）`);
     state = readState(libraryPath);
     diffs = compare(data, state, plan);
   }

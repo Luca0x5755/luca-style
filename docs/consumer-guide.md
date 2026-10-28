@@ -62,7 +62,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 
 ## OpenPencil 與程式同步
 
-設計稿是一個以 OpenPencil 編輯的元件庫設計檔：`docs/mockup/luca-style-library.fig`，含設計變數與 23 個母版；兩套風格以 `Suite`（Vibrant／Professional）模式切換，明暗以 `Mode`（Light／Dark）切換，同時依兩者變化的角色色放在 `Suite x Mode` 集合（切換時三個集合的模式要一起設）。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
+設計稿是一個以 OpenPencil 編輯的元件庫設計檔：`docs/mockup/luca-style-library.fig`，含設計變數與 23 個母版；兩套風格與明暗以 `Suite x Mode` 集合的四個模式切換（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`），裝置以 `Device` 切換。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
 
 | 設計稿名稱 | 程式公開對應 |
 | --- | --- |

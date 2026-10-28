@@ -166,25 +166,21 @@ test('no design-file variable varies by both mode and device, which apply-variab
 });
 
 // ISSUE-004：設計檔的集合與模式由產生器決定（Figma 一個節點在每個集合只持有一個模式）。
-// 同時依套系與明暗變化的變數，沒有別名可用（匯出不解別名），所以放進 4 個模式的「Suite x Mode」集合。
-test('every design-file variable is placed in the collection whose modes cover exactly the axes it varies on', async () => {
+// ISSUE-015：依套系或明暗變化的變數全放進 4 個模式的「Suite x Mode」集合，切換套系與明暗只設這一個集合。
+test('every design-file variable that varies by suite or mode is in Suite x Mode, so one collection switches both', async () => {
   const { data } = await generateFig();
   expect(data!.collections).toEqual([
     { name: 'Base', axes: [], modes: ['Default'] },
-    { name: 'Suite', axes: ['suite'], modes: ['Vibrant', 'Professional'] },
-    { name: 'Mode', axes: ['mode'], modes: ['Light', 'Dark'] },
     { name: 'Device', axes: ['device'], modes: ['Desktop', 'Tablet', 'Mobile'] },
     { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: ['Vibrant / Light', 'Vibrant / Dark', 'Professional / Light', 'Professional / Dark'] },
   ]);
   const placed = (name: string) => data!.variables.find(variable => variable.name === name)?.collection;
   expect(placed('font-zh')).toBe('Base');
-  expect(placed('radius-card')).toBe('Suite');
-  expect(placed('bg')).toBe('Mode');
   expect(placed('fs-hero')).toBe('Device');
-  for (const name of ['accent', 'accent-hover', 'accent-pressed', 'focus-ring', 'success', 'card-highlight']) expect(placed(name)).toBe('Suite x Mode');
+  for (const name of ['radius-card', 'bg', 'text', 'accent-ink', 'accent', 'accent-hover', 'accent-pressed', 'focus-ring', 'success', 'card-highlight']) expect(placed(name)).toBe('Suite x Mode');
   expect(data!.variables.filter(variable => !variable.collection).map(variable => variable.name)).toEqual([]);
   const counts = Object.fromEntries(data!.collections!.map(({ name }) => [name, data!.variables.filter(variable => variable.collection === name).length]));
-  expect(counts).toEqual({ Base: 39, Suite: 8, Mode: 8, Device: 3, 'Suite x Mode': 14 });
+  expect(counts).toEqual({ Base: 39, Device: 3, 'Suite x Mode': 30 });
 });
 
 test('the committed docs/mockup/themes/variables.json is generated output, identical to a fresh npm run generate', async () => {

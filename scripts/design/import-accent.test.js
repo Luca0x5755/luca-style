@@ -92,9 +92,9 @@ const colorsInPng = (path) => {
   return colors;
 };
 
-// 把檔案內所有母版的 Suite、Mode、Suite x Mode 模式設成指定組合，另存成副本（母版的模式切換要三個集合一起設）。
+// 把檔案內所有母版的 Suite x Mode 模式設成指定組合，另存成副本（套系與明暗只由這一個集合切換，ISSUE-015）。
 const withModes = (file, suite, mode) => mutate(file, join(tempDir('import-accent-modes-'), 'modes.fig'), `
-const want = { Suite: ${JSON.stringify(suite)}, Mode: ${JSON.stringify(mode)}, 'Suite x Mode': ${JSON.stringify(`${suite} / ${mode}`)} }
+const want = { 'Suite x Mode': ${JSON.stringify(`${suite} / ${mode}`)} }
 const set = {}
 for (const c of figma.getLocalVariableCollections()) { const m = want[c.name] && c.modes.find((x) => x.name === want[c.name]); if (m) set[c.id] = m.modeId }
 for (const p of figma.root.children) for (const n of p.children) figma.graph.updateNode(n.id, { variableModes: set })`);
