@@ -205,7 +205,7 @@ exit=1
 
 ## 凍結承諾與證據
 
-承諾全文、範圍、排除項目及決策已遷移至[設計系統需求承諾](capabilities/design-system.md#需求承諾)，共 PR-STYLE-01～24，無 retired 行。下列證據使用真實套件與瀏覽器，不以靜態設計稿 frame 代替 React 驗收。
+承諾全文、範圍、排除項目及決策已遷移至[設計系統需求承諾](capabilities/design-system.md#需求承諾)，本表涵蓋 PR-STYLE-01～24；0.2.0 新增的 PR-STYLE-25～47、PR-FILE-16～19 與 retired 的 PR-FILE-01～05、10～15 見該文件，證據在各自的測試檔（以承諾 ID 標註）與下方各節。下列證據使用真實套件與瀏覽器，不以靜態設計稿 frame 代替 React 驗收。
 
 | 承諾 | 交付成果與可重現證據 |
 | --- | --- |
@@ -222,12 +222,12 @@ exit=1
 | PR-STYLE-11 | theme.spec 模擬 reduced-motion，按鈕 transition 從 120ms 變 0；前端 §5.5.3；React CSS 減少非必要動態。 |
 | PR-STYLE-12 | 公開 Button／TextField／Select／Checkbox／Navigation／MetricCard／DataTable／StatusMessage／ContentState；components.spec 真正鍵盤 Tab、方向鍵、Space、Enter 提交及結果、失敗重試；全矩陣見下。 |
 | PR-STYLE-13 | product.spec 與 editorial.spec，產品／介紹頁在雙套系、日夜及桌面／平板／手機；表格、表單、CTA、空白與錯誤還原。 |
-| PR-STYLE-14 | 正式 tokens/react 套件、showcase 五頁、兩個套系設計檔（components-vibrant.fig、components-professional.fig）、consumer-guide、examples/consumer；test:consumer 從 tarball 於 repo 外安裝、typecheck、build、瀏覽器操作。 |
+| PR-STYLE-14 | 正式 tokens/react 套件、showcase 五頁、元件庫設計檔（`docs/mockup/luca-style-library.fig`，ADR 0007）、consumer-guide、examples/consumer；test:consumer 從 tarball 於 repo 外安裝、typecheck、build、瀏覽器操作。 |
 | PR-STYLE-15 | 本機：pages.spec 對 `build:pages` 輸出的模擬 Pages 伺服器，subpath.spec 於 `/luca-style/` 經導覽到達五個路由。**線上尚未驗證**：需 push 到 `main` 並將 Pages 來源設為 GitHub Actions，詳見下節。 |
 | PR-STYLE-16 | pages.spec：每個路由各有 `index.html`、直接開啟與重新整理回應 200；trailing-slash.spec：尾斜線與無尾斜線同一路由；模擬伺服器重現 Pages 對無尾斜線目錄的 301。 |
 | PR-STYLE-17 | pages.spec 未知網址回 404；not-found.spec 與 subpath.spec：找不到頁面內容、四態、返回入口、三寬度無橫溢。 |
 | PR-STYLE-18 | subpath.spec：品牌連結與頁內連結皆在 `/luca-style/` 內；`/` 下既有案例不變。route-table 單一來源與 main.tsx 由 pages-routes.spec 比對。 |
-| PR-STYLE-19 | deploy-workflow.spec：僅 push 到 main、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。工作流程尚未在 GitHub 上實跑。 |
+| PR-STYLE-19 | deploy-workflow.spec：push 到 main 與 PR 觸發、只有 push 才部署、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。2026-10-29 PR #4 在 GitHub Actions 實跑（run 40803527031）：verify、visual 通過，deploy 依條件跳過；推到 main 的部署尚未實跑。 |
 | PR-STYLE-20 | components.spec：預設品牌連結為 `/`，傳入 `brandHref` 後跟隨；consumer-guide 說明，examples/consumer 以 `brandHref="/luca-style/"` 經 test:consumer 驗證。 |
 | PR-STYLE-21 | readme.spec：H2 順序、英文與一句話介紹、線上樣張連結、無「正式預覽」、有「本機預覽」、授權段落。 |
 | PR-STYLE-22 | readme.spec：clone／`npm ci`／`npm run dev`、連到使用端接入文件、程式碼片段 ≤10 行且逐字來自 examples/consumer、相對連結皆存在且被 git 追蹤。 |
@@ -250,13 +250,13 @@ exit=1
 
 ## 設計稿與程式對照
 
-以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#openpencil-與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，已由兩個套系設計檔取代，見 ADR 0003）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
+以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#openpencil-與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，先由 ADR 0003 拆成兩檔，現為元件庫設計檔 `docs/mockup/luca-style-library.fig`，見 ADR 0007）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
 
 實作保留設計角色與內容層次，以下差異由可操作網頁需要而來：
 
 - 當時的 Pencil 設計稿分立 240 個靜態 frame；React 使用單一頁面與本機「樣張狀態」選單，錯誤重試回復正常內容。
 - 當時的 Pencil 設計稿以狀態母版獨立展示；React 以 props、原生 disabled、hover、focus-visible 與可關聯錯誤文字實際操作。
-- 網頁增加套系、模式及強調色比較控制供開發者檢視；正式使用端仍選定專案套系。表單使用原生選單／核取方塊，保留瀏覽器鍵盤操作，外觀不追求每個原生 popup 與靜態圖完全相同。
+- 網頁增加套系、模式及強調色比較控制供開發者檢視；正式使用端仍選定專案套系。表單元件當時使用原生選單／核取方塊；0.2.0 起 Select、Checkbox 等改由 Base UI 處理互動（ADR 0006），Select 選單跟著套系與明暗。
 - 產品資料與圖表為本機示例，操作後可新增列；靜態範本未涵蓋所有新增資料內容。
 
 沒有新增三個參考專案的業務流程、後端、部署或 npm 公開發布。正式合併與發布另由使用者決定。
@@ -284,18 +284,17 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 
 輸出（皆在 `docs/mockup/themes/`）：
 
-- `variables.json`：48 個變數的型別、原始定義，以及在 12 個主題組合（mode × suite × device，鍵為 `Light/Vibrant/Desktop` 這種格式）下的值。
+- `variables.json`：擷取當時是 48 個變數的型別、原始定義，以及在 12 個主題組合（mode × suite × device，鍵為 `Light/Vibrant/Desktop` 這種格式）下的值。ISSUE-003 起改由 `npm run generate` 自 DTCG 原始檔產生（程式變數與這 48 個的聯集；格式相同但不含原始定義 `definition`，沒有腳本讀它），本腳本不再寫出它；擷取當時的 48 個變數保存在 `tests/fixtures/fig-variables-0.1.0.json`。
 - `bindings.json`：每個頁面 frame 的每個被綁定屬性：frame 名稱、節點索引路徑、節點類型、屬性、變數名稱；母版另存在 `masters`。
 - `resolved.json`：每個頁面 frame 在自己的主題下，每個被綁定屬性解析後的實際值；母版以預設主題（Vibrant／Light／Desktop）解析。opacity 類變數保留原值 0–100，不做 Pencil 內部的 0–1 正規化。
-- `extract-raw.txt`、`variables-raw.txt`：從 Pencil 抽出的原始文字，是上面三份 JSON 的唯一輸入。
+- `extract-raw.txt`、`variables-raw.txt`：從 Pencil 抽出的原始文字，是 `bindings.json`、`resolved.json` 的唯一輸入；`variables-raw.txt` 的值只在建置時用來解析 `resolved.json`。
 
 ### 檔案大小與筆數
 
-「筆數」：variables.json 為變數數；bindings.json 與 resolved.json 為展開後的綁定總數（頁面 frame 20,846＋母版 212）。三份都遠低於 5 MB，所以維持單檔，不分套系。
+「筆數」：bindings.json 與 resolved.json 為展開後的綁定總數（頁面 frame 20,846＋母版 212）。兩份都遠低於 5 MB，所以維持單檔，不分套系。
 
 | 檔案 | bytes | 筆數 |
 | --- | --- | --- |
-| variables.json | 34718 | 48 |
 | bindings.json | 906116 | 21058 |
 | resolved.json | 765053 | 21058 |
 
@@ -312,7 +311,7 @@ README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查�
 5. 執行：
 
 ```sh
-node scripts/design/build-theme-data.js              # 建置三份 JSON
+node scripts/design/build-theme-data.js              # 建置 bindings.json 與 resolved.json
 node scripts/design/build-theme-data.js --check      # 內部一致性、型別、逐類型獨立計數、5 MB 上限
 node scripts/design/build-theme-data.js --check-fig  # 與兩個 .fig 比對節點數、名稱序列、路徑與類型（約 8 秒）
 node scripts/design/build-theme-data.js --check-doc  # 本節的大小、筆數與抽樣表
@@ -328,7 +327,7 @@ node --test scripts/design/build-theme-data.test.js                          # �
 ### Pencil 與 Pencil 之外的限制
 
 - Pencil 解析後的輸出會省略預設值：opacity 100、`effect.enabled` 為 true、四邊相同的 strokeWidth。比對時對這三類做了明確的等價處理，其他屬性是逐值比對。
-- `resolved.json` 的值由 `variables.json` 加主題推導；與 Pencil 的 `resolveVariables` 結果一致這件事，是在 Pencil 內對 304 個頁面項目與 22 個母版逐筆比對得到的（BAD total 0），該結果記在 `extract-raw.txt` 檔頭。`.pen` 刪除後這項比對無法重跑，只能用片段 2 重現當時的做法。
+- `resolved.json` 的值由 `variables-raw.txt` 加主題推導；與 Pencil 的 `resolveVariables` 結果一致這件事，是在 Pencil 內對 304 個頁面項目與 22 個母版逐筆比對得到的（BAD total 0），該結果記在 `extract-raw.txt` 檔頭。`.pen` 刪除後這項比對無法重跑，只能用片段 2 重現當時的做法。
 
 ### 抽樣核對（5 個 Dark、5 個 Light）
 
@@ -634,3 +633,31 @@ node --test scripts/design/relayout-fig.test.js scripts/design/verify-split.test
 - 驗證匯出與讀值在拿掉固定後是否正常；目前匯出本身會失敗。
 - 之後要改的文件與腳本：規格 §5.3 的 48 張矩陣、PR-FILE-04 與 `baseline.json`（302 個 frame）、`verify-split.js` 的 Light/Dark 顏色分布檢查、`verify-themes.js`、`apply-bindings.js` 的 frame 模式。
 - 本試驗**沒有**證明可行，也沒有證明不可行；比對只有一個 frame 的目視與數個讀值。
+
+## 合併為一份元件庫設計檔（ISSUE-004，PR-FILE-18）
+
+2026-10-28。`docs/mockup/luca-style-library.fig` 取代 `components-vibrant.fig` 與 `components-professional.fig`（ADR 0007）；舊檔與只為頁面、兩檔比對存在的腳本、基準資料已刪除（`paginate-fig`、`relayout-fig`、`verify-split`、`pages.js`、`layout-snippets.js`、`build-theme-data`、`verify-themes`、`extract-pen-themes.pen.js`、`theme-expected.js`、`themes/` 的 baseline、resolved、extract-raw、variables-raw、strokes），上文各節的指令是當時的紀錄。
+
+- **合併前提：** 兩檔母版只在綁定變數上不同。`check-masters.js`（舊版）全部相同；另以一次性腳本逐節點比對 23 個母版的節點樹、子節點數、`layoutMode`、sizing 與元件屬性定義，差異 0。兩檔的頂層非母版節點只有 `Library guide`、`00 / Canvas directory` 與兩個標題文字，皆為頁面或比對專用。
+- **檔案：** 23 個母版、110 個母版節點，文件節點數 112（含存放變數的空頁 `Internal Only Canvas`，OpenPencil 在檔案含變數時自動維持，無法刪除，所以「有內容的畫布頁」只有 1 個）。
+- **模式：** ISSUE-004 時為五個集合 Base、Suite、Mode、Device、Suite x Mode，Suite x Mode 放 14 個同時依套系與明暗變化的變數；ISSUE-015 把 Suite、Mode 併入 Suite x Mode，現為 Base、Device、Suite x Mode 三個集合（Suite x Mode 30 個變數）。探測：`VARIABLE_ALIAS` 可儲存，但 `resolve*VariableForNode` 回傳 undefined，匯出退回儲存值（灰色方塊仍為灰），所以不能用別名拆進 Suite 與 Mode。集合與歸屬由 `npm run generate` 決定（`variables.json` 的 `collections`）。
+- **解析值：** `check-masters.js` 對 Vibrant／Professional × Light／Dark 四種組合設定模式後，245 筆綁定屬性的解析值都等於 `variables.json`。
+- **母版總覽 PNG：** 四種組合各一張（`-s 2`，臨時 frame 內 23 個實例，母版順序固定），與合併前兩檔以同方式匯出的基準逐列比對（不進版控）。Vibrant 兩張只在預期處不同：`C/Button/Hover`（改綁 `accent-hover`）、`C/Button/Focus` 與 `C/Field/Focus`（焦點框改綁 `focus-ring`）、`C/Card/Metric` 左邊框（改綁 `border`）、Dark 的 `C/Select/Open` 選單外框（原本是未綁定的日間色，改綁 `border`）。Professional 在這些之外，指標卡與表格因自動排版尺寸只存預設模式的值，總高度差 32px（6128 對 6096）。
+- **限制：** 圓角、內距、字級、字型、顏色隨模式解析；但沒有綁定欄位的陰影開關（`elevation-enabled`）與載入圖片透明度（`loading-*-opacity`），以及自動排版後的版面尺寸，只存預設模式的值。離線匯出不會因模式重排版，總覽 PNG 以匯出前把綁定的數值寫進實例的方式補上；App 內的行為未驗證。
+- **未綁定項：** 沒有按下態母版，`accent-pressed` 無處綁定，未新增母版。
+
+## 元件庫設計檔的檢查指令與結果（PR-FILE-06）
+
+2026-10-28，ISSUE-014 收尾時在 Windows 本機對 `docs/mockup/luca-style-library.fig` 執行（三支腳本都以離線、唯讀的 `openpencil eval` 讀檔）：
+
+```sh
+node scripts/design/check-masters.js            # exit 0
+node scripts/design/apply-variables.js --check  # exit 0
+node scripts/design/apply-bindings.js --check   # exit 0
+```
+
+- `check-masters.js`：畫布頁 Library（23）、Internal Only Canvas（0）；母版 23（預期 23）、母版節點 110；245 筆綁定屬性在 Vibrant／Professional × Light／Dark 四種組合的解析值都等於 `variables.json`，「全部通過」。
+- `apply-variables.js --check`：節點數 112，變數與 `variables.json` 逐筆一致。
+- `apply-bindings.js --check`：節點數 112，23 個母版、244 筆綁定，綁定與儲存值全部一致。
+- 三支腳本各自的 `*.test.js`（含故意改壞副本的失敗案例）在 `node --test scripts/design/*.test.js` 內執行。
+- **人眼抽查：** 2026-10-29 使用者在 OpenPencil App 開啟元件庫設計檔檢查，回報「已經看完沒問題」（在 ISSUE-015 合併集合與 `c5cd3fc` 文字置中之後）。使用者沒有說明看了哪些母版與模式，所以這裡不記抽查範圍，也不聲稱做過像素比對。

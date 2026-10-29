@@ -92,3 +92,35 @@ test('project accent preview keeps baseline palette swatches consistent with the
   await expect(page.locator('[data-color="accent-soft"] .color-chip')).toHaveCSS('background-color','rgb(227, 242, 240)');
   await expect(page.getByText('色票顯示套系原始值；專案強調色覆寫僅供比較操作元件。',{exact:true})).toBeVisible();
 });
+
+// §5.3.2、ADR 0005：資訊密度與元件外形切換，預設為目前套系的預設等級，只影響本頁預覽。
+test('density and shape switches default to the suite levels and update this page immediately', async ({page}) => {
+  await page.goto('/foundations');
+  await page.getByLabel('明暗模式').selectOption('light');
+  const html = page.locator('html'), density = page.getByLabel('資訊密度'), shape = page.getByLabel('元件外形');
+  const demo = page.locator('.shape-demo'), spacing = page.getByRole('region', {name:'空間，讓資訊各就其位'});
+  await expect(density).toHaveValue('standard');
+  await expect(shape).toHaveValue('rounded');
+  for (const name of ['data-density','data-shape']) await expect(html).not.toHaveAttribute(name);
+  await density.selectOption('compact');
+  await expect(html).toHaveAttribute('data-density','compact');
+  await expect(page.locator('.foundations')).toHaveCSS('row-gap','24px');
+  await expect(demo).toHaveCSS('padding','16px');
+  await expect(spacing.getByText('精簡密度：操作元件高度 2.5rem，容器內距 1rem，區塊間距 1.5rem；文字角色維持一致。')).toBeVisible();
+  await shape.selectOption('sharp');
+  await expect(demo).toHaveCSS('border-radius','3px');
+  await expect(demo.getByText('俐落外形：容器圓角 0.1875rem · 操作元件 0.1875rem')).toBeVisible();
+  // 換套系即回到新套系的預設等級。
+  await page.getByLabel('風格套系').selectOption('professional');
+  await expect(density).toHaveValue('standard');
+  await expect(shape).toHaveValue('sharp');
+  for (const name of ['data-density','data-shape']) await expect(html).not.toHaveAttribute(name);
+  await shape.selectOption('rounded');
+  await expect(demo).toHaveCSS('border-radius','20px');
+  await density.selectOption('comfortable');
+  await expect(demo).toHaveCSS('padding','24px');
+  // 離開本頁即不再覆寫。
+  await page.getByRole('navigation',{name:'主要導覽'}).getByRole('link',{name:'共用元件',exact:true}).click();
+  await expect(page).toHaveURL(/\/components$/);
+  for (const name of ['data-density','data-shape']) await expect(html).not.toHaveAttribute(name);
+});

@@ -31,7 +31,7 @@ import '@luca-style/tokens/css';
 import '@luca-style/react/fonts.css';
 import '@luca-style/react/css';
 // …
-  return <ThemeProvider suite={suite} accent={custom ? {primary:'#275A83',secondary:'#6995B8',soft:'#E7F0F7',ink:'#FFFFFF'} : undefined}>
+  return <ThemeProvider suite={suite} accent={custom ? {light:'#275A83',secondary:'#6995B8',soft:{light:'#E7F0F7'}} : undefined}>
 // …
   </ThemeProvider>;
 ```
@@ -48,15 +48,16 @@ import '@luca-style/react/css';
 | --- | --- |
 | 在其他專案安裝與套用 | [使用端接入](docs/consumer-guide.md) |
 | 讓其他專案的代理執行接入 | [跨專案套用提示詞](docs/adoption-prompt.md)，內附精緻活力與精緻專業的輸入範例 |
+| 讓代理使用設計系統 | [DESIGN.md](DESIGN.md) 與 [llms.txt](llms.txt)；每個設計變數的值與用途見[設計變數規格](docs/design-tokens.md)（產生物） |
 | 了解設計系統的承諾與範圍 | [設計系統能力規格](docs/capabilities/design-system.md) |
-| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為套系設計檔 `docs/mockup/components-vibrant.fig`（精緻活力）與 `docs/mockup/components-professional.fig`（精緻專業），專案只需開所選套系的那一個 |
+| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為元件庫設計檔 `docs/mockup/luca-style-library.fig`（兩套風格的母版與設計變數合為一檔） |
 | 查架構與部署方式 | [架構設計](docs/03_architecture_design.md) |
 | 查驗收證據與限制 | [交付驗證](docs/delivery-verification.md) |
 | 查領域術語 | [術語表](GLOSSARY.md) |
 
 ## 開發與驗證
 
-變數來源為 `packages/tokens/src/tokens.json`。修改後執行 `npm run generate`，再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
+變數來源為 `packages/tokens/src/` 下的 DTCG 分層檔（`base`、`mode/<明暗>`、`suite/<套系>/<common|明暗>`、`typography`），每個變數都要有 `$value`、`$type` 與 `$description`。修改後執行 `npm run generate`，由 Style Dictionary 重新產生輸出（含 `docs/design-tokens.md` 設計變數規格，勿手改）；任一「風格套系 × 明暗模式」組合缺值時建置失敗並列出缺的變數。之後再重建或重啟開發指令。產物在各套件 `dist/`，不納入版本管理。
 
 ```sh
 npm run build
@@ -78,6 +79,17 @@ npm test
 - `npm run test:consumer`：獨立 consumer 驗證（先 build，需要網路、Chromium 與獨立 4174 port）。
 - `npm run build:pages`：以 `/luca-style/` 為 base 建置 GitHub Pages 靜態輸出到 `apps/showcase/dist-pages`。push 到 `main` 後由 `.github/workflows/pages.yml` 驗證並部署。
 - `npm run screenshots`：重新產生 `docs/images/` 的四張截圖（使用 4177 port，不屬於 `npm test`）；`npm run verify:screenshots` 驗證產生結果穩定。
+
+### 截圖基準
+
+樣張每一頁（含找不到頁面）× 兩種風格套系 × 日間／暗黑 × 寬度 1280／834／390，共 72 張，存於 `tests/__screenshots__/`（PR-STYLE-42）；只含 Success 狀態，設計基礎頁的密度與外形切換維持預設，不在基準內。基準只在 Playwright 官方 Linux Docker 映像（版本與 `@playwright/test` 一致）產生與比對，因為 Windows 與 Linux 字型渲染不同；本機 `npm test` 不含截圖比對。需要 Docker 與 4173 port；首次會下載映像，並在容器內安裝依賴（放在命名 volume `luca-style-visual-node-modules`，不動本機 `node_modules`）。`npm run screenshots` 產生的是 README 用圖，不做比對，與此基準無關。
+
+```sh
+npm run test:visual    # 在 Docker 內與基準比對，不符即失敗
+npm run update:visual  # 在 Docker 內更新基準；之後檢查並提交 tests/__screenshots__/
+```
+
+CI 的 `visual` job（`.github/workflows/pages.yml`）用同一個映像比對，通過後才部署。升級 `@playwright/test` 時須同步改 pages.yml 的映像標籤並重新產生基準。
 
 ## 授權
 

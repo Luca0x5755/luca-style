@@ -1,0 +1,58 @@
+{
+  "hero": {
+    "mobile": "2rem",
+    "tablet": "2.75rem",
+    "desktop": "3.5rem",
+    "weight": 700,
+    "lineHeight": 1.2
+  },
+  "title": {
+    "mobile": "1.5rem",
+    "tablet": "1.75rem",
+    "desktop": "2rem",
+    "weight": 700,
+    "lineHeight": 1.3
+  },
+  "section": {
+    "mobile": "1.25rem",
+    "tablet": "1.375rem",
+    "desktop": "1.5rem",
+    "weight": 600,
+    "lineHeight": 1.4
+  },
+  "card": {
+    "mobile": "1.125rem",
+    "tablet": "1.125rem",
+    "desktop": "1.125rem",
+    "weight": 600,
+    "lineHeight": 1.5
+  },
+  "body": {
+    "mobile": "1rem",
+    "tablet": "1rem",
+    "desktop": "1rem",
+    "weight": 400,
+    "lineHeight": 1.75
+  },
+  "control": {
+    "mobile": "1rem",
+    "tablet": "1rem",
+    "desktop": "1rem",
+    "weight": 500,
+    "lineHeight": 1.5
+  },
+  "secondary": {
+    "mobile": ".875rem",
+    "tablet": ".875rem",
+    "desktop": ".875rem",
+    "weight": 400,
+    "lineHeight": 1.6
+  },
+  "helper": {
+    "mobile": ".75rem",
+    "tablet": ".75rem",
+    "desktop": ".75rem",
+    "weight": 500,
+    "lineHeight": 1.5
+  }
+}

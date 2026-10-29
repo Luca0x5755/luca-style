@@ -1,0 +1,12 @@
+{
+  "suite-label": {
+    "$value": "精緻專業 · 石墨紫",
+    "$type": "string",
+    "$description": "設計檔中標示目前風格套系的文字。$type string 不是 DTCG 標準型別，只供設計檔使用",
+    "$extensions": {
+      "luca-style": {
+        "designFileOnly": true
+      }
+    }
+  }
+}

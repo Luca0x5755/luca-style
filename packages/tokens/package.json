@@ -1,10 +1,13 @@
 {
   "name": "@luca-style/tokens",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "accent.js",
+    "accent.d.ts",
+    "design-tokens.md"
   ],
   "exports": {
     "./css": {
@@ -12,10 +15,17 @@
       "default": "./dist/tokens.css"
     },
     "./data": "./dist/tokens.json",
-    "./typography": "./dist/typography.json"
+    "./typography": "./dist/typography.json",
+    "./accent": {
+      "types": "./accent.d.ts",
+      "default": "./accent.js"
+    }
   },
   "scripts": {
-    "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",
-    "build": "node generate.mjs"
+    "prepack": "node -e \"const fs=require('node:fs');fs.copyFileSync('../../LICENSE','LICENSE');fs.copyFileSync('../../docs/design-tokens.md','design-tokens.md')\"",
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.7.1"
   }
 }

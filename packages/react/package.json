@@ -1,12 +1,14 @@
 {
   "name": "@luca-style/react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "type": "module",
   "files": [
     "dist",
     "fonts",
-    "loading"
+    "loading",
+    "DESIGN.md",
+    "llms.txt"
   ],
   "exports": {
     ".": {
@@ -21,13 +23,15 @@
     "./licenses/*": "./fonts/*-OFL.txt"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@luca-style/tokens": "0.1.0"
+    "@base-ui/react": "^1.9.0",
+    "@luca-style/tokens": "0.2.0"
   },
   "scripts": {
-    "prepack": "node -e \"require('node:fs').copyFileSync('../../LICENSE','LICENSE')\"",
+    "prepack": "node -e \"const fs=require('node:fs');fs.copyFileSync('../../LICENSE','LICENSE');fs.copyFileSync('../../DESIGN.md','DESIGN.md');fs.copyFileSync('../../llms.txt','llms.txt')\"",
     "build": "tsc -p tsconfig.json && node -e \"const fs=require('node:fs');fs.copyFileSync('src/styles.css','dist/styles.css');fs.copyFileSync('src/css.d.ts','dist/css.d.ts')\""
   }
 }

@@ -6,3 +6,6 @@ playwright-report/
 packages/*/LICENSE
 dist-subpath/
 dist-pages/
+packages/react/DESIGN.md
+packages/react/llms.txt
+packages/tokens/design-tokens.md

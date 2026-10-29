@@ -13,7 +13,7 @@ test('form validation is linked and keyboard submission reports an operation res
   await expect(form.getByLabel('通知頻率')).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Tab');
-  await expect(form.getByLabel('我已確認設定')).toBeFocused();
+  await expect(form.getByRole('checkbox',{name:'我已確認設定'})).toBeFocused();
   await page.keyboard.press('Space');
   await page.keyboard.press('Tab');
   await expect(form.getByRole('button',{name:'儲存設定',exact:true})).toBeFocused();
@@ -29,14 +29,14 @@ test('operation failure can be retried without losing editable values', async ({
   const form=page.getByRole('form',{name:'示範設定'});
   await form.getByLabel('計畫名稱',{exact:true}).fill('保留我的設定');
   await form.getByRole('button',{name:'儲存設定',exact:true}).click();
-  await expect(form.getByLabel('我已確認設定')).toBeFocused();
-  await expect(form.getByLabel('我已確認設定')).toHaveAccessibleDescription('請先確認設定。');
-  await form.getByLabel('我已確認設定').check();
-  await form.getByLabel('模擬儲存失敗').check();
+  await expect(form.getByRole('checkbox',{name:'我已確認設定'})).toBeFocused();
+  await expect(form.getByRole('checkbox',{name:'我已確認設定'})).toHaveAccessibleDescription('請先確認設定。');
+  await form.getByRole('checkbox',{name:'我已確認設定'}).check();
+  await form.getByRole('checkbox',{name:'模擬儲存失敗'}).check();
   await form.getByRole('button',{name:'儲存設定',exact:true}).click();
   await expect(form.getByRole('alert')).toHaveText('錯誤 · 儲存失敗，請重試。');
   await expect(form.getByLabel('計畫名稱',{exact:true})).toHaveValue('保留我的設定');
-  await form.getByLabel('模擬儲存失敗').uncheck();
+  await form.getByRole('checkbox',{name:'模擬儲存失敗'}).uncheck();
   await form.getByRole('button',{name:'儲存設定',exact:true}).click();
   await expect(form.getByRole('status')).toHaveText('成功 · 設定已儲存。');
 });
@@ -73,15 +73,16 @@ test('component samples remain operable across suite mode and width combinations
         await expect(page.getByRole('button',{name:'暫不可用',exact:true})).toBeDisabled();
         await expect(page.getByRole('button',{name:'處理中…',exact:true})).toBeDisabled();
         await expect(page.getByLabel('停用欄位')).toBeDisabled();
-        await expect(page.getByLabel('已停用的通知')).toBeDisabled();
+        await expect(page.getByRole('checkbox',{name:'已停用的通知'})).toBeDisabled();
       }
     }
   }
   const interactive=page.getByRole('button',{name:'移入或聚焦',exact:true});
+  // 滑過改用推算的 accent-hover（PR-STYLE-45），焦點框為雙圈（PR-STYLE-46）；細節見 focus-ring.spec。
   await interactive.hover();
-  await expect(interactive).toHaveCSS('filter','brightness(0.94)');
+  await expect(interactive).toHaveCSS('filter','none');
   await interactive.focus();
-  await expect(interactive).toHaveCSS('outline-width','3px');
+  await expect(interactive).toHaveCSS('outline-width','2px');
   await page.getByLabel('聚焦欄位').focus();
   await expect(page.getByLabel('聚焦欄位')).toHaveCSS('outline-width','2px');
 });

@@ -1,0 +1,21 @@
+# Luca Style
+
+> 跨專案的 React 設計系統：精緻活力與精緻專業兩套風格套系、日間與暗黑模式、可單獨覆寫的資訊密度與元件外形、由一個主色推算的專案強調色，以及 Base UI 為基礎的共用元件。套件為 `@luca-style/tokens`（設計變數）與 `@luca-style/react`（元件與主題控制）。文件以繁體中文撰寫。
+
+先讀 DESIGN.md：它先講決策規則（何時選哪套風格套系、強調色不改語意狀態色、業務資料色另訂），再講主題軸、API 與元件。變數的實際值以設計變數規格為準。
+
+## 核心文件
+
+- [DESIGN.md](https://github.com/Luca0x5755/luca-style/blob/main/DESIGN.md): 給代理的使用指南，含決策規則、五條主題軸（套系、明暗、密度、外形、強調色）、元件與範例
+- [設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md): 每個設計變數在每種套系與明暗組合下的值和用途，由 DTCG 原始檔產生
+
+## 接入與規格
+
+- [使用端接入](https://github.com/Luca0x5755/luca-style/blob/main/docs/consumer-guide.md): 安裝、主題、強調色、元件庫設計檔與升級說明
+- [術語表](https://github.com/Luca0x5755/luca-style/blob/main/GLOSSARY.md): 風格套系、資訊密度、元件外形、專案強調色等詞的定義
+- [前端規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/05_frontend_spec.md): 字體角色、資訊密度與元件外形的數值、元件要求
+
+## Optional
+
+- [架構設計](https://github.com/Luca0x5755/luca-style/blob/main/docs/03_architecture_design.md): 技術棧與套件公開合約
+- [README](https://github.com/Luca0x5755/luca-style/blob/main/README.md): 專案介紹、快速開始與開發指令

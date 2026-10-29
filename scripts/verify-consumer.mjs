@@ -24,6 +24,8 @@ try {
   npm(['install','--no-audit','--no-fund',...tarballs],consumer);
   // tarball 須隨附 prepack 複製的 MIT 授權。
   for(const name of ['tokens','react']) assert.match(await readFile(join(consumer,'node_modules','@luca-style',name,'LICENSE'),'utf8'),/^MIT License/);
+  // 給代理讀的文件（ISSUE-013）須隨套件安裝：react 帶 DESIGN.md 與 llms.txt，tokens 帶設計變數規格。
+  for(const [name,file] of [['react','DESIGN.md'],['react','llms.txt'],['tokens','design-tokens.md']]) assert.ok((await readFile(join(consumer,'node_modules','@luca-style',name,file),'utf8')).length>0,`${name} 套件缺少 ${file}`);
   npm(['run','build'],consumer);
   server=spawn(process.execPath,[join(consumer,'node_modules/vite/bin/vite.js'),'preview','--host','127.0.0.1','--port','4174','--strictPort'],{cwd:consumer,stdio:'pipe'});
   await new Promise((done,reject)=>{
@@ -38,14 +40,29 @@ try {
   assert.equal(await page.getByRole('navigation',{name:'子路徑導覽'}).locator('.luca-brand').getAttribute('href'),'/luca-style/');
   await page.getByRole('button',{name:'完成操作'}).click();
   assert.match(await page.getByRole('status').innerText(),/已完成 1 次/);
-  await page.getByLabel('風格套系').selectOption('vibrant');
-  await page.getByLabel('明暗模式').selectOption('dark');
-  await page.getByLabel('專案強調色').check();
+  // Select 是 Base UI 自訂選單（ISSUE-009），不能用 selectOption()：點欄位開啟，再點選項。
+  const choose=async(label,option)=>{
+    await page.getByLabel(label).click();
+    const listbox=page.getByRole('listbox');
+    await listbox.waitFor();
+    // 選單 portal 到 ThemeProvider 的外層容器，主題屬性才套得到。
+    const theme=await listbox.evaluate(element=>{const container=element.closest('[data-luca-theme]');return container && [container.getAttribute('data-suite'),container.getAttribute('data-mode')];});
+    assert.ok(theme,`${label} 的選單不在主題容器內`);
+    await listbox.getByRole('option',{name:option,exact:true}).click();
+    await listbox.waitFor({state:'hidden'});
+    return theme;
+  };
+  await choose('風格套系','精緻活力');
+  // 開啟明暗選單時套系已切到 vibrant，選單所在容器同步顯示。
+  assert.deepEqual(await choose('明暗模式','暗黑'),['vibrant','light']);
+  // Checkbox 是 Base UI 的 role=checkbox 節點（ISSUE-010），旁邊的隱藏 input 也會被 getByLabel 找到，所以用角色定位。
+  await page.getByRole('checkbox',{name:'專案強調色'}).check();
   const theme=page.locator('[data-luca-theme]');
   assert.equal(await theme.getAttribute('data-suite'),'vibrant');
   assert.equal(await theme.getAttribute('data-mode'),'dark');
   const colors=await theme.evaluate(element=>{const s=getComputedStyle(element);return [s.getPropertyValue('--accent').trim(),s.getPropertyValue('--success').trim()];});
-  assert.deepEqual(colors.map(value=>value.toLowerCase()),['#275a83','#7ed4ab']);
+  // 範例只給日間主色，暗黑主色由 deriveAccent 推算。
+  assert.deepEqual(colors.map(value=>value.toLowerCase()),['#7fb4e2','#7ed4ab']);
   await page.reload();
   assert.equal(await theme.getAttribute('data-mode'),'dark');
   for(const name of ['Inter 授權','Noto Sans TC 授權','IBM Plex Mono 授權']) {
@@ -55,7 +72,7 @@ try {
     assert.match(await response.text(),/SIL OPEN FONT LICENSE/i);
   }
   assert.equal(await page.evaluate(async()=>{const faces=await Promise.all(['16px Inter','16px "Noto Sans TC"','16px "IBM Plex Mono"','600 16px "IBM Plex Mono"'].map(font=>document.fonts.load(font)));return faces.every(group=>group.length>0 && group.every(face=>face.status==='loaded'));}),true);
-  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build, theme/mode/accent/status, fonts, font licenses and MIT license');
+  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license');
 } finally {
   if(browser) await browser.close();
   if(server && server.exitCode===null) {const closed=new Promise(done=>server.once('exit',done));server.kill();await closed;}

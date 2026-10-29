@@ -3,12 +3,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 test('structured accent source reaches public package data and browser button', async ({ page }) => {
-  const source = new URL('../packages/tokens/src/tokens.json', import.meta.url);
+  const source = new URL('../packages/tokens/src/suite/vibrant/light.tokens.json', import.meta.url);
   const original = await readFile(source, 'utf8');
   const build = () => execFileSync(process.execPath, [process.env.npm_execpath!, 'run', 'build'], {stdio:'pipe'});
   try {
     const changed = JSON.parse(original);
-    changed.suites.vibrant.light.accent = '#9A4C32';
+    changed.accent.$value = '#9A4C32';
     await writeFile(source, JSON.stringify(changed, null, 2));
     build();
     const {default: data} = await import('@luca-style/tokens/data', {with:{type:'json'}});

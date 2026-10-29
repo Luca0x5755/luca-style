@@ -13,7 +13,7 @@
 - 設計來源：<設計來源路徑>
 - 風格套系：依本專案定位選擇（vibrant／精緻活力・潮汐；professional／精緻專業・石墨紫）
 - 套用範圍：現有前端的共用外殼、共用元件與主要業務頁面
-- 專案強調色：沿用套系預設；已有明確品牌要求時提供日間、暗黑成對覆寫
+- 專案強調色：沿用套系預設；已有明確品牌要求時提供日間主色，暗黑主色選填
 - 優先頁面：依主要使用流程決定
 
 【先讀取與盤點】
@@ -23,8 +23,8 @@
    - docs/05_frontend_spec.md：色彩、響應式字級、間距、外形與載入動畫的正式規範。
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
-   - packages/tokens/src/tokens.json：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 OpenPencil 工具開啟所選套系的設計檔：活力為 docs/mockup/components-vibrant.fig，專業為 docs/mockup/components-professional.fig，一次只需開一個。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。
+   - packages/tokens/src/（DTCG 分層檔）：最新變數來源；數值以此與正式規範核對。
+3. 需要核對視覺設計時，使用 OpenPencil 工具開啟元件庫設計檔 docs/mockup/luca-style-library.fig（只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準），以 Suite x Mode 一個集合的四個模式切換套系與明暗。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，複製此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/import-accent.js；luca-style 更新後的重新匯入也寫在該節。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】
@@ -34,11 +34,11 @@
    - 其他框架：接入公開 tokens，依相同規範建立目標框架的元件；先盤點現有元件可沿用的行為與無障礙功能。字體、OFL 授權及載入動畫資產依目標專案的資產管線交付，記錄來源版本與同步方式。
    - 若無法讀取設計來源，先回報缺少的路徑或檔案，取得內容後再實作精確色票與規格。
 7. React 入口載入 tokens/css、react/fonts.css、react/css，以 ThemeProvider 設定選定套系。模式控制在 Provider 內透過 useTheme 實作；API 與完整接入細節依 consumer-guide。
-8. 首次明暗模式跟隨系統，支援日間、暗黑、跟隨系統與偏好保存。HTML／SSR 首屏在應用程式與外部 CSS 載入前即設定正確背景及 color-scheme，並同步後續切換；直接開頁、重整及跨頁載入都要檢查白底閃爍。ThemeProvider 本身只管理元件範圍，文件首屏由目標專案的入口處理，可參考設計來源 apps/showcase/index.html 與 src/main.tsx，配合目標專案的 SSR／CSP 實作。
+8. 首次明暗模式跟隨系統，支援日間、暗黑、跟隨系統與偏好保存。HTML／SSR 首屏在應用程式與外部 CSS 載入前即設定正確背景及 color-scheme，並同步後續切換；直接開頁、重整及跨頁載入都要檢查白底閃爍。使用 `ThemeProvider target="document"` 讓主題套在整頁，並把 `themeInitScript({suite})` 的回傳字串放進 `<head>` 行內腳本防止首屏閃爍（參考設計來源 apps/showcase/vite.config.ts）；SSR／CSP 需由目標專案自行配合。
 9. 以語意 tokens 和字級角色建立版面，依前端規範處理電腦、平板、手機。精緻活力使用較寬鬆密度與圓潤外形；精緻專業使用較密集節奏與俐落外形。套用既定角色，讓小螢幕以堆疊、換行或可操作的表格捲動適應內容。
 10. 成功、警告、錯誤使用所選套系的正式狀態色並搭配文字或圖示。活力採「海岸訊號」，專業採「冷杉與琥珀」；同套系跨專案維持一致。業務資料的漲跌、正負、紅綠另定 data tokens 與圖例，與操作結果分開。
 11. 內容區塊載入時使用所選套系的正式 GIF：活力「潮汐波紋」、專業「方序循環」。React 使用 ContentState state="loading"；其他框架沿用套件 loading/ 內正式資產。依明暗模式取圖，減少動態時換成對應靜態 PNG，保留載入文字與 aria-busy；載入結束移除動畫。GIF 循環不代表實際進度。空白與錯誤狀態使用相應文案與重試操作。
-12. 自訂專案強調色時提供日間、暗黑色票，檢查文字、按鈕、卡片與柔和底色的對比，保持狀態色語意及數值獨立。字體與授權一起部署。
+12. 自訂專案強調色時以 `AccentInput` 提供日間主色（暗黑主色、點綴色、柔和底色選填，沒給由系統推算；滑過、按下、焦點框一律推算）。有給的顏色不經對比修正，自行檢查文字、按鈕、卡片與柔和底色的對比，保持狀態色語意及數值獨立。字體與授權一起部署。
 
 【驗收與交付】
 13. 執行目標專案既有的 build、typecheck、lint 及受影響流程的測試；依其實際工具選擇命令。
@@ -52,7 +52,7 @@
 
 ## 已套用舊版的專案：升級提示詞
 
-適用於已依舊版（設計稿為單一 `docs/mockup/components.pen`）套用過 Luca Style 的專案。設計來源這次的差異是設計稿正本：改為兩個依套系拆開的 OpenPencil `.fig`，`components.pen` 已移除；tokens 與 React 套件的公開 API、版本號（0.1.0）都沒有變，所以升級以文件、設計稿比對與資產核對為主，不需要重寫元件。若專案連 tokens 數值也沒更新，才依步驟 4 處理。
+適用於已依 0.1.0 套用過 Luca Style 的專案。設計稿正本改為元件庫設計檔 `docs/mockup/luca-style-library.fig`（只含設計變數與母版），舊的 `components.pen` 已移除。tokens 與 React 套件升為 0.2.0，有不相容處（專案強調色寫法、Select 與 Checkbox 的 DOM、使用端測試的寫法），逐條列在 docs/consumer-guide.md〈0.2.0 升級說明〉；整頁主題與防閃爍的自補程式可以刪掉。套件升級依步驟 4 處理。
 
 先在設計來源 `git pull`（或重新 clone）取得最新內容，再複製下方提示詞。
 
@@ -69,9 +69,9 @@
 2. 在設計來源執行 `git log --oneline <舊 commit>..HEAD -- packages apps docs/05_frontend_spec.md docs/03_architecture_design.md`，列出舊 commit 之後與本專案有關的變更。舊 commit 不明時，改以下列差異清單核對。
 
 【已知差異與處理】
-3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開所選套系的設計檔，活力為 docs/mockup/components-vibrant.fig，專業為 docs/mockup/components-professional.fig，一次只開一個，透過 OpenPencil 工具讀取。每個檔案都含該套系的全部頁面 frame 與一份 22 個母版；frame 名稱規則不變（<頁>/<套系>/<模式>/<裝置>/<狀態>），在 OpenPencil 內依產品頁面分在同名畫布頁，母版與元件檢視板在 Library guide。工具不可用時，明確記錄尚未重新做 mockup 比對。
-4. tokens 與套件：比對設計來源 `packages/tokens/src/tokens.json` 與專案目前使用的數值。公開 API 與 0.1.0 版本沒有變，若數值一致就不重新安裝；不一致才依 docs/consumer-guide.md 重新建置、封裝並安裝同版 tarball（兩個套件版本須一致），或同步其他框架的自建 tokens。
-5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為所選套系的 `.fig` 路徑。
+3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.fig，透過 OpenPencil 工具讀取。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。
+4. tokens 與套件：仍是 0.1.0 時，依 docs/consumer-guide.md 重新建置、封裝並安裝 0.2.0 tarball（兩個套件版本須一致），再逐條處理〈0.2.0 升級說明〉：改寫 `accent` 寫法、刪掉整頁主題與防閃爍的自補程式、調整操作 Select 與 Checkbox 的測試。其他框架則比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔，同步自建 tokens。
+5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.fig` 的路徑。
 6. 若專案在第 1 步記錄的 commit 之前就有自訂覆寫（強調色、密度、資料色），確認它們沒有被新的套系預設取代；覆寫值不變。
 
 【驗收】
