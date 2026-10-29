@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { hexChannels, makeWorkspace, neutralValues, readJson, runGenerator, wcagContrast } from './tokens-helpers';
+import { fileURLToPath } from 'node:url';
+import { fixtureDir, hexChannels, makeWorkspace, neutralValues, readJson, readText, runGenerator, wcagContrast } from './tokens-helpers';
 
 // PR-STYLE-49、50：中性色兩套系共用，且文字、操作元件邊框對三層表面的對比過門檻。
 // 只看產生器輸出的 tokens.json，套系分層日後若覆寫中性色也會被抓到。
@@ -81,4 +82,46 @@ test('a muted colour too close to the surfaces is caught by the contrast check',
     await writeFile(file, JSON.stringify(tokens));
   });
   expect(contrastShortfalls(data).filter(problem => problem.includes('light muted on'))).toHaveLength(6);
+});
+
+// PR-STYLE-53：升級說明的中性色對照表。舊值讀 0.1.0 快照（兩套系相同，取 vibrant），新值讀 neutralValues。
+// 只切出「0.2.0 升級說明」整節，不依賴小節標題；每列依序找日間舊、日間新、暗黑舊、暗黑新，
+// 每個值都從前一個命中處之後找，因為 surface 與 accent-ink 的日間新舊值相同。
+async function upgradeNotes() {
+  const guide = await readText(fileURLToPath(new URL('../docs/consumer-guide.md', import.meta.url)));
+  const start = guide.indexOf('\n## 0.2.0 升級說明\n');
+  expect(start, '找不到 0.2.0 升級說明').toBeGreaterThanOrEqual(0);
+  const next = guide.indexOf('\n## ', start + 1);
+  return guide.slice(start, next === -1 ? undefined : next);
+}
+
+function neutralRowProblems(notes: string, legacy: Record<'light' | 'dark', Record<string, string>>) {
+  const problems: string[] = [];
+  const rows = notes.split('\n');
+  for (const [role, values] of Object.entries(neutralValues)) {
+    const row = rows.find(line => line.startsWith(`| \`${role}\` |`));
+    if (!row) { problems.push(`${role}: 沒有對照列`); continue; }
+    const expected = [legacy.light[role], values.light, legacy.dark[role], values.dark];
+    const upperRow = row.toUpperCase();
+    let from = 0;
+    for (const value of expected) {
+      const at = upperRow.indexOf(value.toUpperCase(), from);
+      if (at === -1) { problems.push(`${role}: 缺 ${value} 或順序不對（應為 ${expected.join(' → ')}）`); break; }
+      from = at + value.length;
+    }
+  }
+  if (!notes.includes('var(--')) problems.push('沒有說明改用設計變數 var(--…)');
+  return problems;
+}
+
+const legacyNeutrals = async () => (await readJson(join(fixtureDir, 'tokens.json'))).vibrant;
+
+// PR-STYLE-53
+test('consumer-guide 0.2.0 upgrade notes list every neutral role with its 0.1.0 and PR-STYLE-48 values', async () => {
+  expect(neutralRowProblems(await upgradeNotes(), await legacyNeutrals())).toEqual([]);
+});
+
+test('an upgrade-notes row that repeats one #FFFFFF for both old and new light values is caught', async () => {
+  const notes = '| `surface` | `#FFFFFF` | `#1D2420` | `#1A1D22` |\nvar(--surface)';
+  expect(neutralRowProblems(notes, await legacyNeutrals())).toContain('surface: 缺 #FFFFFF 或順序不對（應為 #FFFFFF → #FFFFFF → #1D2420 → #1A1D22）');
 });

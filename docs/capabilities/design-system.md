@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與 OpenPencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～47` 與 `PR-FILE-01～19`（元件庫設計檔；PR-FILE-01～05、10～15 已 retired）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54` 與 `PR-FILE-01～19`（元件庫設計檔；PR-FILE-01～05、10～15 已 retired）。
 - 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
@@ -77,13 +77,13 @@ PR-FILE-15 — 兩個套系設計檔把 frame 依產品頁面分在不同畫布�
 
 ### 0.2.0 承諾
 
-依[對標研究](../research/design-system-benchmark.md)補上四個缺口：設計變數只有一份正本、專案強調色從一個主色推算整組角色、資訊密度與元件外形可單獨覆寫、無障礙與截圖比對自動檢查；設計檔改為一份不含頁面的元件庫設計檔，共用互動元件改用 Base UI。以 0.2.0 發布，升級說明見[使用端接入](../consumer-guide.md#020-升級說明)。
+依[對標研究](../research/design-system-benchmark.md)補上四個缺口：設計變數只有一份正本、專案強調色從一個主色推算整組角色、資訊密度與元件外形可單獨覆寫、無障礙與截圖比對自動檢查；設計檔改為一份不含頁面的元件庫設計檔，共用互動元件改用 Base UI。中性色 8 個角色重新設計為兩套系共用的冷藍灰（decision-log 2026-10-29），併入 0.2.0。以 0.2.0 發布，升級說明見[使用端接入](../consumer-guide.md#020-升級說明)。
 
 **設計變數**
 
 PR-STYLE-25 — 設計變數的原始檔使用 DTCG 格式，每個變數都附用途說明。
 PR-STYLE-26 — 任一「風格套系 × 明暗模式」組合缺少任何變數的值時，建置失敗並指出缺的是哪個變數。
-PR-STYLE-27 — `@luca-style/tokens` 的 css、data、typography 三種輸出：既有變數的名稱、結構和值都與 0.1.0 相同。
+PR-STYLE-27 — `@luca-style/tokens` 的 css、data、typography 三種輸出：既有變數的名稱、結構和值都與 0.1.0 相同；例外是中性色 8 個角色的值，改為 PR-STYLE-48 所列，其餘任何變數的值與 0.1.0 不同時快照測試失敗。
 PR-STYLE-28 — 建置會產生一份設計變數規格文件，列出每個變數在每種組合下的值和用途，給代理閱讀。
 
 **元件庫設計檔**
@@ -95,7 +95,7 @@ PR-FILE-19 — 使用端複製元件庫設計檔並匯入自己的強調色後�
 
 **密度與外形**
 
-PR-STYLE-29 — 專案沒有覆寫時，資訊密度與元件外形沿用所選風格套系的預設值，畫面與 0.1.0 相同。
+PR-STYLE-29 — 專案沒有覆寫時，資訊密度與元件外形沿用所選風格套系的預設值，密度與外形與 0.1.0 相同；中性色依 PR-STYLE-48。
 PR-STYLE-30 — 專案可以單獨覆寫資訊密度，色彩與元件外形不受影響。
 PR-STYLE-31 — 專案可以單獨覆寫元件外形，色彩與資訊密度不受影響。
 
@@ -106,6 +106,16 @@ PR-STYLE-33 — 自動產生的強調色角色（含滑過、按下），在日�
 PR-STYLE-45 — 滑過與按下色由主色推算：色相不變，日間比主色深、暗黑比主色亮，按下的變化幅度大於滑過。
 PR-STYLE-46 — 所有元件的焦點框為雙圈：內圈表面色、外圈主色；焦點框與底色的對比至少 3:1。
 PR-STYLE-47 — 專案沒給點綴色時，點綴色沿用主色，不另外產生新色相。
+
+**中性色**
+
+PR-STYLE-48 — 中性色在日間／暗黑的值為：`bg` #F7F8FA／#111317、`surface` #FFFFFF／#1A1D22、`surface-subtle` #F1F3F5／#23272D、`text` #2C2E31／#EFF1F5、`muted` #696B6F／#AEB0B4、`border` #E0E2E6／#3C3E41、`control-border` #85878B／#6F7175、`accent-ink` #FFFFFF／#111317。
+PR-STYLE-49 — 中性色 8 個角色在精緻活力與精緻專業的值相同，只隨明暗模式變化。
+PR-STYLE-50 — 兩個套系、日間與暗黑：`text`、`muted` 對 `bg`、`surface`、`surface-subtle` 的對比都至少 4.5:1；`control-border` 對這三層都至少 3:1。
+PR-STYLE-51 — 樣張在 React 掛載前的首次繪製，頁面底色就是該明暗模式的 `bg`。
+PR-STYLE-52 — `docs/images/` 的四張 README 截圖（套系 × 明暗）頁面底色等於該組合的 `bg`。
+PR-STYLE-53 — `docs/consumer-guide.md` 的 0.2.0 升級說明列出中性色 8 個角色的舊值與新值，並說明使用端寫死舊色碼處要改成設計變數。
+PR-STYLE-54 — `docs/05_frontend_spec.md` 的色表與 PR-STYLE-48 一致，三層使用「頁面底色、卡片表面、次要表面」的名稱。
 
 **主題控制**
 
@@ -135,6 +145,10 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 - 元件庫設計檔另有一個 OpenPencil 為存放變數自動維持的空畫布頁 `Internal Only Canvas`，無法刪除；`check-masters.js` 要求它保持空白。
 - 母版的自動排版尺寸、陰影開關與載入圖片透明度沒有綁定欄位，只存預設模式（Vibrant／Light）的值；Professional 的母版總覽因此與 ADR 0007 合併前的總覽總高度差 32px（指標卡、表格）。App 內切換模式後的版面未驗證；細節見[交付驗證](../delivery-verification.md#合併為一份元件庫設計檔issue-004pr-file-18)。
 - 強調色推算的取捨（對比檢查只用於推算出的角色、`focus-ring` 角色、反向位移、`accent-ink` 固定）見 decision-log 2026-10-28。
+- 中性色改值後，快照測試（`tests/tokens-snapshot.spec.ts`）只放行中性色 8 個角色，而且這 8 個必須等於 PR-STYLE-48；其餘變數仍與 0.1.0 快照逐值比對。
+- 截圖比對的預設 pixelmatch 門檻偵測不到中性色這類小幅改值，所以 `tests/visual-config.spec.ts` 另外檢查每張截圖基準的左上角等於該明暗模式的 `bg`。改色後用 `npm run update:visual -- --all` 改寫全部基準，只跑 `npm run update:visual` 不會更新低於門檻的差異。
+- `npm run verify:screenshots` 檢查四張 README 截圖的四角等於該組合的 `bg`（PR-STYLE-52）。
+- 載入動畫 GIF 只有一位元透明，中性色改值後已在新底色上檢視：邊緣是硬邊、沒有舊底色的色邊，未重新輸出。
 
 ### 交付邊界
 
