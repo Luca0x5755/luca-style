@@ -661,3 +661,34 @@ node scripts/design/apply-bindings.js --check   # exit 0
 - `apply-bindings.js --check`：節點數 112，23 個母版、244 筆綁定，綁定與儲存值全部一致。
 - 三支腳本各自的 `*.test.js`（含故意改壞副本的失敗案例）在 `node --test scripts/design/*.test.js` 內執行。
 - **人眼抽查：** 2026-10-29 使用者在 OpenPencil App 開啟元件庫設計檔檢查，回報「已經看完沒問題」（在 ISSUE-015 合併集合與 `c5cd3fc` 文字置中之後）。使用者沒有說明看了哪些母版與模式，所以這裡不記抽查範圍，也不聲稱做過像素比對。
+
+## Penpot 試點：母版與 theme 切換（ISSUE-018、ISSUE-019，PR-FILE-20）
+
+2026-10-30，在連線的暫存檔「嗨嗨」以 Penpot 外掛 API（MCP `execute_code`）操作；暫存檔不進 repo，建置用的一次性腳本也不留。token 來自 `docs/mockup/themes/penpot-tokens.json`（8 個 set、7 個 theme，各 theme 啟用 Base 加一個 set）。
+
+**母版與綁定。** `C/Button/Primary`（ISSUE-018）、`C/State/Loading`、`C/Nav/Mobile` 三個母版都是板（board），沒有轉成元件。綁定依 `bindings.json`：
+
+- `C/State/Loading`（4 個形狀加外框）：外框 fill `surface`、stroke `border`、圓角 `radius-card`、描邊寬 `border-width`；標題 fill `text`、說明 fill `muted`，字型 `font-zh`；四張圖各一個矩形，不透明度分別綁 `loading-tide-light-opacity`、`loading-tide-dark-opacity`、`loading-square-light-opacity`、`loading-square-dark-opacity`。另外為了觀察 hug，外框內距綁 `card-padding`（`bindings.json` 沒有列在這個母版）。
+- `C/Nav/Mobile`（2 個節點）：fill `surface`、stroke `border`；Logo fill `text`、字型 `font-en`。另外為了觀察 hug，Logo 字級綁 `fs-section`（`bindings.json` 沒有列）。
+- 載入圖片是替身：四張 24x24 純色 PNG（tide 兩張為青綠系，square 兩張為灰系），不是 `packages/react/loading/*.png`。原因：手動複製 base64 到外掛程式碼時出錯，`uploadMediaData` 回 `http error`；`uploadMediaUrl` 抓本機 HTTP 也回 `http error`（Penpot 後端抓不到，或不允許）。透明度是否切換與圖片內容無關，但這裡沒有證明真實圖片可用。
+
+**解析值比對。** 對 Suite x Mode 四種 x Device 三種（共 12 組）逐組切換後讀回，與 `variables.json` 比：Loading 的 surface、border、text、muted、radius-card、border-width、四個 opacity；Nav 的 surface、border、text、字級 `fs-section`（Desktop 24、Tablet 22、Mobile 20）。12 組、全部欄位差異 0。顏色為十六進位大寫字串全等；`C/Button/Primary` 的比對見 ISSUE-018。
+
+| Suite x Mode | surface | border | text | muted | radius-card | border-width |
+| --- | --- | --- | --- | --- | --- | --- |
+| Vibrant / Light | #FFFFFF | #E0E2E6 | #2C2E31 | #696B6F | 20 | 1 |
+| Vibrant / Dark | #1A1D22 | #3C3E41 | #EFF1F5 | #AEB0B4 | 20 | 1 |
+| Professional / Light | #FFFFFF | #E0E2E6 | #2C2E31 | #696B6F | 3 | 1.5 |
+| Professional / Dark | #1A1D22 | #3C3E41 | #EFF1F5 | #AEB0B4 | 3 | 1.5 |
+
+`C/Nav/Mobile` 只用 surface、border、text 三欄，值同上表。`muted`、`radius-card`、`border-width` 只在 Loading 驗證。
+
+**`.fig` 只存預設模式的三項，在 Penpot 是否隨 theme 切換。**
+
+- hug 版面尺寸：會。`C/Nav/Mobile` 自動高度隨 `fs-section` 變，Desktop 53、Tablet 51、Mobile 48；`C/State/Loading` 內距綁 `card-padding` 後高度 Vibrant 181、Professional 173（內距 24 對 20）。限制：只驗證字級與內距這兩種綁定引起的 hug；沒驗證 `gap-section` 與其他尺寸綁定。
+- 陰影開關：值會隨 theme 變，但「關」只能用零偏移、零模糊、透明度 0 的陰影表示，形狀上仍留著一筆 `hidden: false` 的陰影，不是真的沒有。探測用的 `shadow` token（Vibrant 兩組 0/4/12 模糊、透明度 0.2 與 0.4；Professional 兩組全零透明）綁在一塊探測板上，四組合讀回的 `shadows` 都跟著變。探測 token 與探測板已移除，母版沒有綁陰影。`elevation-enabled` 是布林，`penpot-tokens.json` 不輸出，所以正式做法要新增一個 shadow token（要改建置輸出與測試）。
+- 載入圖片不透明度：會，且可以每個 Suite x Mode 恰好顯示一張。Penpot 的不透明度 token 綁在形狀上（不是填色的第幾層），所以做法是四個疊在一起的矩形各綁一個 token，不是一個形狀四個填色。12 組讀回的不透明度為 Vibrant/Light 1,0,0,0、Vibrant/Dark 0,1,0,0、Professional/Light 0,0,1,0、Professional/Dark 0,0,0,1（順序 tide-light、tide-dark、square-light、square-dark），與 `variables.json` 一致。`export_shape` 目視抽查一次（Professional / Dark / Mobile 只看到深灰替身圖）；沒有逐組目視。
+
+**`font-zh` 的 `fontFamilies` 綁定（ISSUE-018 遺留）：** 有替代方法。`applyToken(token, ['fontFamilies'])` 一律失敗（錯誤 `should be a set of strings`），連值是單字 `Inter` 的 token 也失敗，所以不是 token 值格式的問題（加引號、逗號分隔都一樣）。不傳 `properties`（`applyToken(token)`）會成功，綁成 `fontFamily`，`fontFamily` 讀回 `Noto Sans TC`（`gfont-noto-sans-tc`）與 `Inter`。已把 `font-zh` 綁在 `C/Button/Primary` 標籤與 Loading 標題、說明，`font-en` 綁在 Nav Logo。注意 `token.resolvedValue` 會把 `Noto Sans TC` 拆成 `[["Noto","Sans","TC"]]`，單字字型不會；沒有影響綁定結果。
+
+**暫存檔現況：** 頁面上三個母版（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`；Penpot 把名稱的斜線兩側補上空白）。token 沒有改動：探測用的 7 個 token 已刪除，8 個 set 的 token 數仍是 39、28x4、3x3。目前啟用 Professional / Dark 與 Mobile。

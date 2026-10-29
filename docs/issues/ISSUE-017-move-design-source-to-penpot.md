@@ -65,6 +65,11 @@ PR-FILE-09（修訂）— ADR 0008 的狀態為 `Accepted`；ADR 0003 的狀態�
 - PR-FILE-22「趨於平穩」的數值判準：目前由使用者看數據判定，沒有門檻；是否改成明確數值，等取得第一批數據再訂。
 - 現有「節點數低於 10,000」的限制來自 OpenPencil MCP，PR-FILE-18 修訂時已拿掉；Penpot 是否需要類似上限，等試點觀察。
 - token theme 是否能表達 `Suite x Mode`，且不重演 ISSUE-015（只切一組就漏掉其他）；兩個 theme 群組（`Suite x Mode`、`Device`）各自啟用一個即可，是否成立要試點證實。
-- `.fig` 只存預設模式的項目（hug 版面尺寸、陰影開關、載入圖片透明度）在 Penpot 是否能跟著 theme 切換，試點的 `C/State/Loading` 一併觀察。
+  - 試點結果（ISSUE-018、019）：三個母版在 Suite x Mode 四種與 Device 三種共 12 組切換後，解析色彩與 `variables.json` 全等，沒有漏掉其中一組；兩個群組各啟用一個 theme 可行。PR-FILE-20 的解析值比對到此完成；載入圖片是替身，使用者人眼抽查尚未做。
+- `.fig` 只存預設模式的項目（hug 版面尺寸、陰影開關、載入圖片透明度）在 Penpot 是否能跟著 theme 切換：ISSUE-019 試點已觀察，三項都能跟著切換，但各有限制，細節與數據見 `docs/delivery-verification.md` 的 Penpot 試點章節。
+  - hug 版面尺寸：會。`C/Nav/Mobile` 高度隨 `fs-section` 變（Desktop 53、Tablet 51、Mobile 48），`C/State/Loading` 內距綁 `card-padding` 後高度 Vibrant 181、Professional 173。只驗證字級與內距兩種綁定。
+  - 陰影開關：值會跟著變，但 Penpot 沒有「關」，只能用零偏移、零模糊、透明度 0 的陰影代替，形狀上仍有一筆陰影。`elevation-enabled` 是布林、現在不輸出，正式做法要新增 shadow token。待使用者確認這樣是否可接受。
+  - 載入圖片透明度：會，`C/State/Loading` 每個 Suite x Mode 恰好顯示四張中的一張。做法是四個疊在一起的矩形各綁一個不透明度 token（Penpot 的不透明度綁形狀，不能綁填色的第幾層）。載入圖片在暫存檔是純色替身，真實圖片上傳失敗（`http error`），尚未證實。
+- `font-zh` 的 `fontFamilies` 綁定：`applyToken(token, ['fontFamilies'])` 一律失敗，不傳 `properties` 即可（綁成 `fontFamily`）；ISSUE-018 遺留的 `font-zh` 已補綁。要不要把這個寫法放進階段二的重建指引，待定。
 - 匯出檔的 repo 路徑、檔名與大小，以及二進位 diff 的審查方式，等試點匯出後訂。
 - 所用 Penpot 版本是否固定，等自架環境建好後記錄。
