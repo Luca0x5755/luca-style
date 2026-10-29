@@ -87,6 +87,7 @@ npm test
 ```sh
 npm run test:visual    # 在 Docker 內與基準比對，不符即失敗
 npm run update:visual  # 在 Docker 內更新基準；之後檢查並提交 tests/__screenshots__/
+npm run update:visual -- --all  # 改寫全部基準；改動低於比對門檻（例如換色）時使用
 ```
 
 CI 的 `visual` job（`.github/workflows/pages.yml`）用同一個映像比對，通過後才部署。升級 `@playwright/test` 時須同步改 pages.yml 的映像標籤並重新產生基準。

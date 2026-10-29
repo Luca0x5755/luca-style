@@ -1,4 +1,4 @@
-// 驗證 `npm run screenshots` 的行為與產出：四個檔案、1280 寬、彼此不同、重跑穩定、總大小，
+// 驗證 `npm run screenshots` 的行為與產出：四個檔案、1280 寬、四角是該組合的頁面底色 bg（PR-STYLE-52）、彼此不同、重跑穩定、總大小，
 // 且不會被 `npm test`（Playwright）列入。不屬於 npm test。
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { readFile, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { expectedBg, readPng } from './png-pixel.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const npmCli = process.env.npm_execpath;
@@ -19,13 +20,20 @@ function npm(args) {
   return result.stdout;
 }
 
-// 讀出每張圖的位元組、PNG IHDR 寬度與雜湊。
+// 讀出每張圖的位元組、PNG IHDR 寬度與雜湊，並檢查四角的頁面底色。
 async function collect() {
   const files = {};
   for (const name of names) {
     const bytes = await readFile(join(root, 'docs', 'images', `${name}.png`));
-    assert.equal(bytes.subarray(1, 4).toString('latin1'), 'PNG', `${name} 不是 PNG`);
-    files[name] = { size: bytes.length, width: bytes.readUInt32BE(16), hash: createHash('sha256').update(bytes).digest('hex') };
+    // readPng 在不是 PNG 時丟錯；寬度取自解碼後的 IHDR。
+    const image = readPng(bytes, `${name}.png`);
+    files[name] = { size: bytes.length, width: image.width, hash: createHash('sha256').update(bytes).digest('hex') };
+    // 四個角落都是頁面底色，必須等於該明暗模式的 bg（期望值取自 DTCG 原始檔，兩個套系共用）。
+    const bg = expectedBg(name.endsWith('-dark') ? 'dark' : 'light');
+    for (const [x, y] of [[0, 0], [image.width - 1, 0], [0, image.height - 1], [image.width - 1, image.height - 1]]) {
+      const got = image.pixel(x, y);
+      assert.equal(got, bg, `${name} (${x}, ${y}) 為 ${got}，應為頁面底色 ${bg}`);
+    }
   }
   return files;
 }
@@ -47,7 +55,9 @@ for (let run = 2; run <= 4; run++) {
 }
 
 const listed = npm(['test', '--', '--list']);
-assert.ok(!/screenshot/i.test(listed), 'npm test 不應列入截圖');
+// 只看列出的測試檔名：測試標題可以提到 screenshot（例如 README 與截圖基準的設定檢查），但不能有截圖產生器的測試檔。
+const screenshotFiles = listed.split('\n').map(line => line.split('›')[1]?.trim() ?? '').filter(file => /screenshot/i.test(file.split(':')[0]));
+assert.deepEqual(screenshotFiles, [], 'npm test 不應列入截圖產生器的測試檔');
 
 console.log(names.map(name => `${name}.png ${first[name].size} bytes ${first[name].width}px`).join('\n'));
 console.log(`合計 ${total} 位元組；連跑 4 次雜湊相同；npm test 未列入截圖`);

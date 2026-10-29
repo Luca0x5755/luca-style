@@ -8,9 +8,9 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { inflateSync } from 'node:zlib';
 import { deriveAccent } from '../../packages/tokens/accent.js';
 import { libraryFig, mutate, run, tempDir } from './test-helpers.js';
+import { readPng } from '../png-pixel.mjs';
 
 const tokenData = JSON.parse(readFileSync(new URL('../../packages/tokens/dist/tokens.json', import.meta.url), 'utf8'));
 const SCRIPT = 'import-accent.js';
@@ -58,36 +58,12 @@ test('匯入後 Suite x Mode 的強調色六個變數，四個模式都等於 de
   assert.equal(state.accent['Professional / Light'], '#B5179E');
 });
 
-// 之後的測試需要的小工具：PNG 解碼（8 位元 RGB／RGBA），回傳出現過的不透明顏色集合。
+// 之後的測試需要的小工具：回傳 PNG 中出現過的完全不透明顏色集合（解碼共用 scripts/png-pixel.mjs）。
 const colorsInPng = (path) => {
-  const buf = readFileSync(path);
-  let offset = 8, width = 0, height = 0, type = 0;
-  const idat = [];
-  while (offset < buf.length) {
-    const length = buf.readUInt32BE(offset), name = buf.toString('ascii', offset + 4, offset + 8);
-    const data = buf.subarray(offset + 8, offset + 8 + length);
-    if (name === 'IHDR') { width = data.readUInt32BE(0); height = data.readUInt32BE(4); type = data[9]; assert.equal(data[8], 8); }
-    if (name === 'IDAT') idat.push(data);
-    offset += 12 + length;
-  }
-  const bpp = type === 6 ? 4 : 3;
-  assert.ok(type === 6 || type === 2, `不支援的 PNG 色彩型別 ${type}`);
-  const raw = inflateSync(Buffer.concat(idat)), stride = width * bpp;
-  const out = Buffer.alloc(stride * height);
-  for (let y = 0; y < height; y++) {
-    const filter = raw[y * (stride + 1)];
-    for (let x = 0; x < stride; x++) {
-      const cur = raw[y * (stride + 1) + 1 + x];
-      const a = x >= bpp ? out[y * stride + x - bpp] : 0, b = y > 0 ? out[(y - 1) * stride + x] : 0, c = x >= bpp && y > 0 ? out[(y - 1) * stride + x - bpp] : 0;
-      const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-      const paeth = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
-      out[y * stride + x] = (cur + [0, a, b, (a + b) >> 1, paeth][filter]) & 255;
-    }
-  }
+  const image = readPng(path);
   const colors = new Set();
-  for (let i = 0; i < out.length; i += bpp) {
-    if (bpp === 4 && out[i + 3] !== 255) continue;
-    colors.add('#' + [0, 1, 2].map((k) => out[i + k].toString(16).padStart(2, '0')).join('').toUpperCase());
+  for (let y = 0; y < image.height; y++) {
+    for (let x = 0; x < image.width; x++) if (image.alpha(x, y) === 255) colors.add(image.pixel(x, y));
   }
   return colors;
 };

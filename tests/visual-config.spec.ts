@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { routeTable } from './route-table';
 import { baselineName, notFoundPath, visualModes, visualPages, visualSuites, visualWidths } from './visual-matrix';
+import { expectedBg, readPng } from '../scripts/png-pixel.mjs';
 
 // 截圖基準的靜態檢查（不需 Docker、不連網、不開頁面）。
 // 實際比對由 Docker 內的 `visual` 專案執行（`npm run test:visual`），Windows 字型不同，不進預設的 `npm test`。
@@ -46,6 +47,44 @@ test('visual spec stays out of the foundations density and shape switches', () =
   expect(spec).toContain("from './visual-matrix'");
   for (const word of ['資訊密度', '元件外形', 'density', 'shape']) expect(spec, word).not.toContain(word);
   expect(spec).toContain('toHaveScreenshot');
+});
+
+// 乾跑：只印出將傳給 docker 的引數（JSON），不執行 Docker。
+function dryRun(...args: string[]) {
+  const r = spawnSync(process.execPath, [fileURLToPath(file('scripts/visual-docker.mjs')), ...args, '--dry-run'], { encoding: 'utf8' });
+  return { code: r.status, args: r.status === 0 ? JSON.parse(r.stdout) as string[] : [], err: r.stderr };
+}
+
+test('the Docker script passes none for test, changed for update, and all only for update --all', () => {
+  const inner = (args: string[]) => args[args.length - 1];
+  const t = dryRun('test');
+  expect(t.code).toBe(0);
+  expect(inner(t.args)).toContain('--update-snapshots=none');
+  const u = dryRun('update');
+  expect(u.code).toBe(0);
+  expect(inner(u.args)).toContain('--update-snapshots=changed');
+  const all = dryRun('update', '--all');
+  expect(all.code).toBe(0);
+  expect(inner(all.args)).toContain('--update-snapshots=all');
+  expect(all.args).toContain(imageTag);
+});
+
+test('the Docker script rejects --all on test and any unknown argument', () => {
+  expect(dryRun('test', '--all').code).not.toBe(0);
+  expect(dryRun('update', '--everything').code).not.toBe(0);
+  expect(dryRun('compare').code).not.toBe(0);
+});
+
+// PR-STYLE-42：預設比對門檻偵測不到中性色這類小幅改值，所以另外確認每張基準的頁面底色（左上角）就是該明暗模式的 bg。
+test('every baseline shows the page background of its mode in the top-left pixel', () => {
+  const bg = { light: expectedBg('light'), dark: expectedBg('dark') };
+  const wrong: string[] = [];
+  for (const p of visualPages) for (const s of visualSuites) for (const m of visualModes) for (const w of visualWidths) {
+    const name = `${baselineName(p, s, m, w)}.png`;
+    const got = readPng(fileURLToPath(file(`tests/__screenshots__/${name}`))).pixel(0, 0);
+    if (got !== bg[m]) wrong.push(`${name}: ${got}，應為 ${bg[m]}`);
+  }
+  expect(wrong).toEqual([]);
 });
 
 test('the Docker script derives the official Playwright image tag from the installed @playwright/test version', () => {
