@@ -1,41 +1,41 @@
 {
   "bg": {
-    "$value": "#151A18",
+    "$value": "#111317",
     "$type": "color",
     "$description": "頁面底色"
   },
   "surface": {
-    "$value": "#1D2420",
+    "$value": "#1A1D22",
     "$type": "color",
     "$description": "卡片與面板的表面色"
   },
   "surface-subtle": {
-    "$value": "#252E28",
+    "$value": "#23272D",
     "$type": "color",
     "$description": "次要表面色，用於區隔區塊、表頭與輸入底"
   },
   "text": {
-    "$value": "#EDF3ED",
+    "$value": "#EFF1F5",
     "$type": "color",
     "$description": "主要文字色"
   },
   "muted": {
-    "$value": "#A5B5A8",
+    "$value": "#AEB0B4",
     "$type": "color",
     "$description": "次要文字色，用於說明與輔助資訊"
   },
   "border": {
-    "$value": "#354139",
+    "$value": "#3C3E41",
     "$type": "color",
     "$description": "分隔線與卡片邊框色"
   },
   "control-border": {
-    "$value": "#65766B",
+    "$value": "#6F7175",
     "$type": "color",
     "$description": "操作元件的邊框色，與底色保有可辨識的對比"
   },
   "accent-ink": {
-    "$value": "#151A18",
+    "$value": "#111317",
     "$type": "color",
     "$description": "放在強調色底上的文字與圖示色"
   }

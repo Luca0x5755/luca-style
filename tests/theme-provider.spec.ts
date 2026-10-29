@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { themeInitScript } from '../packages/react/src/theme-init.js';
 import type { Density, Shape } from '../packages/react/src/theme-types.js';
 import { deriveAccent, type AccentInput } from '../packages/tokens/accent.js';
-import { neutralsOf } from './tokens-helpers';
+import { cssRgb, neutralsOf, neutralValues } from './tokens-helpers';
 import { buildHarness, origin, serveHarness } from './theme-harness';
 
 // 舊的 accent 寫法已移除（decision-log 2026-10-28）：若又能編譯，npm run typecheck 會因 @ts-expect-error 未被用到而失敗。
@@ -132,7 +132,8 @@ test.describe('ThemeProvider', () => {
   });
   // 指標卡底色：rounded 為柔和強調表面、sharp 為主要表面（§5.5.2 與中性色表）。
   const softSurface = {vibrant:{light:'rgb(227, 242, 240)', dark:'rgb(23, 54, 55)'}, professional:{light:'rgb(238, 237, 244)', dark:'rgb(45, 42, 59)'}} as const;
-  const surface = {light:'rgb(255, 255, 255)', dark:'rgb(29, 36, 32)'} as const;
+  // 卡片表面取中性色例外表（PR-STYLE-48）；describe 回呼是同步的，不能 await neutralsOf 讀原始檔。
+  const surface = {light:cssRgb(neutralValues.surface.light), dark:cssRgb(neutralValues.surface.dark)} as const;
   const expectedShape = (shape:'rounded'|'sharp', suite:'vibrant'|'professional', mode:'light'|'dark') => shape === 'rounded'
     ? {'button radius':'16px', 'input radius':'16px', 'metric radius':'20px', 'content-state radius':'20px', 'border-width':'1px',
       'metric border-left-width':'1px', 'metric background':softSurface[suite][mode], 'metric shadow':'rgba(0, 0, 0, 0.03) 0px 4px 16px 0px'}
