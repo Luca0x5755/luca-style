@@ -692,3 +692,48 @@ node scripts/design/apply-bindings.js --check   # exit 0
 **`font-zh` 的 `fontFamilies` 綁定（ISSUE-018 遺留）：** 有替代方法。`applyToken(token, ['fontFamilies'])` 一律失敗（錯誤 `should be a set of strings`），連值是單字 `Inter` 的 token 也失敗，所以不是 token 值格式的問題（加引號、逗號分隔都一樣）。不傳 `properties`（`applyToken(token)`）會成功，綁成 `fontFamily`，`fontFamily` 讀回 `Noto Sans TC`（`gfont-noto-sans-tc`）與 `Inter`。已把 `font-zh` 綁在 `C/Button/Primary` 標籤與 Loading 標題、說明，`font-en` 綁在 Nav Logo。注意 `token.resolvedValue` 會把 `Noto Sans TC` 拆成 `[["Noto","Sans","TC"]]`，單字字型不會；沒有影響綁定結果。
 
 **暫存檔現況：** 頁面上三個母版（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`；Penpot 把名稱的斜線兩側補上空白）。token 沒有改動：探測用的 7 個 token 已刪除，8 個 set 的 token 數仍是 39、28x4、3x3。目前啟用 Professional / Dark 與 Mobile。
+
+## Penpot 試點：離線解析匯出檔（ISSUE-020，PR-FILE-23）
+
+2026-10-30，使用者手動從暫存檔「嗨嗨」匯出 `hihi.penpot`（34,111 bytes，41 個條目，`generatedBy: penpot/2.18.5-RC1`，匯出格式 `penpot/export-files` 版本 1）。匯出檔是不受信任的資料：另解到新的空目錄檢視，原檔未動；試點腳本只在記憶體內讀 zip。匯出檔不進 repo。
+
+```sh
+node scripts/penpot-pilot/parse-export.mjs <匯出檔.penpot> [--json]
+node --test scripts/penpot-pilot/parse-export.test.mjs
+```
+
+**腳本結果**（結束碼 0）：檔案「嗨嗨」、媒體 4、母版 3（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`）、token set 8、theme 7。測試 19 項全過（由 `fixtures/minimal-export.json` 即時組 zip；含 store 與 deflate、非 zip、缺 manifest、壞 JSON、無母版、懸空 token 綁定、路徑可疑、子節點循環、壞壓縮資料、解壓總量超限、manifest id 含正規表示式字元、檔案不存在、用法錯誤）。
+
+**與 Penpot 內實際內容比對**（同日以 `execute_code` 讀回）：3 個頂層形狀的型別為 `board`，名稱相同；8 個 set 的 token 數 39、28x4、3x3，7 個 theme 的群組與名稱相同；每個形狀的 token 綁定與匯出檔一致（只差鍵名，見下）。`library.local.components` 長度為 0，與匯出檔沒有元件資料相符。
+
+### 壓縮檔結構
+
+- `manifest.json`：型別、版本、`generatedBy`、檔案清單（id、名稱、features）。
+- `files/<檔案id>.json`：檔案層資料（名稱、`revn`、`modifiedAt`、`migrations` 清單），不含頁面內容。
+- `files/<檔案id>/pages/<頁面id>.json`：頁面 id、名稱、索引；每個形狀一個檔，`pages/<頁面id>/<形狀id>.json`，另有根 frame（id 全零，名稱 `Root Frame`）的 `shapes` 陣列給出頂層順序。形狀以 `parentId`／`shapes` 連結，不是巢狀。
+- `files/<檔案id>/tokens.json`：所有 token set（鍵為 set 名稱）、`$themes`、`$metadata`（`tokenSetOrder`、`activeThemes`、`activeSets`）。
+- `files/<檔案id>/media/*.json`、`objects/*.png` 與 `*.json`：載入圖片替身（4 張）與縮圖；`thumbnails/frame/…`：板的縮圖記錄。
+
+### 離線可讀與不可讀
+
+| 項目 | 離線可讀 | 說明 |
+| --- | --- | --- |
+| 母版名稱與數量 | 是 | 頁面根 frame 的 `shapes` 中 `type: frame` 的直接子節點。巢狀的 `Loading image` 板不算；母版是板，不是元件。 |
+| token set 與 theme | 是 | 8 個 set、7 個 theme（群組、名稱、各自啟用的 set）。比對 160 個 token：全部在字面上不同，原因是匯出檔多 `$description: ""`，且 `fontFamilies` 值包成陣列（`["Inter"]`）；正規化這兩處後仍有 12 個不同，全是來源值 `0%` 在匯出檔變成 `0` 的不透明度 token（值為 0 的那幾個），數值相同、寫法不同。正式比對要正規化這三處。theme 與 set 的順序不一致：`tokens.json` 的鍵序是雜湊序，順序以 `$metadata.tokenSetOrder` 為準。 |
+| 每個形狀的 token 綁定 | 是 | 讀 `appliedTokens`，但鍵是儲存用的短鍵，與外掛 API 的屬性名不同：字型綁定為 `fontFamily`（不是 `fontFamilies`）、`fontSize`；填色 `fill`、描邊 `strokeColor`、`strokeWidth`、`opacity`；圓角 `r1`～`r4`（API 為 `borderRadiusTopLeft` 等）；內距 `p1`～`p4`（API 為 `paddingTop` 等）。 |
+| 解析後的值（PR-FILE-27 離線檢查） | 部分 | 形狀上存的是匯出當下啟用的 theme 的解析值（本檔為 Professional / Dark 加 Mobile，並記在 `$metadata.activeThemes`），其他 theme 的值不在形狀上，必須由 `tokens.json` 的 set 重新解析。以一次性腳本驗證：用 `activeSets` 解析 28 筆綁定（fill、strokeColor、strokeWidth、圓角、不透明度、字型、字級），27 筆與形狀儲存值相同；1 筆差異只是單位（token 值 `100%`、形狀存 `1`）。內距 `p1`～`p4` 未比（形狀存的是 `layoutPadding`）。文字節點的色彩與字型在 `content` 樹的 run 上，不在形狀頂層。所以離線檢查母版名稱、數量、綁定鍵與 token 是否存在可行；逐 theme 比對解析色彩則要自寫 set 解析（最後啟用者覆蓋），可行但是額外工作。 |
+| 母版是否為元件 | 未驗證 | 匯出檔沒有元件，腳本以 `componentId`／`mainInstance` 欄位名判斷是猜的，沒有真實元件可驗。 |
+| 載入圖片真實內容 | 不適用 | 圖片是純色替身，且 `objects/*.png` 是 Penpot 產生的縮圖。 |
+
+### 能否提交進 repo
+
+- 大小：34 KB，是二進位 zip，審查時看不出差異；若要進版控，需另有展開文字檢視（本腳本的 `--json` 可當一種）。真實母版（23 個含 Select）的大小未測；形狀每個一個 JSON，每個約 1.3 至 3 KB，粗估 23 個母版加子節點在數百 KB 之內，是估計不是量測。
+- 決定性：只有一次匯出，無法實測兩次匯出是否位元組相同，因為 `File.export` 這次在外掛端回 `No matching clause`，無法從 Penpot 重匯。從這一份可見的不穩定來源：zip 條目時間戳（17:05，晚於 `modifiedAt` 17:00，應是匯出時間）；縮圖的 `hash`／`id` 為隨機 uuid（`objects/` 與 `thumbnails/`）；`tokens.json` 的 set 與 theme 內部鍵序是雜湊序；theme id 在匯入來源 JSON 後被重新產生（來源是 `suite-x-mode-vibrant-light` 這種可讀 id，匯出是 uuid）；檔案層有 `revn`、`modifiedAt`。因此推測同內容兩次匯出的位元組會不同；若要進版控，需要規格化（略過縮圖與時間、正規化鍵序）的文字展開，不能直接比對 zip。這是推測，不是量測。
+
+### 把母版轉成元件對匯出表示的影響
+
+未做。重匯無法進行（`File.export` 失敗，見上），而在暫存檔轉換後不能匯出就看不到差異，也不為此改動暫存檔。階段二若母版要成為元件，解析規則（是否出現在 `components`、`componentId`／`mainInstance` 欄位、主元件所在位置）要在實際有元件的匯出檔上重驗。
+
+### PR-FILE-23 判定
+
+通過：腳本能離線列出母版名稱與數量，結果與 Penpot 內一致。限制如上：母版是板、元件表示未驗證、匯出檔不可決定性。

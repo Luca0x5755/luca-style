@@ -71,5 +71,6 @@ PR-FILE-09（修訂）— ADR 0008 的狀態為 `Accepted`；ADR 0003 的狀態�
   - 陰影開關：值會跟著變，但 Penpot 沒有「關」，只能用零偏移、零模糊、透明度 0 的陰影代替，形狀上仍有一筆陰影。`elevation-enabled` 是布林、現在不輸出，正式做法要新增 shadow token。待使用者確認這樣是否可接受。
   - 載入圖片透明度：會，`C/State/Loading` 每個 Suite x Mode 恰好顯示四張中的一張。做法是四個疊在一起的矩形各綁一個不透明度 token（Penpot 的不透明度綁形狀，不能綁填色的第幾層）。載入圖片在暫存檔是純色替身，真實圖片上傳失敗（`http error`），尚未證實。
 - `font-zh` 的 `fontFamilies` 綁定：`applyToken(token, ['fontFamilies'])` 一律失敗，不傳 `properties` 即可（綁成 `fontFamily`）；ISSUE-018 遺留的 `font-zh` 已補綁。要不要把這個寫法放進階段二的重建指引，待定。
-- 匯出檔的 repo 路徑、檔名與大小，以及二進位 diff 的審查方式，等試點匯出後訂。
+  - 匯出檔裡儲存的綁定鍵是 `fontFamily`（不是 `fontFamilies`），離線解析要用這個鍵；其餘儲存鍵與 API 屬性名也不同（圓角 `r1`～`r4`、內距 `p1`～`p4`、描邊色 `strokeColor`），見離線解析章節。
+- 匯出檔的 repo 路徑、檔名，以及二進位 diff 的審查方式：ISSUE-020 已匯出一份 34 KB 的試點檔（見 `docs/delivery-verification.md` 的離線解析章節），zip 內有時間戳、隨機縮圖 id、雜湊序鍵序，推測同內容兩次匯出位元組不同（只有一次匯出，未實測；`File.export` 失敗無法重匯）。進版控要有規格化的文字展開才能審查與比對；路徑與檔名待階段二訂。PR-FILE-23 已能離線列出母版名稱與數量；母版轉成元件後的匯出表示未驗證（無法重匯）。
 - 所用 Penpot 版本是否固定，等自架環境建好後記錄。
