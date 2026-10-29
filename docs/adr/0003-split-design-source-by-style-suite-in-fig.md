@@ -1,4 +1,4 @@
-Status: Accepted
+Status: Accepted (layout superseded by ADR 0007; tool choice replaced by ADR 0008, Proposed)
 
 # Split the design source by style suite and make OpenPencil `.fig` the source of truth
 
