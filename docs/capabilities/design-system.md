@@ -134,7 +134,6 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 
 - 元件庫設計檔另有一個 OpenPencil 為存放變數自動維持的空畫布頁 `Internal Only Canvas`，無法刪除；`check-masters.js` 要求它保持空白。
 - 母版的自動排版尺寸、陰影開關與載入圖片透明度沒有綁定欄位，只存預設模式（Vibrant／Light）的值；Professional 的母版總覽因此與 ADR 0007 合併前的總覽總高度差 32px（指標卡、表格）。App 內切換模式後的版面未驗證；細節見[交付驗證](../delivery-verification.md#合併為一份元件庫設計檔issue-004pr-file-18)。
-- PR-STYLE-42 的 CI 部分：`pages.yml` 的 `visual` job 與本機 `npm run test:visual` 用同一映像，只由 `tests/visual-config.spec.ts` 做靜態檢查，尚未在 GitHub Actions 實跑。
 - 強調色推算的取捨（對比檢查只用於推算出的角色、`focus-ring` 角色、反向位移、`accent-ink` 固定）見 decision-log 2026-10-28。
 
 ### 交付邊界
