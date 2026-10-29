@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { makeWorkspace, readJson, readText, runGenerator } from './tokens-helpers';
+import { expectedAgainstSnapshot, makeWorkspace, neutralValues, readJson, readText, runGenerator } from './tokens-helpers';
 
 // ISSUE-003／PR-FILE-16：npm run generate 由 DTCG 原始檔另外產生設計檔變數資料，
 // 內容是程式變數與原設計檔 48 個變數的聯集；apply-variables.js 讀這份資料寫入元件庫設計檔（含集合與每個變數所在的集合）。
@@ -26,23 +27,50 @@ async function generateFig(edit?: (source: string) => Promise<void>) {
   }
 }
 
-test('generated design-file data keeps the 48 legacy variables with the same type and 12 values each', async () => {
+// 48 個舊變數在 0.1.0 的值；中性色 8 個角色改比 PR-STYLE-48 新值（與 tokens-snapshot 共用 tokens-helpers 的例外表）。
+// card-highlight（程式名 metric-background）在精緻專業是俐落外形的 var(--surface)，解析後等於該組合的 surface，
+// 這是推導值而不是放行：精緻專業 6 個值必須等於新 surface，精緻活力照舊比 0.1.0。
+function expectedLegacyValue(name: string, combo: string, legacy: unknown) {
+  const [mode, suite] = combo.split('/');
+  const lowerMode = mode.toLowerCase() as 'light' | 'dark';
+  if (name === 'card-highlight' && suite === 'Professional') return neutralValues.surface[lowerMode];
+  return expectedAgainstSnapshot(name, lowerMode, legacy);
+}
+
+async function legacyProblems(data: FigData) {
   const legacy = await readJson(legacyFixture) as FigData;
-  const { status, stderr, data } = await generateFig();
-  expect(stderr).toBe('');
-  expect(status).toBe(0);
-  expect(data!.axes).toEqual(legacy.axes);
-  const byName = new Map(data!.variables.map(variable => [variable.name, variable]));
+  const byName = new Map(data.variables.map(variable => [variable.name, variable]));
   const problems: string[] = [];
+  if (!isDeepStrictEqual(data.axes, legacy.axes)) problems.push(`axes: ${JSON.stringify(data.axes)}`);
   for (const { name, type, values } of legacy.variables) {
     const got = byName.get(name);
     if (!got) problems.push(`${name}: 缺少`);
     else if (got.type !== type) problems.push(`${name}: 型別 ${got.type}，應為 ${type}`);
     else for (const [combo, value] of Object.entries(values)) {
-      if (got.values[combo] !== value) problems.push(`${name} @ ${combo}: ${JSON.stringify(got.values[combo])}，應為 ${JSON.stringify(value)}`);
+      const expected = expectedLegacyValue(name, combo, value);
+      if (got.values[combo] !== expected) problems.push(`${name} @ ${combo}: ${JSON.stringify(got.values[combo])}，應為 ${JSON.stringify(expected)}`);
     }
   }
-  expect(problems).toEqual([]);
+  return problems;
+}
+
+test('generated design-file data keeps the 48 legacy variables with the same type and 12 values each, neutral roles at the PR-STYLE-48 values', async () => {
+  const { status, stderr, data } = await generateFig();
+  expect(stderr).toBe('');
+  expect(status).toBe(0);
+  expect(await legacyProblems(data!)).toEqual([]);
+});
+
+test('pointing the sharp metric-background at another neutral fails the legacy comparison on card-highlight', async () => {
+  const { status, data } = await generateFig(async source => {
+    const file = join(source, 'shape/sharp.tokens.json');
+    const tokens = await readJson(file);
+    tokens['metric-background'].$value = 'var(--surface-subtle)';
+    await writeFile(file, JSON.stringify(tokens));
+  });
+  expect(status).toBe(0);
+  const problems = await legacyProblems(data!);
+  expect(problems.filter(problem => problem.startsWith('card-highlight @ '))).not.toEqual([]);
 });
 
 // 程式變數改用設計檔舊名的對照（ADR 0004：重複者合併為一個名稱，設計檔沿用舊名以保留母版綁定）。

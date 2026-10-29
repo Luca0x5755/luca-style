@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { neutralValues } from './tokens-helpers';
 
 // 唯讀檢查 README.md 的結構與連結（不連網、不開頁面）。
 // 線上樣張連結是否回 200 需要已部署的站點，不在此檢查，改由手動 curl 驗證。
@@ -103,4 +104,21 @@ test('design-system capability and delivery verification both carry PR-STYLE-15 
     expect(capability, `design-system.md 缺 ${id}`).toMatch(new RegExp(`^${id} — `, 'm'));
     expect(delivery, `delivery-verification.md 缺 ${id}`).toMatch(new RegExp(`^\\| ${id} \\| .{10,}`, 'm'));
   }
+});
+
+// 規格議題刪除後，真相層是承諾的唯一依據：交付索引的範圍（PR-STYLE-01～nn）內每個 ID 恰好一行、範圍外沒有承諾行，
+// 中性色承諾與 PR-STYLE-48 的值一致（decision-log 2026-10-29）。編號補零並接 ` — `，PR-STYLE-1 才不會誤中 PR-STYLE-10。
+test('design-system capability carries every PR-STYLE promise exactly once, and the neutral promises match the values', () => {
+  const capability = read('docs/capabilities/design-system.md').replace(/\r\n/g, '\n');
+  const last = Number(capability.match(/`PR-STYLE-01～(\d+)`/)?.[1]);
+  expect(last, '交付索引的 PR-STYLE 範圍至少要涵蓋中性色承諾 PR-STYLE-54').toBeGreaterThanOrEqual(54);
+  const promise = (n: number) => capability.match(new RegExp(`^PR-STYLE-${String(n).padStart(2, '0')} — .*$`, 'gm')) ?? [];
+  for (let n = 1; n <= last; n++) expect(promise(n), `PR-STYLE-${n} 應恰好出現一次`).toHaveLength(1);
+  const outside = [...capability.matchAll(/^PR-STYLE-(\d+) — /gm)].map(match => Number(match[1])).filter(n => n > last);
+  expect(outside, '有承諾行超出交付索引的範圍').toEqual([]);
+  const [neutrals] = promise(48);
+  for (const [role, { light, dark }] of Object.entries(neutralValues)) expect(neutrals, `PR-STYLE-48 的 ${role}`).toContain(`\`${role}\` ${light}／${dark}`);
+  expect(promise(27)[0]).toContain('PR-STYLE-48');
+  expect(promise(29)[0]).toContain('PR-STYLE-48');
+  expect(promise(29)[0]).not.toContain('畫面與 0.1.0 相同');
 });

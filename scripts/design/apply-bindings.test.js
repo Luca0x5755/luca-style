@@ -82,7 +82,7 @@ test('hover、焦點框與指標卡邊框綁到 ISSUE-004 指定的變數，儲�
   assert.equal(probe(t.fig, 'C/Select/Open', '1.2').bound['strokes/0/color'], 'focus-ring');
   const metric = probe(t.fig, 'C/Card/Metric', '-');
   assert.equal(metric.bound['strokes/0/color'], 'border');
-  assert.equal(metric.stroke, '#DDE5DC');
+  assert.equal(metric.stroke, '#E0E2E6');
   assert.equal(metric.bound.borderLeftWeight, 'metric-border-left');
   assert.equal(metric.cornerRadius, 20);
   assert.equal(metric.paddingLeft, 24);

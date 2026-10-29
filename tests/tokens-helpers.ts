@@ -11,6 +11,29 @@ export const sourceDir = join(tokensPackage, 'src');
 export const generator = join(tokensPackage, 'build.mjs');
 export const fixtureDir = fileURLToPath(new URL('./fixtures/tokens-0.1.0/', import.meta.url));
 
+// PR-STYLE-48：中性色 8 個角色的日間／暗黑新值（照抄規格，不從原始檔讀）。
+// 與 0.1.0 快照比對時，只有這 8 個名稱放行改值，而且必須等於這裡的新值（PR-STYLE-27、PR-FILE-16）。
+export const neutralValues = {
+  bg: { light: '#F7F8FA', dark: '#111317' },
+  surface: { light: '#FFFFFF', dark: '#1A1D22' },
+  'surface-subtle': { light: '#F1F3F5', dark: '#23272D' },
+  text: { light: '#2C2E31', dark: '#EFF1F5' },
+  muted: { light: '#696B6F', dark: '#AEB0B4' },
+  border: { light: '#E0E2E6', dark: '#3C3E41' },
+  'control-border': { light: '#85878B', dark: '#6F7175' },
+  'accent-ink': { light: '#FFFFFF', dark: '#111317' },
+} as const satisfies Record<string, { light: string; dark: string }>;
+export type NeutralRole = keyof typeof neutralValues;
+
+// 色碼換成瀏覽器計算樣式的 rgb() 寫法，供 toHaveCSS 比對。
+export const cssRgb = (hex: string) => `rgb(${hexChannels(hex).join(', ')})`;
+
+// 某變數在某明暗模式應有的值：名稱完全等於中性色角色時取新值，其餘一律沿用 0.1.0 快照值。
+// 以全名查表，不做子字串或前綴比對，border-width、metric-border-left 不會被 border 帶走。
+export function expectedAgainstSnapshot<T>(name: string, mode: 'light' | 'dark' | undefined, legacy: T): T | string {
+  return mode && Object.hasOwn(neutralValues, name) ? neutralValues[name as NeutralRole][mode] : legacy;
+}
+
 // 在暫存目錄複製一份原始檔，讓測試可以改動而不碰 repo 內的檔案。
 export async function makeWorkspace() {
   const root = await mkdtemp(join(tmpdir(), 'luca-tokens-'));

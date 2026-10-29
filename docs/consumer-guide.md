@@ -48,7 +48,7 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 
 `accent={{light, dark?, secondary?, soft?:{light?, dark?}}}` 覆寫專案強調色（`AccentInput`）；只有日間主色 `light` 必填。暗黑主色、柔和底色沒給時由 ThemeProvider 推算（同色相，通過文字對比 4.5:1）；點綴色沒給時沿用該模式的主色，有給則兩種模式都用同一值。滑過 `--accent-hover`、按下 `--accent-pressed` 與焦點框外圈 `--focus-ring` 一律由主色推算（OKLCH 明度位移，色相不變）。推算函式 `deriveAccent` 由 `@luca-style/tokens/accent` 匯出，建置與設計檔匯入用的是同一份。有給的顏色原樣使用、不做對比檢查：主按鈕文字在日間固定為白色，太淺的日間主色會讓按鈕文字看不清，請自行確認對比。Showcase 日間覆寫使用暖銅色與淺暖底，暗黑使用亮珊瑚色與深暖底。覆寫不改 success／warning／error。業務資料另定 `--data-positive` 等專案變數，使用文字、符號或圖例；不要引用 `--success`／`--error` 代表漲跌。
 
-`density`（`compact`／`standard`／`comfortable`）與 `shape`（`sharp`／`rounded`）可單獨覆寫風格套系的預設等級，例如 `<ThemeProvider suite="professional" shape="rounded">`；沒給時沿用套系預設（精緻活力：標準、圓潤；精緻專業：標準、俐落），畫面與 0.1.0 相同。密度只改 `--control-height`、`--card-padding`、`--gap-section`、`--table-cell-padding-block`／`-inline`；外形只改 `--radius-card`、`--radius-control`、`--border-width`、`--metric-border-left`、`--metric-background`、`--metric-shadow`；兩者都不改色彩。數值見[前端 §5.4.1、§5.4.2](05_frontend_spec.md)。ThemeProvider 以 `data-density`、`data-shape` 屬性套用，與其他主題屬性在同一元素。`themeInitScript` 不處理這兩軸：`target="document"` 搭配覆寫時，React 掛載前會先以套系預設的間距與圓角排版，掛載後才換成覆寫值（色彩不受影響）；介意這一下跳動時，可在 `<head>` 首屏腳本之後自行加上 `document.documentElement.setAttribute('data-density','compact')` 等同值屬性。
+`density`（`compact`／`standard`／`comfortable`）與 `shape`（`sharp`／`rounded`）可單獨覆寫風格套系的預設等級，例如 `<ThemeProvider suite="professional" shape="rounded">`；沒給時沿用套系預設（精緻活力：標準、圓潤；精緻專業：標準、俐落），密度與外形與 0.1.0 相同。密度只改 `--control-height`、`--card-padding`、`--gap-section`、`--table-cell-padding-block`／`-inline`；外形只改 `--radius-card`、`--radius-control`、`--border-width`、`--metric-border-left`、`--metric-background`、`--metric-shadow`；兩者都不改色彩。數值見[前端 §5.4.1、§5.4.2](05_frontend_spec.md)。ThemeProvider 以 `data-density`、`data-shape` 屬性套用，與其他主題屬性在同一元素。`themeInitScript` 不處理這兩軸：`target="document"` 搭配覆寫時，React 掛載前會先以套系預設的間距與圓角排版，掛載後才換成覆寫值（色彩不受影響）；介意這一下跳動時，可在 `<head>` 首屏腳本之後自行加上 `document.documentElement.setAttribute('data-density','compact')` 等同值屬性。
 
 整頁之外，特定頁面也可用 CSS 在自身區域覆寫密度變數，例如 `.dense-section { --card-padding:var(--space-4); --gap-section:var(--space-4); }`；不改文字角色或全域套系。自行版面使用 `--space-*`，欄位設定 `min-width:0`，窄版堆疊，表格保留可聚焦的水平捲動區。
 
@@ -120,12 +120,13 @@ npm run test:consumer
 
 ## 0.2.0 升級說明
 
-從 0.1.0 升級時，依〈建置、封裝與安裝〉重新封裝並安裝兩個 0.2.0 tarball（兩個套件版本須一致）。`@luca-style/react` 新增執行期依賴 `@base-ui/react` ^1.9，隨 tarball 一起安裝；`react-dom` 19 列為 peer。沒給 `accent`、沒覆寫 `density`／`shape` 的專案，版面、色彩與 0.1.0 相同，但所有元件的焦點框改為雙圈、主按鈕滑過改用推算色（見〈專案強調色〉），Checkbox 的方框改為依主題自繪、不再用瀏覽器的 `accent-color`（見〈其餘共用元件改用 Base UI〉）。
+從 0.1.0 升級時，依〈建置、封裝與安裝〉重新封裝並安裝兩個 0.2.0 tarball（兩個套件版本須一致）。`@luca-style/react` 新增執行期依賴 `@base-ui/react` ^1.9，隨 tarball 一起安裝；`react-dom` 19 列為 peer。沒給 `accent`、沒覆寫 `density`／`shape` 的專案，密度與外形與 0.1.0 相同；中性色 8 個角色改為冷藍灰（見〈中性色改為冷藍灰〉），所有元件的焦點框改為雙圈、主按鈕滑過改用推算色（見〈專案強調色〉），Checkbox 的方框改為依主題自繪、不再用瀏覽器的 `accent-color`（見〈其餘共用元件改用 Base UI〉）。
 
 摘要：
 
 - **必改**：有傳 `accent` 的專案改成 `AccentInput`（舊寫法會造成型別錯誤）；傳給 `Select` 的 `multiple`、`size` 或陣列值要拿掉。
 - **可刪**：手寫的首屏防閃爍腳本、把 `resolvedMode` 同步到 `<html>` 的 effect、只為整頁底色加的 `html` 背景規則（見〈整頁主題與防閃爍〉）。
+- **中性色**：頁面底色、卡片表面、次要表面、文字與邊框改為冷藍灰；寫死 0.1.0 色碼的地方改用設計變數（見〈中性色改為冷藍灰〉）。
 - **可能要調整的測試**：見〈要調整的測試〉；最常見的是 Select 不再是原生 `<select>`，`selectOption()` 不能用。
 - **不相容處**：Select、Checkbox、Navigation 的 DOM 與事件物件改變，逐條列在各元件小節。
 - **設計稿**：0.1.0 的 `components.pen` 與依套系拆開的 `.fig` 已移除，改從元件庫設計檔複製開始，見〈複製元件庫設計檔並匯入專案強調色〉。
@@ -140,9 +141,27 @@ npm run test:consumer
 | Checkbox 的 `getByLabel('…')` | `getByRole('checkbox', {name:'…'})` | `getByLabel` 會同時找到方框與隱藏的 input，strict mode 報錯 |
 | `input[type=checkbox]`、`.luca-checkbox input` | `[role=checkbox]` 或 `.luca-checkbox-box` | 可見的方框改為 `<span>` |
 | 斷言按鈕滑過的 `filter: brightness(...)` | 斷言背景色等於 `--accent-hover` | 滑過改用推算色 |
-| 斷言焦點框為 3px 文字色單圈 | 2px 表面色內圈＋2px `--focus-ring` 外圈 | 焦點框改為雙圈 |
+| 斷言焦點框為 3px 文字色單圈 | 2px 卡片表面色內圈＋2px `--focus-ring` 外圈 | 焦點框改為雙圈 |
 | `.luca-navigation > div` | `.luca-navigation-list` | 連結列改為 `<ul>`／`<li>` |
 | 依賴主題外層 `div` 結構（`target="document"` 時） | 主題容器 `[data-luca-theme]` 是 `<html>` | 主題套在整頁 |
+| 斷言頁面底色、文字或邊框等於 0.1.0 色碼（例如 `#F7F7F2`） | 斷言等於對應的設計變數，或改用〈中性色改為冷藍灰〉的新值；截圖基準要重新產生 | 中性色改值 |
+
+### 中性色改為冷藍灰
+
+中性色 8 個角色改為一致的冷藍灰（決策見 decision-log 2026-10-29）。兩個風格套系共用同一組值，只隨明暗模式變化；`ThemeProvider` 沒有覆寫中性色的選項。
+
+| 角色 | 日間 0.1.0 | 日間 0.2.0 | 暗黑 0.1.0 | 暗黑 0.2.0 |
+| --- | --- | --- | --- | --- |
+| `bg` | `#F7F7F2` | `#F7F8FA` | `#151A18` | `#111317` |
+| `surface` | `#FFFFFF` | `#FFFFFF` | `#1D2420` | `#1A1D22` |
+| `surface-subtle` | `#F1F3EE` | `#F1F3F5` | `#252E28` | `#23272D` |
+| `text` | `#24312A` | `#2C2E31` | `#EDF3ED` | `#EFF1F5` |
+| `muted` | `#626F65` | `#696B6F` | `#A5B5A8` | `#AEB0B4` |
+| `border` | `#DDE5DC` | `#E0E2E6` | `#354139` | `#3C3E41` |
+| `control-border` | `#7B8C80` | `#85878B` | `#65766B` | `#6F7175` |
+| `accent-ink` | `#FFFFFF` | `#FFFFFF` | `#151A18` | `#111317` |
+
+使用端的 CSS、行內樣式或圖片若寫死上表的 0.1.0 色碼，改成對應的設計變數（例如 `var(--bg)`、`var(--surface)`、`var(--text)`、`var(--border)`），之後 luca-style 再改值時就會自動跟上。只有使用設計變數的專案不需修改。
 
 ### 整頁主題與防閃爍
 
@@ -161,7 +180,7 @@ npm run test:consumer
 
 ### 資訊密度與元件外形可單獨覆寫
 
-- 沒給 `density`、`shape` 時畫面與 0.1.0 相同，不需修改。
+- 沒給 `density`、`shape` 時密度與外形與 0.1.0 相同，不需修改。
 - 新增 CSS 變數 `--table-cell-padding-block`、`--table-cell-padding-inline`（預設 12px／8px，即 0.1.0 表格儲存格內距），也寫進設計檔變數。
 - `--control-height` 改由密度等級提供，精緻專業 comfortable 為 52px；直接在頁面覆寫這些變數的寫法仍有效。
 
@@ -178,9 +197,9 @@ npm run test:consumer
 
 - 顏色須為 `#RRGGBB`，其他寫法（`red`、`#abc`）會讓推算在 render 時拋錯。
 - 點綴色只有一個值，兩種模式共用；0.1.0 的暗黑專屬點綴色無法表達（樣張原本的暗黑點綴 `#E6BE70` 因此不再使用）。沒給時沿用該模式的主色。
-- `accent-ink`（填色按鈕上的文字）不再可覆寫，固定為日間白色、暗黑炭黑。有給的顏色原樣使用、不做對比檢查；日間主色很淺（例如亮黃）時白字對比會不足，請改用較深的主色。
+- `accent-ink`（填色按鈕上的文字）不再可覆寫，固定為日間白色、暗黑 `#111317`。有給的顏色原樣使用、不做對比檢查；日間主色很淺（例如亮黃）時白字對比會不足，請改用較深的主色。
 - 推算的只有沒給的角色：暗黑主色、柔和底色、點綴色，以及一律推算的滑過、按下、焦點框色。推算值都通過文字對比 4.5:1（焦點框 3:1）；位移後不足時會再加深／加亮。
-- 按鈕滑過不再用 `filter:brightness(.94)`，改為 `--accent-hover`；測試若斷言 `filter` 或焦點框粗細（舊為 3px 文字色單圈，現為 2px 表面色內圈＋2px 主色外圈）需調整。
+- 按鈕滑過不再用 `filter:brightness(.94)`，改為 `--accent-hover`；測試若斷言 `filter` 或焦點框粗細（舊為 3px 文字色單圈，現為 2px 卡片表面色內圈＋2px 主色外圈）需調整。
 - 新增的 CSS 變數：`--accent-hover`、`--accent-pressed`、`--focus-ring`；套系預設值在建置時算好，也寫進設計檔變數。
 
 ### Select 改為自訂選單

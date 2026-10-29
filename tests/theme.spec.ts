@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { cssRgb, neutralsOf } from './tokens-helpers';
 
+// 某明暗模式的頁面底色 bg，換成瀏覽器計算樣式的 rgb() 寫法；期望值跟著設計變數原始檔走，不寫死色碼。
+// 原始檔是否等於 PR-STYLE-48 由 tokens-snapshot.spec 把關。兩個模式各讀一次。
+const bg = { light: cssRgb((await neutralsOf('light')).bg), dark: cssRgb((await neutralsOf('dark')).bg) };
+const bgOf = (mode: 'light' | 'dark') => bg[mode];
+
+// PR-STYLE-51：React 掛載前、外部 CSS 尚未到達時，首屏底色就是該明暗模式的 bg。
 test('document background resolves the theme before application assets load', async ({browser}) => {
   for (const scenario of [
     {system:'light',stored:'dark',expected:'dark'},
@@ -20,7 +27,7 @@ test('document background resolves the theme before application assets load', as
       await expect(page.locator('html')).toHaveAttribute('data-luca-theme','');
       await expect(page.locator('html')).toHaveAttribute('data-suite','vibrant');
       await expect(page.locator('html')).toHaveAttribute('data-mode',scenario.expected);
-      await expect(page.locator('html')).toHaveCSS('background-color',scenario.expected === 'dark' ? 'rgb(21, 26, 24)' : 'rgb(247, 247, 242)');
+      await expect(page.locator('html')).toHaveCSS('background-color',bgOf(scenario.expected));
       await expect(page.locator('html')).toHaveCSS('color-scheme',scenario.expected);
     }
     await context.close();
@@ -62,10 +69,10 @@ test('showcase themes the whole document through ThemeProvider', async ({page}) 
   await expect(html).toHaveAttribute('data-luca-theme','');
   await page.getByLabel('明暗模式').selectOption('dark');
   await expect(html).toHaveAttribute('data-mode','dark');
-  await expect(html).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await expect(html).toHaveCSS('background-color',bgOf('dark'));
   await expect(html).toHaveCSS('color-scheme','dark');
   await page.getByLabel('明暗模式').selectOption('light');
-  await expect(html).toHaveCSS('background-color','rgb(247, 247, 242)');
+  await expect(html).toHaveCSS('background-color',bgOf('light'));
   await expect(html).toHaveCSS('color-scheme','light');
   await page.getByLabel('風格套系').selectOption('professional');
   await expect(html).toHaveAttribute('data-suite','professional');
@@ -106,17 +113,17 @@ test('mode follows live system changes and retains a manual preference', async (
   await page.emulateMedia({colorScheme:'dark'});
   await page.goto('/');
   await expect(page.locator('[data-luca-theme]')).toHaveAttribute('data-mode','dark');
-  await expect(page.locator('html')).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await expect(page.locator('html')).toHaveCSS('background-color',bgOf('dark'));
   await page.emulateMedia({colorScheme:'light'});
   await expect(page.locator('[data-luca-theme]')).toHaveAttribute('data-mode','light');
-  await expect(page.locator('html')).toHaveCSS('background-color','rgb(247, 247, 242)');
+  await expect(page.locator('html')).toHaveCSS('background-color',bgOf('light'));
   await page.getByLabel('明暗模式').selectOption('dark');
   const reopened = await context.newPage();
   await reopened.goto('/');
   await expect(reopened.getByLabel('明暗模式')).toHaveValue('dark');
   await expect(reopened.locator('[data-luca-theme]')).toHaveAttribute('data-mode','dark');
   await reopened.getByRole('navigation',{name:'主要導覽'}).getByRole('link',{name:'設計基礎',exact:true}).click();
-  await expect(reopened.locator('html')).toHaveCSS('background-color','rgb(21, 26, 24)');
+  await expect(reopened.locator('html')).toHaveCSS('background-color',bgOf('dark'));
   await reopened.getByLabel('明暗模式').selectOption('system');
   await reopened.emulateMedia({colorScheme:'light'});
   await expect(reopened.locator('[data-luca-theme]')).toHaveAttribute('data-mode','light');
