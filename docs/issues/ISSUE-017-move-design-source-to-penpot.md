@@ -61,6 +61,7 @@ PR-FILE-09（修訂）— ADR 0008 的狀態為 `Accepted`；ADR 0003 的狀態�
 
 ## Open questions
 
+- 試點結論已記錄在 `docs/delivery-verification.md` 的「Penpot 試點結論」：PR-FILE-20、23 通過，PR-FILE-21、22 retired。陰影「關閉」是否可接受、匯出檔是否改提交文字 dump 兩項待使用者決定，階段二的票等這兩項決定後再切。
 - Penpot 是否比 OpenPencil 穩定沒有驗證：長時間編輯的壓力測試（PR-FILE-21、22）已由使用者決定不做。這是 ADR 0008 立論的原因（記憶體累積後當機），切換後若在 Penpot 也遇到同樣的當機，要重新評估。
 - 使用端匯入強調色：`scripts/design/import-accent.js` 靠 OpenPencil 離線 CLI，Penpot 沒有等價路徑。要改為產生強調色 token JSON 讓使用端匯入，還是別的做法，由階段二設計前確認，並影響 PR-FILE-19 的文字。
 - 現有「節點數低於 10,000」的限制來自 OpenPencil MCP，PR-FILE-18 修訂時已拿掉；Penpot 是否需要類似上限，等試點觀察。

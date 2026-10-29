@@ -737,3 +737,31 @@ node --test scripts/penpot-pilot/parse-export.test.mjs
 ### PR-FILE-23 判定
 
 通過：腳本能離線列出母版名稱與數量，結果與 Penpot 內一致。限制如上：母版是板、元件表示未驗證、匯出檔不可決定性。
+
+## Penpot 試點結論（ISSUE-022，PR-FILE-24）
+
+2026-10-30。使用者在試點收尾時回覆「確認」，同意記錄結論；「確認」沒有指定下列兩項待決的選項，所以它們帶進階段二，不當成已決定。
+
+| 承諾 | 結果 | 依據 |
+| --- | --- | --- |
+| PR-FILE-20 | 通過 | 三個母版在 Suite x Mode 四種 × Device 三種共 12 組，解析值與 `variables.json` 全等；見「母版與 theme 切換」章節。限制：載入圖片是純色替身，母版是板不是元件，`font-zh` 要以不帶屬性的 `applyToken` 綁成 `fontFamily` |
+| PR-FILE-21 | retired | 使用者決定不做長時間編輯的壓力測試（2026-10-30） |
+| PR-FILE-22 | retired | 隨 PR-FILE-21 不做 |
+| PR-FILE-23 | 通過 | 腳本離線列出 3 個母版，與 Penpot 內一致；見「離線解析匯出檔」章節。限制：元件表示未驗證，匯出檔位元組不可決定 |
+
+**沒有驗證的事：Penpot 是否比 OpenPencil 穩定。** 這是 ADR 0008 的立論原因（記憶體累積後當機），試點只證明 theme 切換正確與匯出檔可離線解析。切換後若在 Penpot 遇到同樣的當機，要重新評估。
+
+**帶進階段二的待決項**
+
+- 陰影「關閉」在 Penpot 沒有對應，只能用零偏移、零模糊、透明度 0 的陰影代替；是否可接受待使用者決定。
+- 匯出檔是二進位 zip，不適合直接當 repo 正本提交；是否改為提交正規化的文字 dump（會修改 ADR 0008 的「repo 裡的匯出檔為正本」）待使用者決定。
+- 使用端匯入強調色的做法（`import-accent.js` 沒有 Penpot 等價路徑）。
+- 母版轉成元件後匯出表示是否改變，需先能重新匯出（外掛 `File.export` 現在失敗）。
+
+**階段二要切的票（尚未寫檔，待上面前兩項決定後再用 `/to-tickets` 切）**
+
+- 重建其餘 20 個母版（含 `C/Select/Open`），依大小分 2 至 3 張（PR-FILE-18、26）。
+- 離線驗證腳本：把 `scripts/penpot-pilot/parse-export.mjs` 正式化，加其他 theme 的解析值比對（PR-FILE-27）。
+- 刪除 OpenPencil 產物並改文件：`.fig`、`scripts/design/` 的腳本與測試、`fig-variables.spec.ts`、consumer-guide、adoption-prompt、GLOSSARY，ADR 0008 改 Accepted（PR-FILE-28、07、08、30、31、09、06）。
+- Penpot 自架說明文件（PR-FILE-29）。
+- 使用端強調色匯入（PR-FILE-19），做法待決。
