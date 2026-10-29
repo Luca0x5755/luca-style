@@ -69,3 +69,5 @@
 2026-10-30 — GLOSSARY 的 元件庫設計檔、畫布頁、設計變數 先不改，等 Penpot 版落地時同一個變更改寫，因為詞彙表只寫現行為真；待改項目記在 ADR 0008 的 Consequences。
 2026-10-30 — 使用者決定不做 Penpot 試點的長時間編輯壓力測試（ISSUE-021，PR-FILE-21、22 retired）；試點只驗證 theme 切換與匯出檔離線解析。代價是 Penpot 是否比 OpenPencil 穩定沒有證據，切換後若遇到同樣的當機要重新評估；風險記在 ISSUE-017 的 Open questions。
 2026-10-30 — Penpot 試點結束：PR-FILE-20、23 通過，21、22 retired（ISSUE-022）。陰影關閉的表示法與匯出檔是否改提交文字 dump 未決，帶進階段二；ADR 0008 維持 Proposed，待 Penpot 版落地時改 Accepted。
+2026-10-30 — 使用者接受 Penpot 的陰影「關閉」以零偏移、零模糊、透明度 0 的 shadow token 表示（PR-FILE-33）；Penpot 沒有真正的 off。
+2026-10-30 — 匯出檔除 `.penpot` 外另提交正規化文字 dump 供審查與驗證，兩者不一致時檢查失敗（PR-FILE-32，修訂 ADR 0008）；`.penpot` 仍是使用端複製的檔案，因為 dump 無法匯回 Penpot。原因：匯出檔是位元組不穩定的二進位 zip，審查時看不到差異。

@@ -2,7 +2,7 @@ Status: Proposed
 
 # Move the design source from OpenPencil `.fig` to a self-hosted Penpot file, gated by a pilot
 
-The component library design file moves from OpenPencil to Penpot, self-hosted on the owner's machine. The repo keeps an exported `.penpot` file as the source of truth, and consumer projects copy that file to start their mockup, as ADR 0007 already says for the `.fig`. The move happens only after a pilot passes; until then ADR 0007 and its `.fig` stand.
+The component library design file moves from OpenPencil to Penpot, self-hosted on the owner's machine. The repo keeps an exported `.penpot` file, which consumer projects copy, together with a normalized text dump of it that is the form reviewed and verified (decided 2026-10-30, after the pilot showed the export is an opaque zip) to start their mockup, as ADR 0007 already says for the `.fig`. The move happens only after a pilot passes; until then ADR 0007 and its `.fig` stand.
 
 The reason is stability. OpenPencil crashes in the middle of editing once its in-memory state has built up, even after ADR 0007 shrank the file far below the 10,000-node limit. The crash follows session length, not the file, so shrinking the file did not fix it. The earlier bet (decision log, 2026-10-24) that the upstream bug would be fixed did not pay off.
 
@@ -38,7 +38,8 @@ If the pilot fails, the decision is reopened rather than falling back by default
 ## Consequences
 
 - Penpot has no offline CLI like `openpencil eval`, so variables can no longer be written into the design file from a script or CI.
-- Changes to the exported `.penpot` file show up as binary diffs, so review relies on the parsed summary or the PR note.
+- The exported `.penpot` file is a binary zip whose bytes are probably not stable between two exports of the same content (zip timestamps, random thumbnail ids, hash-ordered keys), so a script writes a normalized text dump next to it with stable ordering and without the volatile fields. Review and diffs use the dump; consumers copy the `.penpot`. A check fails when the dump disagrees with the `.penpot`. The dump cannot be imported back into Penpot, so the `.penpot` is not replaceable by it.
+- Shadows have no off state in Penpot. The owner accepted (2026-10-30) representing off as a shadow with zero offset, zero blur and zero opacity, driven by a shadow token.
 - Glossary entries to rewrite when the Penpot file lands, in the same change (the glossary describes what is in force): 元件庫設計檔, 畫布頁 (likely retired), 設計變數. Docs that name OpenPencil or `.fig` (about 230 mentions, mostly `docs/delivery-verification.md`) move at the same time.
 - `automated_trading` and `badminton` draw in their own files and are not affected, but `docs/consumer-guide.md` and `docs/adoption-prompt.md` change their starting instructions.
 - The two facts the pilot must settle: whether token themes express `Suite x Mode` without the multi-collection mix-up of ISSUE-015, and whether the export parses offline.

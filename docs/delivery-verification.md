@@ -753,12 +753,12 @@ node --test scripts/penpot-pilot/parse-export.test.mjs
 
 **帶進階段二的待決項**
 
-- 陰影「關閉」在 Penpot 沒有對應，只能用零偏移、零模糊、透明度 0 的陰影代替；是否可接受待使用者決定。
-- 匯出檔是二進位 zip，不適合直接當 repo 正本提交；是否改為提交正規化的文字 dump（會修改 ADR 0008 的「repo 裡的匯出檔為正本」）待使用者決定。
+- 陰影「關閉」在 Penpot 沒有對應，只能用零偏移、零模糊、透明度 0 的陰影代替；使用者於 2026-10-30 接受（PR-FILE-33）。
+- 匯出檔是二進位 zip，不適合單獨審查；使用者於 2026-10-30 決定另提交一份正規化文字 dump（PR-FILE-32），ADR 0008 已修訂。
 - 使用端匯入強調色的做法（`import-accent.js` 沒有 Penpot 等價路徑）。
 - 母版轉成元件後匯出表示是否改變，需先能重新匯出（外掛 `File.export` 現在失敗）。
 
-**階段二要切的票（尚未寫檔，待上面前兩項決定後再用 `/to-tickets` 切）**
+**階段二要切的票（尚未寫檔，兩項已決定，可用 `/to-tickets` 切，並含 PR-FILE-32、33）**
 
 - 重建其餘 20 個母版（含 `C/Select/Open`），依大小分 2 至 3 張（PR-FILE-18、26）。
 - 離線驗證腳本：把 `scripts/penpot-pilot/parse-export.mjs` 正式化，加其他 theme 的解析值比對（PR-FILE-27）。
