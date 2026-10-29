@@ -15,10 +15,11 @@ const job = (name: string) => topBlock('jobs').match(new RegExp(`^  ${name}:\\n(
 const jobNames = () => [...topBlock('jobs').matchAll(/^ {2}([\w-]+):\s*$/gm)].map((m) => m[1]);
 const runs = (block: string) => [...block.matchAll(/^\s*(?:- )?run:\s*(.+)$/gm)].map((m) => m[1].trim());
 
-test('workflow runs only on push to main', () => {
+test('workflow runs on push to main and on pull requests, but only deploys on push', () => {
   const on = topBlock('on');
   expect(on).toMatch(/push:\s*\n\s+branches:\s*\[\s*main\s*\]/);
-  expect(on).not.toContain('pull_request');
+  expect(on).toMatch(/^ {2}pull_request:\s*$/m);
+  expect(job('deploy')).toMatch(/^\s+if:\s*github\.event_name\s*==\s*'push'\s*$/m);
 });
 
 test('deploy job needs both the verify and the visual jobs', () => {

@@ -21,7 +21,7 @@
 
 | 部署 | 方式 |
 | --- | --- |
-| GitHub Pages | `.github/workflows/pages.yml` 在 push 到 `main` 時執行：驗證 job 依序跑 build、typecheck、lint 與 Playwright，通過後才由 deploy job 部署；任一步失敗就不部署，線上維持上一版 |
+| GitHub Pages | `.github/workflows/pages.yml` 在 push 到 `main` 與 PR 時執行：驗證 job 依序跑 build、typecheck、lint 與 Playwright；只有 push 到 `main` 且驗證通過才由 deploy job 部署；任一步失敗就不部署，線上維持上一版 |
 | 部署內容 | `npm run build:pages` 以 `/luca-style/` 為 base 輸出到 `apps/showcase/dist-pages`，內含每個路由的 `index.html` 與 `404.html` |
 | 權限與版本 | 預設只讀；僅 deploy job 取得 `pages: write` 與 `id-token: write`。所有 action 固定到 commit SHA |
 | 前提 | repo Settings → Pages 的來源須設為「GitHub Actions」；`test:consumer` 需網路與獨立 port，不列入此工作流程 |

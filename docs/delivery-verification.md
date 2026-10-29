@@ -227,7 +227,7 @@ exit=1
 | PR-STYLE-16 | pages.spec：每個路由各有 `index.html`、直接開啟與重新整理回應 200；trailing-slash.spec：尾斜線與無尾斜線同一路由；模擬伺服器重現 Pages 對無尾斜線目錄的 301。 |
 | PR-STYLE-17 | pages.spec 未知網址回 404；not-found.spec 與 subpath.spec：找不到頁面內容、四態、返回入口、三寬度無橫溢。 |
 | PR-STYLE-18 | subpath.spec：品牌連結與頁內連結皆在 `/luca-style/` 內；`/` 下既有案例不變。route-table 單一來源與 main.tsx 由 pages-routes.spec 比對。 |
-| PR-STYLE-19 | deploy-workflow.spec：僅 push 到 main、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。工作流程尚未在 GitHub 上實跑。 |
+| PR-STYLE-19 | deploy-workflow.spec：push 到 main 與 PR 觸發、只有 push 才部署、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。工作流程尚未在 GitHub 上實跑。 |
 | PR-STYLE-20 | components.spec：預設品牌連結為 `/`，傳入 `brandHref` 後跟隨；consumer-guide 說明，examples/consumer 以 `brandHref="/luca-style/"` 經 test:consumer 驗證。 |
 | PR-STYLE-21 | readme.spec：H2 順序、英文與一句話介紹、線上樣張連結、無「正式預覽」、有「本機預覽」、授權段落。 |
 | PR-STYLE-22 | readme.spec：clone／`npm ci`／`npm run dev`、連到使用端接入文件、程式碼片段 ≤10 行且逐字來自 examples/consumer、相對連結皆存在且被 git 追蹤。 |
@@ -660,4 +660,4 @@ node scripts/design/apply-bindings.js --check   # exit 0
 - `apply-variables.js --check`：節點數 112，變數與 `variables.json` 逐筆一致。
 - `apply-bindings.js --check`：節點數 112，23 個母版、244 筆綁定，綁定與儲存值全部一致。
 - 三支腳本各自的 `*.test.js`（含故意改壞副本的失敗案例）在 `node --test scripts/design/*.test.js` 內執行。
-- **人眼抽查：尚未做。** 元件庫設計檔只有上一節的四種組合母版總覽 PNG 比對（腳本匯出、逐列比對），沒有人在 OpenPencil App 內逐一開啟抽查。〈人眼抽查與退役 `.pen`、`components.fig`〉一節記的是 ISSUE-004 合併前的兩個舊設計檔，不適用於元件庫設計檔。待補。
+- **人眼抽查：** 2026-10-29 使用者在 OpenPencil App 開啟元件庫設計檔檢查，回報「已經看完沒問題」（在 ISSUE-015 合併集合與 `c5cd3fc` 文字置中之後）。使用者沒有說明看了哪些母版與模式，所以這裡不記抽查範圍，也不聲稱做過像素比對。

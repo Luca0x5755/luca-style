@@ -121,12 +121,11 @@ test('匯入後匯出母版，畫面顯示該強調色（滑過、焦點框、�
   for (const [suite, mode] of COMBOS) {
     const roles = expectedRoles(input, suite, mode);
     const shownAfter = renderMasters(withModes(imported, suite, mode), names);
-    // 匯出一次要數秒，反向保險只在 Vibrant / Light 做一遍。
-    const shownBefore = suite === 'Vibrant' && mode === 'Light' ? renderMasters(withModes(original, suite, mode), names) : null;
+    const shownBefore = renderMasters(withModes(original, suite, mode), names);
     for (const [master, role] of MASTER_ROLES) {
       assert.ok(shownAfter[master].has(roles[role].toUpperCase()), `${master} @ ${suite}/${mode} 應顯示 ${role} ${roles[role]}`);
       // 反向保險：未匯入的原檔不會顯示這個測試色，差異來自匯入而非巧合。
-      if (shownBefore) assert.ok(!shownBefore[master].has(roles[role].toUpperCase()), `${master} 原檔不應已有 ${roles[role]}`);
+      assert.ok(!shownBefore[master].has(roles[role].toUpperCase()), `${master} 原檔不應已有 ${roles[role]}`);
     }
   }
 });
