@@ -17,10 +17,10 @@ Blocked by: none
 ### 階段一：試點
 
 PR-FILE-20 — 在 Penpot 暫存檔建立設計變數與 `C/Button/Primary`、`C/State/Loading`、`C/Nav/Mobile` 三個母版後，以 token theme 切換 `Suite x Mode` 的四種組合與 `Device` 的三種尺寸，三個母版解析出的色彩與 `docs/mockup/themes/variables.json` 一致。
-PR-FILE-21 — 單一連續 MCP 工作階段至少 500 次寫入呼叫，加上至少 1 小時的手動編輯，全程不當機。
-PR-FILE-22 — 試點期間至少取樣 6 次瀏覽器分頁記憶體（起點、每 100 次寫入、終點），數據記錄在 `docs/delivery-verification.md`，並由使用者判定記憶體是否趨於平穩而非隨編輯次數線性成長。
+PR-FILE-21 — 單一連續 MCP 工作階段至少 500 次寫入呼叫，加上至少 1 小時的手動編輯，全程不當機。 — retired：使用者決定不做長時間編輯的壓力測試（2026-10-30），穩定度不在試點驗收內。
+PR-FILE-22 — 試點期間至少取樣 6 次瀏覽器分頁記憶體（起點、每 100 次寫入、終點），數據記錄在 `docs/delivery-verification.md`，並由使用者判定記憶體是否趨於平穩而非隨編輯次數線性成長。 — retired：隨 PR-FILE-21 一併不做（2026-10-30）。
 PR-FILE-23 — 試點檔匯出的 `.penpot` 能由腳本離線解析出母版名稱與數量。
-PR-FILE-24 — 試點四項（PR-FILE-20 至 23）逐項通過與否與實測數字記錄在 `docs/delivery-verification.md`；任一項未通過就停止，不進入階段二，並重新討論（ADR 0008）。
+PR-FILE-24 — 試點仍有效的兩項（PR-FILE-20、23）逐項通過與否與實測數字記錄在 `docs/delivery-verification.md`；任一項未通過就停止，不進入階段二，並重新討論（ADR 0008）。
 
 ### 階段二：切換（僅在 PR-FILE-24 全部通過後）
 
@@ -61,8 +61,8 @@ PR-FILE-09（修訂）— ADR 0008 的狀態為 `Accepted`；ADR 0003 的狀態�
 
 ## Open questions
 
+- Penpot 是否比 OpenPencil 穩定沒有驗證：長時間編輯的壓力測試（PR-FILE-21、22）已由使用者決定不做。這是 ADR 0008 立論的原因（記憶體累積後當機），切換後若在 Penpot 也遇到同樣的當機，要重新評估。
 - 使用端匯入強調色：`scripts/design/import-accent.js` 靠 OpenPencil 離線 CLI，Penpot 沒有等價路徑。要改為產生強調色 token JSON 讓使用端匯入，還是別的做法，由階段二設計前確認，並影響 PR-FILE-19 的文字。
-- PR-FILE-22「趨於平穩」的數值判準：目前由使用者看數據判定，沒有門檻；是否改成明確數值，等取得第一批數據再訂。
 - 現有「節點數低於 10,000」的限制來自 OpenPencil MCP，PR-FILE-18 修訂時已拿掉；Penpot 是否需要類似上限，等試點觀察。
 - token theme 是否能表達 `Suite x Mode`，且不重演 ISSUE-015（只切一組就漏掉其他）；兩個 theme 群組（`Suite x Mode`、`Device`）各自啟用一個即可，是否成立要試點證實。
   - 試點結果（ISSUE-018、019）：三個母版在 Suite x Mode 四種與 Device 三種共 12 組切換後，解析色彩與 `variables.json` 全等，沒有漏掉其中一組；兩個群組各啟用一個 theme 可行。PR-FILE-20 的解析值比對到此完成；載入圖片是替身，使用者人眼抽查尚未做。

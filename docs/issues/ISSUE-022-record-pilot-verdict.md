@@ -1,10 +1,10 @@
 # 記錄試點結論並決定是否切換
 
-Blocked by: ISSUE-019, ISSUE-020, ISSUE-021
+Blocked by: ISSUE-019, ISSUE-020
 
 ## Done when
 
-- `docs/delivery-verification.md` 逐項記錄 PR-FILE-20 至 23 通過與否和實測數字（PR-FILE-24）。
+- `docs/delivery-verification.md` 逐項記錄 PR-FILE-20 與 23 通過與否和實測數字（PR-FILE-24）；明列 PR-FILE-21、22 已 retired，穩定度未驗證。
 - 任一項未通過就停止，並整理失敗原因交回使用者重新討論。
 - 全部通過就更新 ISSUE-017 的 Open questions，並列出階段二要切的票。
 
@@ -14,7 +14,7 @@ Blocked by: ISSUE-019, ISSUE-020, ISSUE-021
 
 ## Blocked by
 
-ISSUE-019, ISSUE-020, ISSUE-021
+ISSUE-019, ISSUE-020
 
 ## Notes
 

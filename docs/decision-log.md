@@ -67,3 +67,4 @@
 2026-10-30 — OpenPencil 產物（`.fig`、`scripts/design/` 的 4 支腳本與測試、`fig-variables.spec.ts`）在 Penpot 版落地的同一個 PR 刪除，不留備份；沿用 ADR 0003 對 `.pen` 的先例。
 2026-10-30 — Penpot 自架設定只以文件放進 repo（版本、啟動步驟、MCP 外掛安裝），不放含密鑰的 compose 檔，因為 repo 已公開。
 2026-10-30 — GLOSSARY 的 元件庫設計檔、畫布頁、設計變數 先不改，等 Penpot 版落地時同一個變更改寫，因為詞彙表只寫現行為真；待改項目記在 ADR 0008 的 Consequences。
+2026-10-30 — 使用者決定不做 Penpot 試點的長時間編輯壓力測試（ISSUE-021，PR-FILE-21、22 retired）；試點只驗證 theme 切換與匯出檔離線解析。代價是 Penpot 是否比 OpenPencil 穩定沒有證據，切換後若遇到同樣的當機要重新評估；風險記在 ISSUE-017 的 Open questions。

@@ -10,7 +10,7 @@ ADR 0004 stands in principle: the DTCG token files in `packages/tokens` stay the
 
 ## Pilot
 
-Done in a scratch Penpot file with the design variables and three masters (`C/Button/Primary`, `C/State/Loading`, `C/Nav/Mobile`). All four must hold:
+Done in a scratch Penpot file with the design variables and three masters (`C/Button/Primary`, `C/State/Loading`, `C/Nav/Mobile`). Items 1 and 4 must hold. Items 2 and 3 were waived by the owner on 2026-10-30, so stability is not verified by the pilot:
 
 1. The four `Suite x Mode` combinations and the three `Device` sizes switch by token theme and resolve the right colours.
 2. One continuous MCP session of at least 500 write calls, plus at least one hour of manual editing, without a crash. The two numbers are estimates, not measured limits.
