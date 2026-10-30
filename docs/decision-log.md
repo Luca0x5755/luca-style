@@ -57,3 +57,4 @@
 2026-10-30 — 使用者接受 Penpot 的陰影「關閉」以零偏移、零模糊、透明度 0 的 shadow token 表示（PR-FILE-33）；Penpot 沒有真正的 off。
 2026-10-30 — 匯出檔除 `.penpot` 外另提交正規化文字 dump 供審查與驗證，兩者不一致時檢查失敗（PR-FILE-32，修訂 ADR 0008）；`.penpot` 仍是使用端複製的檔案，因為 dump 無法匯回 Penpot。原因：匯出檔是位元組不穩定的二進位 zip，審查時看不到差異。
 2026-10-30 — 清掉設計稿工具轉換（Pencil → OpenPencil → Penpot）的過程紀錄，只保留現行資訊；舊紀錄見 git 歷史。這是對本檔 append-only 規則的一次例外，由使用者要求。
+2026-10-30 — `docs/delivery-verification.md` 只寫現況（承諾由哪個測試覆蓋、怎麼重現、仍有效的限制），一次性的實跑結果與審查痕跡交給 CI 與 git 歷史，因為寫死的結果會過時（文件曾寫 25 passed，實際已是 257）。
