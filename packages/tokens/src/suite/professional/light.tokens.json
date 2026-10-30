@@ -25,7 +25,7 @@
     "$description": "點綴色，用於次要強調與裝飾。設計檔中名為 secondary",
     "$extensions": {
       "luca-style": {
-        "figName": "secondary"
+        "designName": "secondary"
       }
     }
   },

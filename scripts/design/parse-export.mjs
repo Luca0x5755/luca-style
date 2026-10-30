@@ -1,4 +1,4 @@
-// 離線解析 Penpot 匯出檔（ISSUE-020 試點、ISSUE-023 正式化，PR-FILE-23）。
+// 離線解析 Penpot 匯出檔（PR-FILE-23）。
 // 離線讀取 Penpot 匯出的 `.penpot`（zip），列出母版名稱與數量，另列 token set、theme 與每個形狀的 token 綁定。
 // 匯出檔是不受信任的資料：只在記憶體內解開，不寫檔、不執行其中任何內容。
 // 用法：node scripts/design/parse-export.mjs <匯出檔.penpot> [--json]

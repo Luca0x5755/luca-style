@@ -15,7 +15,7 @@ const { values: args } = parseArgs({ options: {
 } });
 const source = resolve(args.source);
 const out = resolve(args.out);
-const figPath = args.variables && resolve(args.variables);
+const designPath = args.variables && resolve(args.variables);
 const docPath = args.doc && resolve(args.doc);
 const penpotPath = args.penpot && resolve(args.penpot);
 
@@ -180,23 +180,23 @@ css.push(`@media(min-width:600px) { :root, [data-luca-theme] {\n${declarations(r
 css.push(`@media(min-width:1024px) { :root, [data-luca-theme] {\n${declarations(roleVariables('desktop'))}\n} }`);
 
 // 第五步：設計檔變數資料。程式變數與設計檔變數的聯集，以設計檔的軸（mode × suite × device）展開成 12 個組合。
-// 名稱：$extensions["luca-style"].figName（字體角色字級為群組上的 figSizeName）有給就用設計檔名稱，否則沿用 CSS 變數名。
+// 名稱：$extensions["luca-style"].designName（字體角色字級為群組上的 designSizeName）有給就用設計檔名稱，否則沿用 CSS 變數名。
 // 任何無法轉換的值都讓建置失敗並指出變數，不寫任何輸出。
-const figAxes = { mode: ['Light', 'Dark'], suite: ['Vibrant', 'Professional'], device: ['Desktop', 'Tablet', 'Mobile'] };
+const designAxes = { mode: ['Light', 'Dark'], suite: ['Vibrant', 'Professional'], device: ['Desktop', 'Tablet', 'Mobile'] };
 const title = word => word[0].toUpperCase() + word.slice(1);
-const figProblems = [];
+const designProblems = [];
 const firstFamily = stack => stack.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
 
 // 單一值轉成設計檔的型別與值；raw 是同一組合的「CSS 變數名 → 原始值」，用來解析 var(--x)。
-function toFig(token, raw, seen = []) {
+function toDesign(token, raw, seen = []) {
   const name = nameOf(token);
-  const fail = reason => (figProblems.push(`無法轉成設計檔變數：${name}（${reason}）`), undefined);
+  const fail = reason => (designProblems.push(`無法轉成設計檔變數：${name}（${reason}）`), undefined);
   const value = token.$value;
   const reference = typeof value === 'string' && value.match(/^var\(--([a-z0-9-]+)\)$/);
   if (reference) {
     const target = raw.get(reference[1]);
     if (!target || seen.includes(reference[1])) return fail(`參照 ${value} 無法解析`);
-    return toFig(target, raw, [...seen, name]);
+    return toDesign(target, raw, [...seen, name]);
   }
   switch (token.$type) {
     case 'color':
@@ -224,24 +224,24 @@ function toFig(token, raw, seen = []) {
   }
 }
 
-const figVariables = new Map();
+const designVariables = new Map();
 // 每個設計檔名稱只能由一個原始變數佔用；第二個佔用者會默默蓋掉前者的值，所以直接失敗。
 const claimedBy = new Map();
-const setFig = (name, combo, converted, origin) => {
+const setDesign = (name, combo, converted, origin) => {
   const owner = claimedBy.get(name) ?? origin;
   claimedBy.set(name, owner);
-  if (owner !== origin) figProblems.push(`無法轉成設計檔變數：${origin} 與 ${owner} 都對應到設計檔名稱 ${name}`);
+  if (owner !== origin) designProblems.push(`無法轉成設計檔變數：${origin} 與 ${owner} 都對應到設計檔名稱 ${name}`);
   if (!converted || owner !== origin) return;
-  const variable = figVariables.get(name) ?? { name, type: converted.type, values: {} };
-  if (variable.type !== converted.type) figProblems.push(`無法轉成設計檔變數：${name}（各組合的型別不一致）`);
+  const variable = designVariables.get(name) ?? { name, type: converted.type, values: {} };
+  if (variable.type !== converted.type) designProblems.push(`無法轉成設計檔變數：${name}（各組合的型別不一致）`);
   variable.values[combo] = converted.value;
-  figVariables.set(name, variable);
+  designVariables.set(name, variable);
 };
 for (const { suite, mode, allTokens } of themes) {
   const raw = new Map(allTokens.map(token => [nameOf(token), token]));
   for (const token of allTokens) {
-    const converted = toFig(token, raw);
-    for (const device of figAxes.device) setFig(ours(token).figName ?? nameOf(token), `${title(mode)}/${title(suite)}/${device}`, converted, nameOf(token));
+    const converted = toDesign(token, raw);
+    for (const device of designAxes.device) setDesign(ours(token).designName ?? nameOf(token), `${title(mode)}/${title(suite)}/${device}`, converted, nameOf(token));
   }
 }
 const typographySource = JSON.parse(await readFile(join(source, 'typography.tokens.json'), 'utf8'));
@@ -251,53 +251,53 @@ const devices = { desktop: 'Desktop', tablet: 'Tablet', mobile: 'Mobile' };
 const fixedSuffix = { weight: 'weight', lineHeight: 'line-height' };
 for (const token of typographyTokens) {
   const [role, field] = token.path;
-  const name = devices[field] ? ours(typographySource[role]).figSizeName ?? `type-${role}-size`
+  const name = devices[field] ? ours(typographySource[role]).designSizeName ?? `type-${role}-size`
     : fixedSuffix[field] && `type-${role}-${fixedSuffix[field]}`;
-  if (!name) { figProblems.push(`無法轉成設計檔變數：${role}.${field}（不認得的字體角色欄位）`); continue; }
-  const converted = toFig({ ...token, path: [name] }, new Map());
-  for (const mode of figAxes.mode) for (const suite of figAxes.suite) for (const device of figAxes.device) {
-    if (!devices[field] || devices[field] === device) setFig(name, `${mode}/${suite}/${device}`, converted, `${role}.${devices[field] ? 'size' : field}`);
+  if (!name) { designProblems.push(`無法轉成設計檔變數：${role}.${field}（不認得的字體角色欄位）`); continue; }
+  const converted = toDesign({ ...token, path: [name] }, new Map());
+  for (const mode of designAxes.mode) for (const suite of designAxes.suite) for (const device of designAxes.device) {
+    if (!devices[field] || devices[field] === device) setDesign(name, `${mode}/${suite}/${device}`, converted, `${role}.${devices[field] ? 'size' : field}`);
   }
 }
-// 設計檔的集合與模式：Figma 一個節點在每個集合只持有一個模式，所以一個集合的模式只對應一組軸。
+// 設計檔的集合與模式：Penpot 的 token theme 在同一個群組內一次只啟用一個，所以一個集合的模式只對應一組軸。
 // 變數放進第一個涵蓋它「實際變化的軸」的集合：只依套系、只依明暗或兩者都依的，都放進模式為「套系 / 明暗」
 // 四種組合的 Suite x Mode，切換套系與明暗只設這一個集合（ISSUE-015）；不用別名拆集合，因匯出不解別名（ISSUE-004）。
 // 其他跨軸組合（例如明暗加裝置）無法建模，直接失敗。
-const figKey = (mode, suite, device) => `${mode}/${suite}/${device}`;
+const designKey = (mode, suite, device) => `${mode}/${suite}/${device}`;
 // 順序有意義：find 取第一個涵蓋的集合，所以軸少的在前（Base 必須第一個，否則常數會落進別的集合）。
-const figCollections = [
+const designCollections = [
   { name: 'Base', axes: [], modes: ['Default'] },
-  { name: 'Device', axes: ['device'], modes: figAxes.device },
-  { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: figAxes.suite.flatMap(suite => figAxes.mode.map(mode => `${suite} / ${mode}`)) },
+  { name: 'Device', axes: ['device'], modes: designAxes.device },
+  { name: 'Suite x Mode', axes: ['suite', 'mode'], modes: designAxes.suite.flatMap(suite => designAxes.mode.map(mode => `${suite} / ${mode}`)) },
 ];
 // 某一軸上是否變化：固定其他兩軸的任一組合，換這一軸的值就得到不同的值。
 const variesOn = (variable, axis) => {
-  const others = Object.keys(figAxes).filter(other => other !== axis);
-  return figAxes[others[0]].some(x => figAxes[others[1]].some(y =>
-    new Set(figAxes[axis].map(value => {
+  const others = Object.keys(designAxes).filter(other => other !== axis);
+  return designAxes[others[0]].some(x => designAxes[others[1]].some(y =>
+    new Set(designAxes[axis].map(value => {
       const pick = { [others[0]]: x, [others[1]]: y, [axis]: value };
-      return JSON.stringify(variable.values[figKey(pick.mode, pick.suite, pick.device)]);
+      return JSON.stringify(variable.values[designKey(pick.mode, pick.suite, pick.device)]);
     })).size > 1));
 };
-for (const variable of figVariables.values()) {
-  const varying = Object.keys(figAxes).filter(axis => variesOn(variable, axis));
-  const target = figCollections.find(collection => varying.every(axis => collection.axes.includes(axis)));
-  if (!target) figProblems.push(`無法轉成設計檔變數：${variable.name}（同時依 ${varying.join('、')} 變化，沒有對應的集合）`);
+for (const variable of designVariables.values()) {
+  const varying = Object.keys(designAxes).filter(axis => variesOn(variable, axis));
+  const target = designCollections.find(collection => varying.every(axis => collection.axes.includes(axis)));
+  if (!target) designProblems.push(`無法轉成設計檔變數：${variable.name}（同時依 ${varying.join('、')} 變化，沒有對應的集合）`);
   else variable.collection = target.name;
 }
-if (figProblems.length) {
-  console.error([...new Set(figProblems)].join('\n'));
+if (designProblems.length) {
+  console.error([...new Set(designProblems)].join('\n'));
   process.exit(1);
 }
-const figData = {
+const designData = {
   $generated: '由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑；Penpot 設計檔以 npm run check:penpot 檢查。',
-  axes: figAxes,
-  collections: figCollections,
-  count: figVariables.size,
-  variables: [...figVariables.values()],
+  axes: designAxes,
+  collections: designCollections,
+  count: designVariables.size,
+  variables: [...designVariables.values()],
 };
 
-// 第五之二步：Penpot 可匯入的 token JSON（ISSUE-018、PR-FILE-25）。取自上面已解析的 figVariables，不另算值。
+// 第五之二步：Penpot 可匯入的 token JSON（ISSUE-018、PR-FILE-25）。取自上面已解析的 designVariables，不另算值。
 // 結構：Base 一個共用 set；Suite x Mode 群組 4 個 set、Device 群組 3 個 set，各群組每個 theme 只啟用一個 set，
 // 兩個群組各啟用一個即可同時切套系明暗與裝置。Penpot 沒有布林與一般字串型別，suite-label 不輸出；elevation-enabled 改以 shadow token metric-shadow 輸出。
 const penpotTypeOf = variable => {
@@ -319,7 +319,7 @@ const penpotValueOf = (variable, combo) => {
   if (variable.type === 'color' || variable.type === 'string') return value;
   return penpotTypeOf(variable) === 'opacity' ? `${value}%` : String(value);
 };
-const penpotSet = (collection, combo) => Object.fromEntries([...figVariables.values()]
+const penpotSet = (collection, combo) => Object.fromEntries([...designVariables.values()]
   .filter(variable => variable.collection === collection && penpotTypeOf(variable))
   .map(variable => [variable.name, { $value: penpotValueOf(variable, combo), $type: penpotTypeOf(variable) }]));
 // 陰影開關：Penpot 沒有布林，elevation-enabled 以 shadow token 表示（ISSUE-024、PR-FILE-33）。
@@ -339,11 +339,11 @@ const addPenpotTheme = (group, name, setName, set) => {
   penpotOrder.push(setName);
   penpotThemes.push({ id: `${group}-${name}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name, group, selectedTokenSets: { Base: 'enabled', [setName]: 'enabled' } });
 };
-for (const suite of figAxes.suite) for (const mode of figAxes.mode) {
+for (const suite of designAxes.suite) for (const mode of designAxes.mode) {
   addPenpotTheme('Suite x Mode', `${suite} / ${mode}`, `Suite x Mode/${suite}-${mode}`,
     { ...penpotSet('Suite x Mode', `${mode}/${suite}/Desktop`), 'metric-shadow': { $value: penpotShadowOf(suite, mode), $type: 'shadow' } });
 }
-for (const device of figAxes.device) addPenpotTheme('Device', device, `Device/${device}`, penpotSet('Device', `Light/Vibrant/${device}`));
+for (const device of designAxes.device) addPenpotTheme('Device', device, `Device/${device}`, penpotSet('Device', `Light/Vibrant/${device}`));
 const penpotFile = { ...penpotData, $themes: penpotThemes, $metadata: { tokenSetOrder: penpotOrder } };
 
 // 第六步：給代理讀的設計變數規格文件。內容全部取自上面已解析（含推算）的 allTokens 與 typography，不另存手寫的值。
@@ -404,9 +404,9 @@ if (docPath) {
   await mkdir(dirname(docPath), { recursive: true });
   await writeFile(docPath, docText);
 }
-if (figPath) {
-  await mkdir(dirname(figPath), { recursive: true });
-  await writeFile(figPath, JSON.stringify(figData, null, 1) + '\n');
+if (designPath) {
+  await mkdir(dirname(designPath), { recursive: true });
+  await writeFile(designPath, JSON.stringify(designData, null, 1) + '\n');
 }
 if (penpotPath) {
   await mkdir(dirname(penpotPath), { recursive: true });

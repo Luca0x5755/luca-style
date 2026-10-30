@@ -1,4 +1,4 @@
-// parse-export.mjs 的測試（源自 ISSUE-020 試點，ISSUE-023 搬到 scripts/design/）：夾具由 fixtures/minimal-export.json 即時組成 zip，不提交真實匯出檔。
+// parse-export.mjs 的測試（PR-FILE-23）：夾具由 fixtures/minimal-export.json 即時組成 zip，不提交真實匯出檔。
 // 執行：node --test scripts/design/parse-export.test.mjs
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';

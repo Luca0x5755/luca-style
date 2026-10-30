@@ -17,7 +17,7 @@
 | 巢狀主題 | CSS 選擇器可巢狀，Provider 各自存偏好 | `<Theme>` 繼承 | 無 | ConfigProvider 繼承 | Provider 繼承 | zone＋layer | data 屬性 | 條件 |
 | 偏好保存 | 元件庫負責 | 交給 app | 交給 app | 交給 app | 交給 app | 交給 app | 交給 app | 交給 app |
 | 行為／a11y 層 | 自寫 | Radix Primitives | Radix／Base UI／Aria | 自寫 | React Aria | 自寫 | 自寫 | Ark／Zag |
-| 設計檔正本 | `.fig` 為正本，人工同步＋核對 | 無官方檔 | 無官方檔 | Sketch，不同步 | Tokens Studio→資料，轉向資料為正本 | DTCG 為正本，Code Connect | 程式→Figma 單向，Code Connect | Figma 套件，人工 |
+| 設計檔正本 | Penpot 匯出檔為設計稿，token 由程式產生，人工核對 | 無官方檔 | 無官方檔 | Sketch，不同步 | Tokens Studio→資料，轉向資料為正本 | DTCG 為正本，Code Connect | 程式→Figma 單向，Code Connect | Figma 套件，人工 |
 | a11y 自動測試 | 無 axe | 無 | 無 | jest-axe | axe-playwright、forced-colors | IBM checker、92 支 avt | 每 story×9 主題跑 axe | vitest＋axe |
 | 視覺回歸 | 僅 README 4 張 | 219 張截圖 | 未見 | 三套演算法各拍 | Chromatic 兩套 | Chromatic | VRT＋色票 | 未見 |
 | 給 AI 的文件 | AGENTS.md | AGENTS.md、Context7 | MCP、Skill＋evals、/llm | llms.txt、DESIGN.md、MCP | MCP、skills | AGENTS.md、產生的 token 表 | MCP、`$extensions.llm`、規格文件 | 分主題 llms.txt、MCP |
@@ -43,7 +43,7 @@
 |---|---|---|
 | 0001 一個專案只選一套風格套系 | 正面：shadcn 與 Park UI 都是 init 時選一次。反面：Radix、Ant、Spectrum 把密度與圓角做成獨立軸 | 「每專案選一次」有支持；「密度與外形綁死在套系」缺乏支持。調和做法是把套系改成「一組軸的具名預設值」 |
 | 0002 語意狀態色與業務資料色分離 | Carbon、Primer、shadcn、Spectrum 都把資料視覺化色與狀態色分開，沒有反例 | 強化 |
-| 0003 `.fig` 為正本、母版雙份、人工同步 | 7 家都沒有以設計檔為正本；Primer 從程式單向匯出到設計工具；Spectrum 淘汰拆開的母版 | 受到明顯挑戰，特別是 token 這一段 |
+| 0004 設計檔不是變數正本，0007 母版只留一份 | 7 家都沒有以設計檔為正本；Primer 從程式單向匯出到設計工具；Spectrum 淘汰拆開的母版 | 已採納：變數正本改為 DTCG 原始檔（0004） |
 
 ## 本專案已領先的地方
 

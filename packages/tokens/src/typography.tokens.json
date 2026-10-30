@@ -2,7 +2,7 @@
   "hero": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-hero"
+        "designSizeName": "fs-hero"
       }
     },
     "mobile": {
@@ -34,7 +34,7 @@
   "title": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-title"
+        "designSizeName": "fs-title"
       }
     },
     "mobile": {
@@ -66,7 +66,7 @@
   "section": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-section"
+        "designSizeName": "fs-section"
       }
     },
     "mobile": {
@@ -98,7 +98,7 @@
   "card": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-card"
+        "designSizeName": "fs-card"
       }
     },
     "mobile": {
@@ -130,7 +130,7 @@
   "body": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-body"
+        "designSizeName": "fs-body"
       }
     },
     "mobile": {
@@ -189,7 +189,7 @@
   "secondary": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-small"
+        "designSizeName": "fs-small"
       }
     },
     "mobile": {
@@ -221,7 +221,7 @@
   "helper": {
     "$extensions": {
       "luca-style": {
-        "figSizeName": "fs-label"
+        "designSizeName": "fs-label"
       }
     },
     "mobile": {

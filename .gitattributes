@@ -1,4 +1,4 @@
-# 主題資料的位元組數記在 docs/delivery-verification.md，並由腳本比對；不做換行轉換。
+# docs/mockup/themes 的 variables.json 與 penpot-tokens.json 由 npm run generate 產生，測試逐位元組比對已提交檔與重新產生的結果；不做換行轉換。
 docs/mockup/themes/* -text
 # 元件庫設計檔是二進位 zip：不做換行或文字轉換（ISSUE-027）。
 docs/mockup/*.penpot binary

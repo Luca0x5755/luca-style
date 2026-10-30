@@ -91,8 +91,8 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 
 使用端的設計稿從元件庫設計檔複製開始（ADR 0007、0008）：檔案含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準。
 
-**匯入會取代整個 token 庫（實測，2026-10-30）：** Penpot 的 Tokens 面板「工具 > 匯入」不是合併，而是用匯入檔取代設計檔現有的全部 token set 與 theme。所以強調色腳本輸出的是**完整檔**（`penpot-tokens.json` 全部內容加上強調色 set），不是只含強調色的增量檔；匯入後設計變數不會消失。代價：你在複本裡手動加的 token 會被取代，設計變數只在 luca-style 的 DTCG 來源改（ADR 0004），不在 Penpot 內手改。
-**完整檔匯入實測（2026-10-30）：** 匯入 `accent.tokens.json` 後再從 Penpot 匯出 token，12 個 set 都在，`Project Accent/*` 排在最後，7 個 theme 的 set 引用正確，強調色 token 與腳本輸出逐值相同；匯入後只啟用了一個 `Suite x Mode` theme，沒有啟用 `Device` theme，要自己選。**尚未驗證：** 母版畫面是否顯示新強調色（沒有目視）；「產生 token JSON、在 Penpot 手動匯入」這個管道是建議做法，使用者尚未最後確認。
+**匯入會取代整個 token 庫：** Penpot 的 Tokens 面板「工具 > 匯入」不是合併，而是用匯入檔取代設計檔現有的全部 token set 與 theme。所以強調色腳本輸出的是**完整檔**（`penpot-tokens.json` 全部內容加上強調色 set），不是只含強調色的增量檔；匯入後設計變數不會消失。代價：你在複本裡手動加的 token 會被取代，設計變數只在 luca-style 的 DTCG 來源改（ADR 0004），不在 Penpot 內手改。
+**匯入後要自己選 theme：** 匯入後只會啟用一個 `Suite x Mode` theme，不會啟用 `Device` theme。**尚未驗證：** 母版畫面是否顯示新強調色（沒有目視）。
 
 前提：需要一份 luca-style 檢出，並先在檢出內執行 `npm ci` 與 `npm run generate`（產生腳本從 `packages/tokens/dist/tokens.json` 取各套系的中性色）。腳本與設計檔都不在 npm 套件內，不能只靠安裝 `@luca-style/react`。
 
@@ -105,7 +105,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' --out accent.tokens.json
 ```
 
-腳本呼叫與 `ThemeProvider` 同一份 `deriveAccent`，輸出**完整檔**：`penpot-tokens.json` 的全部內容（Base、4 個 `Suite x Mode` set、3 個 `Device` set、7 個 theme），再加 4 個新 set `Project Accent/{Vibrant,Professional}-{Light,Dark}`，各含 `accent`、`secondary`（點綴色）、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring` 六個 token；4 個 `Suite x Mode` theme 各多啟用對應的 Project Accent set，Project Accent set 排在 `tokenSetOrder` 最後。成功、警告、錯誤色與其他變數不動（ADR 0002）。
+不給 `--out` 時輸出到 stdout。腳本呼叫與 `ThemeProvider` 同一份 `deriveAccent`，輸出**完整檔**：`penpot-tokens.json` 的全部內容（Base、4 個 `Suite x Mode` set、3 個 `Device` set、7 個 theme），再加 4 個新 set `Project Accent/{Vibrant,Professional}-{Light,Dark}`，各含 `accent`、`secondary`（點綴色）、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring` 六個 token；4 個 `Suite x Mode` theme 各多啟用對應的 Project Accent set，Project Accent set 排在 `tokenSetOrder` 最後。成功、警告、錯誤色與其他變數不動（ADR 0002）。
 3. 在 Penpot 左邊的 Tokens 面板，點右下角的「工具」，選「匯入」，選 `accent.tokens.json`。匯入會取代整個 token 庫，匯入前先備份複本。匯入後切換一次 theme，讓畫面套用新色（實測以 API 重建 set 時，已啟用的 theme 要切走再切回才更新）。
 
 匯入後母版畫面應顯示這組強調色（主要按鈕、滑過、焦點框、Select 選單等）。`accent-pressed` 沒有對應的按下狀態母版，只存在於變數；畫稿需要按下色時綁這個變數。
