@@ -888,7 +888,9 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 
 因此 `scripts/design/penpot-accent.mjs` 改為輸出完整檔：`penpot-tokens.json` 全部內容加 4 個 Project Accent set，4 個 Suite x Mode theme 各多啟用對應的 set，Project Accent set 排在 `tokenSetOrder` 最後；先前只產生 4 個 set 的邏輯保留為 `buildAccentSets`。離線測試 `node --test scripts/design/penpot-accent.test.mjs`：18 項通過，涵蓋 6 組輸入逐值比對 `deriveAccent`、完整檔保留 `penpot-tokens.json` 全部 set 與 Device theme、4 個 theme 的 set 引用與排序、缺 theme 的 base 丟錯、命令列結束碼與連跑位元組相同。
 
-**未驗證。** 完整檔匯入後 Penpot 實際的 set 排序與 theme 啟用狀態；匯入完整檔後母版是否顯示新強調色。使用者尚未用完整檔再匯入一次。
+**完整檔匯入實測。** 使用者用完整檔（強調色 `#B5179E`）匯入後，在 Penpot 匯出 token（`tokens (1).json`，不進 repo）：12 個 set 都在（Base 39、Suite x Mode 各 29、Device 各 3、Project Accent 各 6），`tokenSetOrder` 與腳本輸出完全相同（Project Accent 在最後），7 個 theme 的 id 與 set 引用與腳本輸出完全相同；188 筆 token 中 180 筆值與型別與 `accent.tokens.json` 相同，其餘 8 筆是 Penpot 的正規化寫法（`fontFamilies` 值由字串變成陣列、`metric-shadow` 由物件變成陣列，值本身相同）。匯出的 `$metadata` 顯示匯入後啟用的 theme 只有 `Suite x Mode/Vibrant / Dark`，沒有啟用任何 `Device` theme。
+
+**未驗證。** 母版畫面是否顯示新強調色（沒有目視）；Device theme 沒有啟用是匯入造成，或是使用者匯入前的狀態，沒有區分（使用者先前還原後 `Device/Mobile` 就已經沒啟用）。
 
 ## Penpot：匯出並提交元件庫設計檔，離線檢查（ISSUE-027，PR-FILE-16、18、26、27、32）
 

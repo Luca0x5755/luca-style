@@ -90,7 +90,7 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 使用端的設計稿從元件庫設計檔複製開始（ADR 0007、0008）：檔案含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準。
 
 **匯入會取代整個 token 庫（實測，2026-10-30）：** Penpot 的 Tokens 面板「工具 > 匯入」不是合併，而是用匯入檔取代設計檔現有的全部 token set 與 theme。所以強調色腳本輸出的是**完整檔**（`penpot-tokens.json` 全部內容加上強調色 set），不是只含強調色的增量檔；匯入後設計變數不會消失。代價：你在複本裡手動加的 token 會被取代，設計變數只在 luca-style 的 DTCG 來源改（ADR 0004），不在 Penpot 內手改。
-**尚未驗證：** 完整檔匯入後 set 的排序與 theme 的啟用狀態（見下方〈匯入後檢查〉）；「產生 token JSON、在 Penpot 手動匯入」這個管道是建議做法，使用者尚未最後確認。
+**完整檔匯入實測（2026-10-30）：** 匯入 `accent.tokens.json` 後再從 Penpot 匯出 token，12 個 set 都在，`Project Accent/*` 排在最後，7 個 theme 的 set 引用正確，強調色 token 與腳本輸出逐值相同；匯入後只啟用了一個 `Suite x Mode` theme，沒有啟用 `Device` theme，要自己選。**尚未驗證：** 母版畫面是否顯示新強調色（沒有目視）；「產生 token JSON、在 Penpot 手動匯入」這個管道是建議做法，使用者尚未最後確認。
 
 前提：需要一份 luca-style 檢出，並先在檢出內執行 `npm ci` 與 `npm run generate`（產生腳本從 `packages/tokens/dist/tokens.json` 取各套系的中性色）。腳本與設計檔都不在 npm 套件內，不能只靠安裝 `@luca-style/react`。
 
@@ -108,10 +108,10 @@ node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' --out accen
 
 匯入後母版畫面應顯示這組強調色（主要按鈕、滑過、焦點框、Select 選單等）。`accent-pressed` 沒有對應的按下狀態母版，只存在於變數；畫稿需要按下色時綁這個變數。
 
-匯入後檢查（這一步尚未有人用完整檔走過）：
+匯入後檢查（set 排序與 theme 引用已實測正確，啟用狀態要自己確認）：
 
 - Tokens 面板的 set 應有 Base、`Suite x Mode`、`Device`，再加 `Project Accent`；`Project Accent/*` 要排在 `Suite x Mode` 各 set 之後（同名 token 後者覆蓋前者），順序不對時手動拖到後面。
-- 7 個 theme 都在，且每個群組各啟用一個（`Suite x Mode` 一個、`Device` 一個）；匯入可能把啟用狀態重設，缺了就手動選。
+- 7 個 theme 都在，且每個群組各啟用一個（`Suite x Mode` 一個、`Device` 一個）；匯入後 `Device` 沒有啟用任何 theme（實測），請手動選 Desktop、Tablet 或 Mobile 其中一個。
 - 備案：若匯入的結果不對，從備份的複本還原，或改為手動建立 4 個 set、貼入 6 個 token，並在 4 個 `Suite x Mode` theme 各啟用對應的 `Project Accent/*` set。
 - 還原強調色：重新匯入 luca-style 檢出內的 `docs/mockup/themes/penpot-tokens.json`（不含強調色），或在 4 個 theme 取消啟用並刪除 4 個 `Project Accent/*` set。
 
