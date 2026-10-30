@@ -693,6 +693,21 @@ node scripts/design/apply-bindings.js --check   # exit 0
 
 **暫存檔現況：** 頁面上三個母版（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`；Penpot 把名稱的斜線兩側補上空白）。token 沒有改動：探測用的 7 個 token 已刪除，8 個 set 的 token 數仍是 39、28x4、3x3。目前啟用 Professional / Dark 與 Mobile。
 
+## Penpot：以 shadow token 表示陰影開關（ISSUE-024，PR-FILE-33）
+
+2026-10-30，建置另外輸出 `metric-shadow`：每個 `Suite x Mode/*` set 一個 `shadow` token，值取自該套系與明暗已解析的 DTCG `metric-shadow`。開（Vibrant）為 `0 4px 16px #00000008`，輸出為 `offsetX 0、offsetY 4、blur 16、spread 0、color #00000008、inset false`；關（Professional，DTCG 為 `none`）為 `0/0/0/0、color #00000000`。離線測試（`tests/penpot-tokens.spec.ts`）以獨立的 `tokens.json` 比對 4 個組合，並驗證改 DTCG 陰影值會改 token。`elevation-enabled` 的設計檔布林輸出不變；已發布的 `@luca-style/tokens` 輸出不變（只有 `penpot-tokens.json` 重新產生）。
+
+**暫存檔驗證**（MCP `execute_code`，同日）：Penpot 沒有匯入 JSON 的外掛 API，所以以 `set.addToken({ type: 'shadow', name: 'metric-shadow', value: [組合物件] })` 對 4 個 Suite x Mode set 各加一個 token（值逐欄與 `penpot-tokens.json` 相同，`inset` 為字串 `'false'`），不是實際匯入檔案；匯入該 JSON 的路徑未驗證。目前母版沒有綁陰影，所以建一塊探測板，先給一筆紅色 1/1/1 的陰影，再 `applyToken(token, ['shadow'])`（API 屬性 `shadow` 可用，綁定一次成功，`tokens` 讀回 `{ shadow: 'metric-shadow' }`）。依序切換 4 個 Suite x Mode theme（Device 維持 Mobile；每次切換後等 700 ms 讀回 `shadows`）：
+
+| Suite x Mode | 陰影筆數 | offsetX / offsetY / blur / spread | 顏色 | 不透明度 | hidden |
+| --- | --- | --- | --- | --- | --- |
+| Vibrant / Light | 1 | 0 / 4 / 16 / 0 | #000000 | 0.0314（8/255） | false |
+| Vibrant / Dark | 1 | 0 / 4 / 16 / 0 | #000000 | 0.0314 | false |
+| Professional / Light | 1 | 0 / 0 / 0 / 0 | #000000 | 0 | false |
+| Professional / Dark | 1 | 0 / 0 / 0 / 0 | #000000 | 0 | false |
+
+與 `variables.json` 的 `elevation-enabled`（Vibrant 開、Professional 關）和 DTCG 陰影值一致，4 組差異 0。限制：只驗證 Device 為 Mobile；「關」仍是一筆 `hidden: false` 的零值陰影（PR-FILE-33 已接受）；沒有目視。探測板已移除，4 個 Suite x Mode set 各留下 `metric-shadow`，token 數由 28 變 29；目前啟用 Professional / Dark 與 Mobile。
+
 ## Penpot 試點：離線解析匯出檔（ISSUE-020，PR-FILE-23）
 
 2026-10-30，使用者手動從暫存檔「嗨嗨」匯出 `hihi.penpot`（34,111 bytes，41 個條目，`generatedBy: penpot/2.18.5-RC1`，匯出格式 `penpot/export-files` 版本 1）。匯出檔是不受信任的資料：另解到新的空目錄檢視，原檔未動；試點腳本只在記憶體內讀 zip。匯出檔不進 repo。

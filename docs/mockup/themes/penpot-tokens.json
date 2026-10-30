@@ -269,6 +269,17 @@
   "accent-soft": {
    "$value": "#E3F2F0",
    "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000008",
+    "offsetX": "0",
+    "offsetY": "4",
+    "blur": "16",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
   }
  },
  "Suite x Mode/Vibrant-Dark": {
@@ -383,6 +394,17 @@
   "accent-soft": {
    "$value": "#173637",
    "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000008",
+    "offsetX": "0",
+    "offsetY": "4",
+    "blur": "16",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
   }
  },
  "Suite x Mode/Professional-Light": {
@@ -497,6 +519,17 @@
   "accent-soft": {
    "$value": "#EEEDF4",
    "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000000",
+    "offsetX": "0",
+    "offsetY": "0",
+    "blur": "0",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
   }
  },
  "Suite x Mode/Professional-Dark": {
@@ -611,6 +644,17 @@
   "accent-soft": {
    "$value": "#2D2A3B",
    "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000000",
+    "offsetX": "0",
+    "offsetY": "0",
+    "blur": "0",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
   }
  },
  "Device/Desktop": {

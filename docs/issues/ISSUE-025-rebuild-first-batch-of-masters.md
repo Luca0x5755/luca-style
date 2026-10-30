@@ -21,3 +21,4 @@ ISSUE-024
 - 建置用的一次性腳本不進 repo。
 - 母版現在是 board，不是 component；先照 board，轉換問題留給 ISSUE-027 匯出後觀察。
 - 結果寫進 `docs/delivery-verification.md` 的 Penpot 章節。
+- 綁陰影的母版名單（依 `bindings.json` 的 `effect.enabled`／`elevation-enabled`）：本批 13 個都沒有，不需綁 `metric-shadow`（唯一綁的是 `C/Card/Metric`，在 ISSUE-026）。

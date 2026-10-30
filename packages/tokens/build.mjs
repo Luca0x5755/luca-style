@@ -299,7 +299,7 @@ const figData = {
 
 // 第五之二步：Penpot 可匯入的 token JSON（ISSUE-018、PR-FILE-25）。取自上面已解析的 figVariables，不另算值。
 // 結構：Base 一個共用 set；Suite x Mode 群組 4 個 set、Device 群組 3 個 set，各群組每個 theme 只啟用一個 set，
-// 兩個群組各啟用一個即可同時切套系明暗與裝置。Penpot 沒有布林與一般字串型別，elevation-enabled、suite-label 不輸出。
+// 兩個群組各啟用一個即可同時切套系明暗與裝置。Penpot 沒有布林與一般字串型別，suite-label 不輸出；elevation-enabled 改以 shadow token metric-shadow 輸出。
 const penpotTypeOf = variable => {
   const { name, type } = variable;
   if (type === 'color') return 'color';
@@ -322,6 +322,15 @@ const penpotValueOf = (variable, combo) => {
 const penpotSet = (collection, combo) => Object.fromEntries([...figVariables.values()]
   .filter(variable => variable.collection === collection && penpotTypeOf(variable))
   .map(variable => [variable.name, { $value: penpotValueOf(variable, combo), $type: penpotTypeOf(variable) }]));
+// 陰影開關：Penpot 沒有布林，elevation-enabled 以 shadow token 表示（ISSUE-024、PR-FILE-33）。
+// 開為 DTCG 原陰影值；關（none）為零偏移、零模糊、透明度 0 的陰影。值取自該套系與明暗已解析的 metric-shadow。
+const penpotShadowOf = (suite, mode) => {
+  const css = themes.find(theme => title(theme.suite) === suite && title(theme.mode) === mode).allTokens.find(token => nameOf(token) === 'metric-shadow').$value;
+  if (css === 'none') return { color: '#00000000', offsetX: '0', offsetY: '0', blur: '0', spread: '0', inset: false };
+  const match = String(css).match(/^(-?[\d.]+)(?:px)?\s+(-?[\d.]+)(?:px)?\s+(-?[\d.]+)(?:px)?\s+(?:(-?[\d.]+)(?:px)?\s+)?(#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?)$/);
+  if (!match) { console.error(`無法轉成 Penpot shadow token：metric-shadow（${css} 不是「x y 模糊 [擴散] #色碼」）`); process.exit(1); }
+  return { color: match[5].toUpperCase(), offsetX: match[1], offsetY: match[2], blur: match[3], spread: match[4] ?? '0', inset: false };
+};
 const penpotData = { Base: penpotSet('Base', 'Light/Vibrant/Desktop') };
 const penpotThemes = [];
 const penpotOrder = ['Base'];
@@ -331,7 +340,8 @@ const addPenpotTheme = (group, name, setName, set) => {
   penpotThemes.push({ id: `${group}-${name}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'), name, group, selectedTokenSets: { Base: 'enabled', [setName]: 'enabled' } });
 };
 for (const suite of figAxes.suite) for (const mode of figAxes.mode) {
-  addPenpotTheme('Suite x Mode', `${suite} / ${mode}`, `Suite x Mode/${suite}-${mode}`, penpotSet('Suite x Mode', `${mode}/${suite}/Desktop`));
+  addPenpotTheme('Suite x Mode', `${suite} / ${mode}`, `Suite x Mode/${suite}-${mode}`,
+    { ...penpotSet('Suite x Mode', `${mode}/${suite}/Desktop`), 'metric-shadow': { $value: penpotShadowOf(suite, mode), $type: 'shadow' } });
 }
 for (const device of figAxes.device) addPenpotTheme('Device', device, `Device/${device}`, penpotSet('Device', `Light/Vibrant/${device}`));
 const penpotFile = { ...penpotData, $themes: penpotThemes, $metadata: { tokenSetOrder: penpotOrder } };

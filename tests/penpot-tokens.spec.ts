@@ -78,6 +78,53 @@ test('every Device set carries the font sizes of that device in pixels', async (
   }
 });
 
+// ISSUE-024／PR-FILE-33：布林 elevation-enabled 在 Penpot 以 shadow token 表示。
+// 期望值取自獨立的 tokens.json（每個套系與明暗的 metric-shadow CSS 字串），不從輸出檔自己推。
+type ShadowValue = { color: string; offsetX: string; offsetY: string; blur: string; spread: string };
+
+// 解析 CSS 陰影字串 `<x> <y> <blur> [<spread>] <color>`；none 以 undefined 表示。
+function parseCssShadow(css: string) {
+  if (css === 'none') return undefined;
+  const [offsetX, offsetY, blur, ...rest] = css.split(/\s+/);
+  const color = rest.pop()!;
+  return { offsetX: Number.parseFloat(offsetX), offsetY: Number.parseFloat(offsetY), blur: Number.parseFloat(blur), spread: Number.parseFloat(rest[0] ?? '0'), color };
+}
+// 十六進位色的透明度（0 到 1）；六碼視為不透明。
+const alphaOf = (hex: string) => (hex.length === 9 ? Number.parseInt(hex.slice(7), 16) / 255 : 1);
+
+test('every Suite x Mode set carries a shadow token: the DTCG shadow when on, zero offset and blur with alpha 0 when off', async () => {
+  const { file, data } = await generatePenpot();
+  const seen = new Set<string>();
+  for (const suite of suites) for (const mode of modes) {
+    const token = tokensOf(file!, `Suite x Mode/${title(suite)}-${title(mode)}`)['metric-shadow'];
+    expect(token, `${suite}/${mode} 缺 metric-shadow`).toBeDefined();
+    expect(token.$type).toBe('shadow');
+    const value = token.$value as unknown as ShadowValue;
+    const expected = parseCssShadow(data![suite][mode]['metric-shadow']);
+    seen.add(expected ? 'on' : 'off');
+    if (expected) {
+      expect([value.offsetX, value.offsetY, value.blur, value.spread].map(Number)).toEqual([expected.offsetX, expected.offsetY, expected.blur, expected.spread]);
+      expect(value.color.toUpperCase()).toBe(expected.color.toUpperCase());
+    } else {
+      expect([value.offsetX, value.offsetY, value.blur, value.spread].map(Number)).toEqual([0, 0, 0, 0]);
+      expect(alphaOf(value.color)).toBe(0);
+    }
+  }
+  // 開與關兩種都要出現，否則測試沒有驗到開關。
+  expect([...seen].sort()).toEqual(['off', 'on']);
+});
+
+test('changing the DTCG shadow changes the shadow token for the suites that use it', async () => {
+  const { file } = await generatePenpot(async source => {
+    const path = join(source, 'shape/rounded.tokens.json');
+    const tokens = await readJson(path);
+    tokens['metric-shadow'].$value = '2px 6px 20px #11223344';
+    await writeFile(path, JSON.stringify(tokens));
+  });
+  const value = tokensOf(file!, 'Suite x Mode/Vibrant-Light')['metric-shadow'].$value as unknown as ShadowValue;
+  expect([value.offsetX, value.offsetY, value.blur, value.color.toUpperCase()]).toEqual(['2', '6', '20', '#11223344']);
+});
+
 test('changing a DTCG colour changes the Penpot token JSON for that combination only', async () => {
   const { file } = await generatePenpot(async source => {
     const path = join(source, 'suite/vibrant/light.tokens.json');
