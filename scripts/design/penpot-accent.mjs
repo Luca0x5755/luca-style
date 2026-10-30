@@ -70,7 +70,8 @@ export function buildAccentTokens(input, tokenData, base) {
     const added = Object.keys(extra.selectedTokenSets).filter((name) => name.startsWith('Project Accent/'));
     return { ...theme, selectedTokenSets: { ...theme.selectedTokenSets, ...Object.fromEntries(added.map((name) => [name, 'enabled'])) } };
   });
-  const { $themes, $metadata, ...baseSets } = base;
+  const { $metadata } = base;
+  const baseSets = Object.fromEntries(Object.entries(base).filter(([key]) => key !== '$themes' && key !== '$metadata'));
   const kept = $metadata.tokenSetOrder.filter((name) => !accentSets.includes(name));
   return { ...baseSets, ...Object.fromEntries(accentSets.map((name) => [name, accent[name]])), $themes: themes, $metadata: { ...$metadata, tokenSetOrder: [...kept, ...accentSets] } };
 }
