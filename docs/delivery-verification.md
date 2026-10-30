@@ -926,3 +926,31 @@ node --test scripts/design/check-penpot.test.mjs
 **開放問題「路徑與檔名」的決定。** `docs/mockup/luca-style-library.penpot` 與 `docs/mockup/luca-style-library.dump.json`（沿用 `penpot-dump.mjs` 的預設輸出名，不另加 `--out`）。
 
 **未驗證。** 元件表示；兩次匯出的決定性；`C/Card/Metric` 單邊描邊寬的 Penpot 表示（ISSUE-026 留給本票之後決定，這張票沒有處理，維持接受差異）。
+
+## Penpot：退役 OpenPencil 產物與設計檔檢查總覽（ISSUE-029，PR-FILE-06、07、08、28）
+
+2026-10-30。這一章記錄 Penpot 版元件庫設計檔 `docs/mockup/luca-style-library.penpot` 的檢查指令與結果（PR-FILE-06），以及 OpenPencil 產物退場的範圍。過往章節（含 `.fig`、`check-masters.js` 等當時的指令）是歷史記錄，不改。
+
+**檢查指令與結果（退場後）。**
+
+| 指令 | 結果 |
+| --- | --- |
+| `npm run check:penpot` | 通過：23 個母版名稱與綁定、各 theme 組合的解析值與 `variables.json`、`penpot-tokens.json` 一致；`docs/mockup/luca-style-library.dump.json` 與匯出檔一致 |
+| `node --test scripts/design/*.test.mjs` | 94 項通過、0 失敗 |
+| `npm test` | 257 passed（Playwright，2.4 分鐘）；退場前基準同為 257 passed |
+| `npm run typecheck`、`npm run lint` | 無輸出錯誤，結束碼 0 |
+| `npm run generate` | 產出與已提交檔案相同，唯一差異是 `variables.json` 的 `$generated` 字串（不再指向已刪除的 `apply-variables.js`），已一併提交 |
+
+`npm test` 內的 `tests/penpot-library.spec.ts` 以兩個獨立測試執行 `npm run check:penpot` 與 `scripts/design/*.test.mjs`，所以 CI 的 verify job 會跑。
+
+**人眼抽查（誠實記錄）。** 做過的只有 Penpot 內以 `export_shape` 取的少量樣本，沒有全面核對：`C/Field/Error` 一張（ISSUE-026）、`C/Select/Open` 與 `C/State/Loading` 各一張（ISSUE-027 前後，後者只看到深灰替身圖）。`export_shape` 取整頁逾時失敗，沒有整頁目視；沒有逐板、逐 theme 組合目視。**23 個母版的全面人眼核對尚未做，是交接項目**：需要使用者在 Penpot 內逐一看過 23 個母版在四種 Suite x Mode 與三種 Device 下的樣子，並判定是否可接受；在此之前，「母版顯示正確」只由 `check:penpot` 對綁定與 token 值的離線比對支持，不含實際渲染。
+
+**刪除了什麼（PR-FILE-08、28）。** `docs/mockup/luca-style-library.fig`；`scripts/design/` 的 `apply-bindings.js`、`apply-variables.js`、`check-masters.js`、`import-accent.js`、`test-helpers.js` 與四個對應的 `*.test.js`（約 44 個測試，依賴 `openpencil` CLI，本來就不在 `npm test` 內）；`tests/fig-variables.spec.ts`（見下）。`package.json` 與 `.github/workflows/*` 在這張票之前就已沒有 `openpencil` 呼叫，驗證為 0 命中。`penpot-test-helpers.mjs` 的 `exportViolations` 移除 `.fig` 例外，單測改為斷言 zip 內容的 `.fig` 一樣違規。
+
+**保留了什麼與原因。** `docs/mockup/themes/variables.json`、`bindings.json`、`penpot-tokens.json`：`check-penpot.mjs` 的比對基準；`variables.json` 仍由 `npm run generate` 產生，是 `penpot-tokens.json` 的來源。`scripts/design/` 的 `penpot-*.mjs`、`parse-export.mjs`、`read-zip.mjs`、`check-penpot.mjs` 與其測試、`fixtures/`。
+
+**覆蓋移到哪。** `tests/fig-variables.spec.ts` 的 12 個測試守的是 `variables.json` 與 DTCG 的一致性（舊 48 變數保值、72 變數涵蓋全部 CSS 變數、不可轉型別與重複名稱讓建置失敗、集合分配、已提交檔等於新產生、沒有旗標不寫檔）。`penpot-tokens.spec.ts` 只驗 color 與 fontSizes 的值，`check:penpot` 把 `variables.json` 當信任的基準，兩者取代不了，所以**移植而非刪除**：改名為 `tests/design-variables.spec.ts`，測試數仍是 12，只改旗標名（建置選項 `--fig` 改名 `--variables`，`package.json`、`packages/tokens/build.mjs`、`tests/tokens-derived.spec.ts` 同步）與措辭；fixture 改名為 `tests/fixtures/design-variables-0.1.0.json`。`apply-*.test.js` 與 `check-masters.test.js` 測的是被刪的腳本，由 `check-penpot.mjs` 及其測試（母版名稱、綁定、解析值）承接同一件事，`import-accent.test.js` 由 `penpot-accent.test.mjs`（15 項）承接。
+
+**文件改動。** `DESIGN.md`、`docs/03_architecture_design.md`、`docs/05_frontend_spec.md`（§5.5 標題改為「共用元件庫元件」）、`docs/capabilities/design-system.md`（工具敘述；PR-FILE-06、07、08 改為 ISSUE-017 的修訂文字；移除只適用 OpenPencil 的 `Internal Only Canvas` 備註）、`README.md`、`packages/tokens/build.mjs` 註解改指向 `.penpot`。留給 ISSUE-030 的：`GLOSSARY.md`、`docs/consumer-guide.md`、`docs/adoption-prompt.md` 與 ADR 0008 狀態；它們仍寫 OpenPencil，`docs/consumer-guide.md` 指向已刪腳本的步驟已登記在 ISSUE-030 Notes。
+
+**未驗證。** 上述人眼抽查；`variables.json` 的檔名與 `$extensions` 的 `figName` 鍵沿用舊名（改名會動 DTCG 原始檔，不在本票）。

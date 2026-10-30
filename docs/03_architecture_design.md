@@ -9,7 +9,7 @@
 | 套件管理 | npm workspaces | [決策紀錄](decision-log.md) |
 | 設計變數 | DTCG 格式的單一來源，經 Style Dictionary 產生 CSS、程式資料、元件庫設計檔變數與代理用規格文件 | [ADR 0004](adr/0004-design-variables-sourced-from-dtcg-tokens-and-imported-into-fig.md) |
 | 樣張網站 | 引用正式套件，展示元件、雙風格、明暗模式及頁面範本；頁面範本以此為準 | [決策紀錄](decision-log.md) |
-| 設計資產 | 一份元件庫設計檔（OpenPencil .fig），只含設計變數與 23 個母版，以 `Suite x Mode` 一個集合的四個「套系 / 明暗」模式切換；使用端設計稿由它複製開始 | [ADR 0007](adr/0007-keep-one-component-library-design-file-without-pages.md) |
+| 設計資產 | 一份元件庫設計檔（Penpot 匯出檔 .penpot），只含設計變數與 23 個母版，以 `Suite x Mode` 一個集合的四個「套系 / 明暗」模式切換；使用端設計稿由它複製開始 | [ADR 0007](adr/0007-keep-one-component-library-design-file-without-pages.md) |
 | 品質檢查 | Playwright 搭配 `@axe-core/playwright`，並逐頁 × 套系 × 明暗截圖比對 | [決策紀錄](decision-log.md) |
 
 | 目錄 | 責任 |
@@ -17,7 +17,7 @@
 | `packages/tokens/` | 設計變數 DTCG 來源、產生器與輸出 |
 | `packages/react/` | 共用 React 元件與主題控制 |
 | `apps/showcase/` | 使用說明、元件樣張及產品介面與介紹頁範本 |
-| `docs/mockup/` | 元件庫設計檔 `luca-style-library.fig` |
+| `docs/mockup/` | 元件庫設計檔 `luca-style-library.penpot` |
 
 | 部署 | 方式 |
 | --- | --- |

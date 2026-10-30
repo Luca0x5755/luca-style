@@ -8,14 +8,14 @@ import { deriveAccent } from './accent.js';
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
 // --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，公開輸出維持三份。
 // --penpot <路徑>：另外寫一份 Penpot 可匯入的 token JSON（ISSUE-018）；同樣不放進 --out。
-// --fig <路徑>：另外寫一份設計檔變數資料（scripts/design/apply-variables.js 讀它寫入元件庫設計檔）；
+// --variables <路徑>：另外寫一份設計檔變數資料（variables.json；Penpot token JSON 與 npm run check:penpot 都以它為基準）；
 //   不放進 --out，因為 dist 會發布到 npm，且公開輸出只有三份。
 const { values: args } = parseArgs({ options: {
-  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, fig: { type: 'string' }, penpot: { type: 'string' }, doc: { type: 'string' },
+  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, variables: { type: 'string' }, penpot: { type: 'string' }, doc: { type: 'string' },
 } });
 const source = resolve(args.source);
 const out = resolve(args.out);
-const figPath = args.fig && resolve(args.fig);
+const figPath = args.variables && resolve(args.variables);
 const docPath = args.doc && resolve(args.doc);
 const penpotPath = args.penpot && resolve(args.penpot);
 
@@ -290,7 +290,7 @@ if (figProblems.length) {
   process.exit(1);
 }
 const figData = {
-  $generated: '由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑，再執行 node scripts/design/apply-variables.js 寫入設計檔。',
+  $generated: '由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑；Penpot 設計檔以 npm run check:penpot 檢查。',
   axes: figAxes,
   collections: figCollections,
   count: figVariables.size,

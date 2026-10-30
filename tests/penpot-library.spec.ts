@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 // ISSUE-027／PR-FILE-27：元件庫設計檔（Penpot 匯出）的離線檢查納入 `npm test`，CI 的 verify job 因此會跑。
 // 兩條命令各自獨立成一個測試，其一失敗不會讓另一條不執行；node --test 逐檔列出，不靠 shell 展開 glob。
-// 只跑 .test.mjs：舊的 .test.js 依賴 openpencil，CI 沒有。
+// 只跑 *.test.mjs，逐檔列出；舊設計工具的腳本與測試已隨 ISSUE-029 刪除。
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 

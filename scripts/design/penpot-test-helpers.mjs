@@ -60,7 +60,6 @@ export function exportViolations(files, headOf) {
       bad.push(`被追蹤或待追蹤的匯出檔 ${f}`);
       continue;
     }
-    if (f.endsWith('.fig')) continue; // OpenPencil 的 .fig 本身是 zip，由 ISSUE-029 退役；這裡只擋 Penpot 匯出檔偽裝成其他副檔名
     const head = headOf(f);
     if (head && head.length >= 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04) bad.push(`${f} 以 zip 魔術位元組開頭`);
   }

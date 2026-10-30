@@ -48,7 +48,7 @@ const NODE_TYPES = { frame: 'frame', component: 'frame', icon: 'frame', text: 't
 // 每一項都要寫清楚出處，不在這裡的差異一律視為差異。
 const ACCEPTED = [
   {
-    // ISSUE-026：.fig 的一個 frame 帶 4 層填色（fill[i].opacity）；Penpot 的不透明度 token 綁在形狀上，
+    // ISSUE-026：舊設計檔的一個 frame 帶 4 層填色（fill[i].opacity）；Penpot 的不透明度 token 綁在形狀上，
     // 所以該 board 的子節點是 4 個疊放的矩形，各綁一個 opacity token，矩形名稱是 token 名去掉 `-opacity`。
     master: 'C/State/Loading', path: '0', pattern: /^fill\[(\d+)\]\.opacity$/, kind: 'stack',
   },
@@ -71,7 +71,7 @@ const SHADOW_TOKEN = 'metric-shadow';
 // ---- 母版與綁定 ----
 
 // 把 Penpot 形狀樹轉成 bindings.json 的 path：根為 `-`，子節點索引取 Penpot `shapes` 的反向序
-// （Penpot 由下而上存，bindings.json 是 .fig 的由上而下）。stackPaths 內的節點，其子節點是疊放矩形，不進 map。
+// （Penpot 由下而上存，bindings.json 是由上而下）。stackPaths 內的節點，其子節點是疊放矩形，不進 map。
 function pathMap(shape, stackPaths) {
   const map = new Map();
   const walk = (node, path) => {

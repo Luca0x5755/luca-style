@@ -113,7 +113,7 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 
 ## 5.4 共用風格角色（能力：設計系統）
 
-視覺方向沿用已核可的 V2「潮汐」、P3「石墨紫」與 B「個性鮮明」，不另套用新視覺原型。OpenPencil variables 使用 suite、mode、device 軸承接同一組角色；頁面不另建各自的色票或字級。
+視覺方向沿用已核可的 V2「潮汐」、P3「石墨紫」與 B「個性鮮明」，不另套用新視覺原型。設計檔的 token（Penpot token set 與 theme）使用 suite、mode、device 軸承接同一組角色；頁面不另建各自的色票或字級。
 
 中性色由兩個風格套系共用，只隨明暗模式變化，色相統一為冷藍灰；套系之間的差異來自主色、點綴色與語意狀態色。
 
@@ -162,9 +162,9 @@ Auth 欄指樣張應用本身的頁面要求；不改變既有私有色票與字
 | 指標卡背景 `metric-background` | 柔和強調表面 | 卡片表面 |
 | 指標卡陰影 `metric-shadow` | 垂直位移 4px、模糊 16px、`#00000008` | 無 |
 
-## 5.5 共用 OpenPencil 元件（能力：設計系統）
+## 5.5 共用元件庫元件（能力：設計系統）
 
-元件庫設計檔 `docs/mockup/luca-style-library.fig` 只含設計變數與共用元件母版，涵蓋按鈕、表單、導覽、卡片、表格與狀態提示，不含頁面 frame。變數分三個集合：依套系或明暗變化的都在 `Suite x Mode`，模式為「套系 / 明暗」四種組合（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`）；只依裝置變化的在 `Device`（Desktop、Tablet、Mobile）；常數在 `Base`。切換套系與明暗只設 `Suite x Mode` 一個集合。不拆成套系、明暗兩個集合，是因為 OpenPencil 一個節點在每個集合只持有一個模式，且匯出不解別名（決策見[決策紀錄](decision-log.md)）。母版的填色、描邊、字型、圓角與間距綁定設計變數，每個母版只有一份。
+元件庫設計檔 `docs/mockup/luca-style-library.penpot` 只含設計變數與共用元件母版，涵蓋按鈕、表單、導覽、卡片、表格與狀態提示，不含頁面 frame。設計變數是 Penpot 的 token，分三組：依套系或明暗變化的在 `Suite x Mode` 這一個 theme 群組，四個 theme 是「套系 / 明暗」四種組合（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`）；只依裝置變化的在 `Device` 群組（Desktop、Tablet、Mobile）；常數在共用的 `Base` set。切換套系與明暗只切 `Suite x Mode` 一個群組的 theme，同一群組只能啟用一個 theme，所以套系與明暗合成四種組合而不拆成兩個群組（決策見[決策紀錄](decision-log.md)與 ADR 0007）。母版的填色、描邊、字型、圓角與間距綁定設計變數，每個母版只有一份。
 
 使用端的設計稿複製此檔開始，匯入專案強調色後以母版組合頁面；設計變數由程式產生，可重新匯入。
 

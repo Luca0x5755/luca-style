@@ -2,12 +2,12 @@
 
 ## 範圍
 
-跨專案共用精緻活力、精緻專業兩套風格的設計變數、React 元件、明暗模式、樣張、頁面範本與元件庫設計檔（OpenPencil .fig，只含設計變數與母版）。
+跨專案共用精緻活力、精緻專業兩套風格的設計變數、React 元件、明暗模式、樣張、頁面範本與元件庫設計檔（Penpot 匯出檔 .penpot，只含設計變數與母版）。
 
 ## 交付索引
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
-- 套件安裝、公開 API、主題覆寫、字體授權與 OpenPencil 同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
+- 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
 - 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54` 與 `PR-FILE-01～19`（元件庫設計檔；PR-FILE-01～05、10～15 已 retired）。
 - 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
 
@@ -18,7 +18,7 @@
 - 兩種風格套系：精緻活力、精緻專業；每個專案選一套。
 - 每套包含日間與暗黑模式、預設色票、元件外形與資訊密度。
 - 共用的字體角色、語意狀態色、設計變數、React 元件及使用規範。
-- 產品介面和介紹頁的桌面、手機範本，以及可瀏覽樣張與元件庫設計檔（`luca-style-library.fig`，OpenPencil .fig 元件庫）。
+- 產品介面和介紹頁的桌面、手機範本，以及可瀏覽樣張與元件庫設計檔（`luca-style-library.penpot`，Penpot 元件庫）。
 - 既有 mockup 作為參考案例：活動、社群類產品對應精緻活力；金融、資料監控類產品對應精緻專業。
 
 PR-STYLE-01 — 新專案可選擇精緻活力或精緻專業作為整站基準；同一專案的頁面可調整密度，但維持所選風格套系。
@@ -34,7 +34,7 @@ PR-STYLE-10 — 元件外形採 B「個性鮮明」；精緻活力的容器圓�
 PR-STYLE-11 — 動態效果短而克制；使用者啟用減少動態設定時，介面相應減少動畫。
 PR-STYLE-12 — 共用元件涵蓋按鈕、表單、導覽、卡片、表格、狀態提示與載入、空白、錯誤狀態，並展示兩套風格及兩種明暗模式。
 PR-STYLE-13 — 提供產品介面與介紹頁的桌面和手機範本，使新專案可依同一規則建立畫面。
-PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、元件庫設計檔（OpenPencil .fig 元件庫）及使用說明，讓後續專案可取得並沿用。
+PR-STYLE-14 — 提供可瀏覽樣張、設計變數、React 元件、元件庫設計檔（Penpot 元件庫）及使用說明，讓後續專案可取得並沿用。
 
 ### 公開樣張與 README 承諾
 
@@ -55,9 +55,9 @@ PR-FILE-02 — `components-professional.fig` 含原設計稿全部精緻專業�
 PR-FILE-03 — 兩個套系設計檔的頁面 frame 合計，涵蓋原設計稿 302 個 frame 的全部名稱，沒有遺失，也沒有任何一個套系的 frame 出現在另一個套系設計檔。 — retired：元件庫設計檔不再有頁面 frame，拆檔基準已無比對對象（ADR 0007）。
 PR-FILE-04 — 每個頁面 frame 的節點數與文字內容，與拆檔前的單檔基準（`docs/mockup/themes/baseline.json`）一致；顏色不與基準比，改由 PR-FILE-12 驗收。結構驗收腳本在不一致時回報非零結束碼並列出差異。 — retired：元件庫設計檔不再有頁面 frame，拆檔基準已無比對對象（ADR 0007）。
 PR-FILE-05 — 兩個套系設計檔的 22 個母版內容相同；比對腳本在任何差異時回報非零結束碼並列出母版名稱。 — retired：母版只剩一份，不再需要兩檔比對（ADR 0007）。
-PR-FILE-06 — `docs/delivery-verification.md` 記錄元件庫設計檔的 `check-masters.js`、`apply-variables.js --check`、`apply-bindings.js --check` 執行指令與結果，並記錄人眼抽查結果。
-PR-FILE-07 — 專案文件與程式註解不再把 `components.pen` 或兩個套系設計檔當作設計稿，改指向元件庫設計檔 `docs/mockup/luca-style-library.fig`。
-PR-FILE-08 — 工作樹中不存在 `docs/mockup/components.fig` 與 `docs/mockup/components.pen`；驗收所需的基準以 `docs/mockup/themes/` 下的 JSON 保存。
+PR-FILE-06 — `docs/delivery-verification.md` 記錄 Penpot 版元件庫設計檔的檢查指令與結果，並記錄人眼抽查結果。
+PR-FILE-07 — 專案文件與程式註解不再把 `.fig`、`.pen` 或 OpenPencil 當作設計稿工具，改指向 Penpot 版元件庫設計檔 `docs/mockup/luca-style-library.penpot`；歷史記錄（ADR、decision-log、delivery-verification 的過往章節）除外。
+PR-FILE-08 — 工作樹中不存在 `docs/mockup/luca-style-library.fig`、`components.fig`、`components.pen`；驗收所需的基準以 `docs/mockup/themes/` 下的 JSON 保存。
 PR-FILE-09 — ADR 0003 的狀態為 `Accepted`。
 PR-FILE-10 — 每個套系設計檔含該套系用到的全部主題變數，型別與每個模式（Light／Dark、Desktop／Tablet／Mobile）的值與 `.pen` 一致。 — retired：設計變數改由 DTCG 原始檔產生並匯入元件庫設計檔（ADR 0004），由 PR-FILE-16 取代。
 PR-FILE-11 — 每個頁面 frame 的模式與其名稱相符，節點的填色、描邊、字型、字級、間距、內距、圓角綁定到與 `.pen` 相同的變數；母版內的綁定同樣保留。 — retired：頁面 frame 已刪除（ADR 0007）；母版綁定由 PR-FILE-18 承接。
@@ -70,7 +70,7 @@ PR-FILE-15 — 兩個套系設計檔把 frame 依產品頁面分在不同畫布�
 
 - 部署輸出目錄為 `apps/showcase/dist-pages`（`npm run build:pages`，base 為 `/luca-style/`），內含每個路由的 `index.html` 與 `404.html`；一般 `npm run build` 的輸出不變。
 - 路由清單單一來源為 `apps/showcase/src/route-table.json`，應用路由與 `build:pages` 共用，測試比對兩者一致。
-- 元件庫設計檔的變數資料 `docs/mockup/themes/variables.json` 由 `npm run generate` 自 `packages/tokens/src` 的 DTCG 原始檔產生（ADR 0004），內容是程式變數與原設計檔 48 個變數的聯集；重複者沿用設計檔舊名（例如 `accent-secondary` 在設計檔叫 `secondary`，對照寫在原始檔的 `$extensions["luca-style"].figName`），只給設計檔用的變數標 `designFileOnly`，不進公開的 css 與 data。改值流程：改原始檔 → `npm run generate` → `node scripts/design/apply-variables.js` → `--check`；`scripts/design/apply-variables.test.js` 對進版控的元件庫設計檔執行 `--check`，沒有重新套用就失敗。
+- 元件庫設計檔的變數資料 `docs/mockup/themes/variables.json` 由 `npm run generate` 自 `packages/tokens/src` 的 DTCG 原始檔產生（ADR 0004），內容是程式變數與原設計檔 48 個變數的聯集；重複者沿用設計檔舊名（例如 `accent-secondary` 在設計檔叫 `secondary`，對照寫在原始檔的 `$extensions["luca-style"].figName`），只給設計檔用的變數標 `designFileOnly`，不進公開的 css 與 data。改值流程：改原始檔 → `npm run generate` → 在 Penpot 內更新 token 並重新匯出元件庫設計檔 → `npm run check:penpot`；`tests/penpot-library.spec.ts` 在 `npm test` 內執行該檢查，設計檔與產生的變數資料不一致就失敗。
 - 承諾 PR-STYLE-15 的線上部分（網址實際回應 200）需要使用者 push 到 `main` 並把 repo Settings → Pages 的來源設為「GitHub Actions」，尚未線上驗證；見[交付驗證](../delivery-verification.md#公開樣張與-readme)。
 
 承諾沿用已核可總規格的凍結 ID 與原文（PR-STYLE-15 至 24 於公開樣張票新增，文字依最終實作補充）。0.2.0 起 PR-FILE-01～05、10～15 為 retired，行尾附原因；PR-FILE-06、07 保留編號，文字改為指向元件庫設計檔。驗收證據見[交付驗證](../delivery-verification.md)。
@@ -142,7 +142,6 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 
 實作補充與已知缺口：
 
-- 元件庫設計檔另有一個 OpenPencil 為存放變數自動維持的空畫布頁 `Internal Only Canvas`，無法刪除；`check-masters.js` 要求它保持空白。
 - 母版的自動排版尺寸、陰影開關與載入圖片透明度沒有綁定欄位，只存預設模式（Vibrant／Light）的值；Professional 的母版總覽因此與 ADR 0007 合併前的總覽總高度差 32px（指標卡、表格）。App 內切換模式後的版面未驗證；細節見[交付驗證](../delivery-verification.md#合併為一份元件庫設計檔issue-004pr-file-18)。
 - 強調色推算的取捨（對比檢查只用於推算出的角色、`focus-ring` 角色、反向位移、`accent-ink` 固定）見 decision-log 2026-10-28。
 - 中性色改值後，快照測試（`tests/tokens-snapshot.spec.ts`）只放行中性色 8 個角色，而且這 8 個必須等於 PR-STYLE-48；其餘變數仍與 0.1.0 快照逐值比對。
@@ -181,4 +180,4 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 - [前端 §5.2 路由](../05_frontend_spec.md#52-路由能力設計系統)；路徑相對於部署 base path，對應 `PR-STYLE-15` 至 `PR-STYLE-18`、`PR-STYLE-24`。
 - [前端 §5.3 頁面與狀態](../05_frontend_spec.md#53-頁面與狀態能力設計系統)，包含 §5.3.1 入口、§5.3.2 設計基礎、§5.3.3 共用元件、§5.3.4 產品介面範本、§5.3.5 介紹頁範本、§5.3.6 找不到頁面；對應 `PR-STYLE-12` 至 `PR-STYLE-14`。
 - [前端 §5.4 共用風格角色](../05_frontend_spec.md#54-共用風格角色能力設計系統)，包含 §5.4.1 資訊密度、§5.4.2 元件外形；對應 `PR-STYLE-01` 至 `PR-STYLE-07`、`PR-STYLE-09` 至 `PR-STYLE-11`。
-- [前端 §5.5 共用 OpenPencil 元件](../05_frontend_spec.md#55-共用-openpencil-元件能力設計系統)，包含 §5.5.1 母版元件、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。
+- [前端 §5.5 共用元件庫元件](../05_frontend_spec.md#55-共用元件庫元件能力設計系統)，包含 §5.5.1 母版元件、§5.5.2 元件變數、§5.5.3 間距與動態、§5.5.4 畫面核對；對應 `PR-STYLE-09`、`PR-STYLE-11`、`PR-STYLE-12`、`PR-STYLE-14`。

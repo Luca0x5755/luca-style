@@ -355,6 +355,6 @@ test('the export guard allows exactly one path and rejects every other .penpot o
   for (const f of ['docs/mockup/luca-style-library.penpot.bak', 'docs/mockup/luca-style-library.zip']) {
     assert.equal(run([f], { [f]: PK }).length, 1, f);
   }
-  assert.deepEqual(run(['docs/a.fig'], { 'docs/a.fig': PK }), []); // .fig 是既有例外
+  assert.equal(run(['docs/a.fig'], { 'docs/a.fig': PK }).length, 1); // 不再有 .fig 例外：舊設計檔副檔名的 zip 一樣違規
   assert.deepEqual(run(['docs/missing.json'], { 'docs/missing.json': null }), []);
 });

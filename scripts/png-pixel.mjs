@@ -1,5 +1,4 @@
-// 讀 PNG 的像素顏色與設計變數的頁面底色，供截圖檢查共用（verify-screenshots.mjs、tests/visual-config.spec.ts、
-// scripts/design/import-accent.test.js）。
+// 讀 PNG 的像素顏色與設計變數的頁面底色，供截圖檢查共用（verify-screenshots.mjs、tests/visual-config.spec.ts）。
 // 只支援 Chromium 截圖的格式：8 位元、非交錯的 RGB 或 RGBA；其他格式直接丟錯，不猜。只用 node:zlib，不加依賴。
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';

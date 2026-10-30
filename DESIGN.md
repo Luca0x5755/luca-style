@@ -151,4 +151,4 @@ CSS 變數名就是設計變數名加 `--`；在 JavaScript 取值用 `@luca-sty
 
 ## 設計稿
 
-設計稿從元件庫設計檔 `docs/mockup/luca-style-library.fig` 複製開始（設計變數與 23 個母版，以套系與明暗模式切換）。頁面範本以線上樣張網站為準。使用端匯入自己的強調色與更新後重新匯入的步驟，見[使用端接入](https://github.com/Luca0x5755/luca-style/blob/main/docs/consumer-guide.md)。
+設計稿從元件庫設計檔（Penpot 匯出檔）`docs/mockup/luca-style-library.penpot` 複製開始（設計變數與 23 個母版，以套系與明暗模式切換）。頁面範本以線上樣張網站為準。使用端匯入自己的強調色與更新後重新匯入的步驟，見[使用端接入](https://github.com/Luca0x5755/luca-style/blob/main/docs/consumer-guide.md)。
