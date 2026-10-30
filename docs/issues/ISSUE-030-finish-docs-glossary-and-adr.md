@@ -22,3 +22,4 @@ ISSUE-028, ISSUE-029
 
 - 試點用的是 Penpot 2.18.5-RC1；是否固定版本由這張票決定並記錄。
 - 這是最後一張，完成後 `docs/issues/` 應為空，CI 的 `issues-check` 才會通過。
+- 強調色匯入步驟需要的說明文字（來自 ISSUE-028，做法仍待使用者確認）：先在 luca-style 檢出執行 `npm ci`、`npm run generate`；`node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' --out accent.tokens.json`（`--accent` 與 `ThemeProvider` 的 `AccentInput` 相同，只有 `light` 必填）；在 Penpot 的 Tokens 面板匯入該 JSON，會多出 4 個 `Project Accent/*` set 與 4 個 Suite x Mode theme（含 Base、既有 Suite x Mode set、對應 Project Accent set）。匯入後切換一次 theme 讓畫面套用。若匯入取代了整個 token 庫，改為手動建 4 個 set 貼入 6 個 token，並在 4 個 Suite x Mode theme 各啟用對應的 `Project Accent/*` set（排序要在 Suite x Mode 之後；匯入後順序未驗證，請確認）。要還原強調色：從 theme 取消並刪除 4 個 Project Accent set。實際匯入行為未驗證，寫文件前請使用者在介面實測一次。

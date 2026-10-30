@@ -848,7 +848,7 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 
 - 陰影「關閉」在 Penpot 沒有對應，只能用零偏移、零模糊、透明度 0 的陰影代替；使用者於 2026-10-30 接受（PR-FILE-33）。
 - 匯出檔是二進位 zip，不適合單獨審查；使用者於 2026-10-30 決定另提交一份正規化文字 dump（PR-FILE-32），ADR 0008 已修訂。
-- 使用端匯入強調色的做法（`import-accent.js` 沒有 Penpot 等價路徑）。
+- 使用端匯入強調色的做法（`import-accent.js` 沒有 Penpot 等價路徑）。ISSUE-028 已先照建議做出 token JSON（見〈使用端強調色 token JSON〉），使用者仍未確認，且實際匯入未驗證。
 - 母版轉成元件後匯出表示是否改變，需先能重新匯出（外掛 `File.export` 現在失敗）。
 
 **階段二要切的票（尚未寫檔，兩項已決定，可用 `/to-tickets` 切，並含 PR-FILE-32、33）**
@@ -858,3 +858,26 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 - 刪除 OpenPencil 產物並改文件：`.fig`、`scripts/design/` 的腳本與測試、`fig-variables.spec.ts`、consumer-guide、adoption-prompt、GLOSSARY，ADR 0008 改 Accepted（PR-FILE-28、07、08、30、31、09、06）。
 - Penpot 自架說明文件（PR-FILE-29）。
 - 使用端強調色匯入（PR-FILE-19），做法待決。
+
+## Penpot：使用端強調色 token JSON（ISSUE-028，PR-FILE-19）
+
+2026-10-30。**做法是建議、使用者尚未確認：** 產生 token JSON，由使用端在 Penpot 內手動匯入（ISSUE-017 開放問題）。
+
+**產物。** `scripts/design/penpot-accent.mjs --accent '<AccentInput JSON>' [--out 檔]`（不給 `--out` 寫 stdout；先 `npm run generate` 以取得 `packages/tokens/dist/tokens.json` 的中性色）。輸出是增量檔，不含 Base、Device 與既有 set：4 個新 set `Project Accent/{Vibrant,Professional}-{Light,Dark}`，各 6 個 color token（`accent`、`secondary`、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring`），值逐一等於 `deriveAccent`；`$themes` 為 4 個 Suite x Mode theme（同 id／名稱／群組），多啟用對應的 Project Accent set；輸出的 `tokenSetOrder` 只列這 4 個 set（意圖是排在 Suite x Mode 之後、同名 token 後者覆蓋前者）；匯入後 Penpot 實際把它們排在哪裡未驗證（模擬時是手動加在最後，在 Device 之後）。成功、警告、錯誤色與其他 token 不動（ADR 0002）。
+
+**離線測試。** `node --test scripts/design/penpot-accent.test.mjs`：15 項通過。6 組輸入（只給 light、加 dark、加 secondary、加 soft.light、加 soft.dark、全給）逐 set 逐 token 比對 `deriveAccent`；依 `penpot-tokens.json` 的 `tokenSetOrder` 合併後，6 個 token 等於推算值、其餘 token 與原檔相同；結構、錯誤結束碼 1／2、連跑兩次位元組相同。
+
+**Penpot 內驗證（模擬匯入，不是實際匯入檔案）。** Penpot 沒有匯入 JSON 的外掛 API，所以用 MCP `execute_code` 以 `addSet`、`addToken`、`theme.addSet` 重建同樣的 4 個 set 與 theme 引用，輸入為 `{"light":"#B5179E"}`，值取自該腳本的輸出。連線檔「嗨嗨」的基準：23 個板；Base 39、Suite x Mode 各 29、Device 各 3；7 個 theme；啟用 Professional / Dark 與 Mobile。讀 `C/Button/Primary` 的填色、`C/Button/Hover` 的填色、`C/Button/Focus` 的外框、`Option / selected`（`C/Select/Open` 內，綁 `accent-soft`）的填色，4 組 Suite x Mode 各讀一次：
+
+| 組合 | 加入前（accent／hover／focus／soft） | 加入後 |
+|---|---|---|
+| Vibrant / Light | #147f82／#007072／#147f82／#e3f2f0 | #b5179e／#a1008c／#b5179e／#fee6f8 |
+| Vibrant / Dark | #64c2bc／#75d2cc／#64c2bc／#173637 | #ff6ce3／#ff91e7／#ff6ce3／#392735 |
+| Professional / Light | #625c83／#544e74／#625c83／#eeedf4 | #b5179e／#a1008c／#b5179e／#fee6f8 |
+| Professional / Dark | #aba4d7／#bbb4e8／#aba4d7／#2d2a3b | #ff6ce3／#ff91e7／#ff6ce3／#392735 |
+
+「加入後」與腳本輸出（即 `deriveAccent`）逐值相同。新增的 set 排在 Device 之後，同名 token 蓋過 Suite x Mode 的值，母版顯示新強調色。觀察：加入 set 後立刻讀 Professional / Dark（已啟用的 theme）仍是舊色，要切到別的 theme 再切回才套用新值；實際匯入時使用端若停在目前 theme，需切換一次。
+
+**還原。** 對 4 個 theme 呼叫 `removeSet`，再 `remove()` 4 個 Project Accent set，然後逐 theme 切換重讀：4 組顏色與加入前完全相同；板數 23；set 與 token 數與基準相同（Base 39、Suite x Mode 各 29、Device 各 3，共 8 個 set）；各 Suite x Mode theme 的 set 引用回到 Base 加一個（沒有在加入前記錄 theme 的 set 引用順序，這項是事後讀回、非逐項比對）；啟用 Professional / Dark 與 Mobile。沒有殘留。
+
+**限制。** (1) 「在 Penpot 介面實際匯入該 JSON」未驗證：Penpot 匯入時是合併或取代既有 token 庫，我不知道；增量檔的設計即為了降低取代的風險，但不保證。若匯入取代整個庫，使用端需改為手動建立 4 個 set 並在 4 個 Suite x Mode theme 啟用它們（見 ISSUE-030 Notes）。(2) 只讀 4 個母版的 4 個欄位，其餘母版沒有逐一讀。(3) 沒做目視 `export_shape`。(4) Done-when 的「匯入後」以模擬代替，是否接受須使用者決定。
