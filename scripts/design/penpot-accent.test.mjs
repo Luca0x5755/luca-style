@@ -10,9 +10,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deriveAccent } from '../../packages/tokens/accent.js';
-import { buildAccentTokens } from './penpot-accent.mjs';
+import { buildAccentSets, buildAccentTokens as buildFull } from './penpot-accent.mjs';
 
 const tokenData = JSON.parse(readFileSync(new URL('../../packages/tokens/dist/tokens.json', import.meta.url), 'utf8'));
+const base = JSON.parse(readFileSync(new URL('../../docs/mockup/themes/penpot-tokens.json', import.meta.url), 'utf8'));
+// 預設輸出是完整檔（含 penpot-tokens.json 全部內容）；只看 Project Accent set 的測試仍可由它取值。
+const buildAccentTokens = (input, data) => buildFull(input, data, base);
 
 test('只給日間主色時，日間 set 的 accent 是該主色原值', () => {
   const out = buildAccentTokens({ light: '#B5179E' }, tokenData);
@@ -59,25 +62,42 @@ test('沒給 secondary 時沿用該模式的主色', () => {
   assert.equal(out['Project Accent/Vibrant-Light'].secondary.$value, '#B5179E');
 });
 
-test('結構：4 個 Suite x Mode theme 各多啟用對應的 Project Accent set，且排在既有 set 之後', () => {
+test('結構：完整檔保留 penpot-tokens.json 全部內容，只多 4 個 Project Accent set 並排在最後', () => {
   const out = buildAccentTokens(INPUTS['只給 light'], tokenData);
-  const names = Object.keys(out).filter((k) => !k.startsWith('$'));
-  assert.equal(names.length, 4);
-  assert.deepEqual(out.$metadata.tokenSetOrder, names);
-  assert.equal(out.$themes.length, 4);
+  const baseNames = Object.keys(base).filter((k) => !k.startsWith('$'));
+  const accentNames = ['Vibrant-Light', 'Vibrant-Dark', 'Professional-Light', 'Professional-Dark'].map((n) => `Project Accent/${n}`);
+  for (const name of baseNames) assert.deepEqual(out[name], base[name], name);
+  assert.deepEqual(Object.keys(out).filter((k) => !k.startsWith('$')).sort(), [...baseNames, ...accentNames].sort());
+  assert.deepEqual(out.$metadata.tokenSetOrder, [...base.$metadata.tokenSetOrder, ...accentNames]);
+});
+
+test('結構：7 個 theme 都在；4 個 Suite x Mode theme 各多啟用對應的 Project Accent set，Device theme 不變', () => {
+  const out = buildAccentTokens(INPUTS['只給 light'], tokenData);
+  assert.equal(out.$themes.length, base.$themes.length);
   const dark = out.$themes.find((t) => t.name === 'Professional / Dark');
   assert.equal(dark.group, 'Suite x Mode');
   assert.equal(dark.id, 'suite-x-mode-professional-dark');
   assert.deepEqual(dark.selectedTokenSets, { Base: 'enabled', 'Suite x Mode/Professional-Dark': 'enabled', 'Project Accent/Professional-Dark': 'enabled' });
+  for (const theme of base.$themes.filter((t) => t.group === 'Device')) assert.deepEqual(out.$themes.find((t) => t.id === theme.id), theme);
+});
+
+test('buildAccentSets 只含 4 個 Project Accent set 與 4 個 Suite x Mode theme', () => {
+  const sets = buildAccentSets(INPUTS['只給 light'], tokenData);
+  assert.equal(Object.keys(sets).filter((k) => !k.startsWith('$')).length, 4);
+  assert.equal(sets.$themes.length, 4);
+});
+
+test('缺 theme 的 base 會丟錯', () => {
+  const broken = { ...base, $themes: base.$themes.filter((t) => t.id !== 'suite-x-mode-vibrant-light') };
+  assert.throws(() => buildFull(INPUTS['只給 light'], tokenData, broken), /suite-x-mode-vibrant-light/);
 });
 
 // 模擬 Penpot：theme 啟用的 set 依 tokenSetOrder 由前到後合併，同名 token 後者覆蓋前者。
-test('與 penpot-tokens.json 依 tokenSetOrder 合併後：6 個 token 是推算值，其餘與原檔相同，語意狀態色不變', () => {
-  const base = JSON.parse(readFileSync(new URL('../../docs/mockup/themes/penpot-tokens.json', import.meta.url), 'utf8'));
+test('完整檔依 tokenSetOrder 合併後：6 個 token 是推算值，其餘與原檔相同，語意狀態色不變', () => {
   const out = buildAccentTokens(INPUTS['全給'], tokenData);
-  const order = [...base.$metadata.tokenSetOrder, ...out.$metadata.tokenSetOrder];
-  const sets = { ...base, ...out };
-  for (const theme of out.$themes) {
+  const order = out.$metadata.tokenSetOrder;
+  const sets = out;
+  for (const theme of out.$themes.filter((t) => t.group === 'Suite x Mode')) {
     const merged = {};
     for (const name of order) if (theme.selectedTokenSets[name] === 'enabled') Object.assign(merged, sets[name]);
     const [suite, mode] = theme.name.split(' / ');
@@ -114,6 +134,7 @@ test('命令列：--out 寫出的檔與 stdout 相同，且連跑兩次位元組
     assert.equal(stdout.status, 0);
     assert.equal(stdout.stdout, bytes.toString('utf8'));
     assert.deepEqual(JSON.parse(stdout.stdout), buildAccentTokens({ light: '#B5179E' }, tokenData));
+    assert.deepEqual(JSON.parse(stdout.stdout).$metadata.tokenSetOrder.slice(0, base.$metadata.tokenSetOrder.length), base.$metadata.tokenSetOrder);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

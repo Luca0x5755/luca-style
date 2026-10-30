@@ -882,6 +882,14 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 
 **限制。** (1) 「在 Penpot 介面實際匯入該 JSON」未驗證：Penpot 匯入時是合併或取代既有 token 庫，我不知道；增量檔的設計即為了降低取代的風險，但不保證。若匯入取代整個庫，使用端需改為手動建立 4 個 set 並在 4 個 Suite x Mode theme 啟用它們（見 ISSUE-030 Notes）。(2) 只讀 4 個母版的 4 個欄位，其餘母版沒有逐一讀。(3) 沒做目視 `export_shape`。(4) Done-when 的「匯入後」以模擬代替，是否接受須使用者決定。
 
+## Penpot：強調色匯入實測與改為完整檔（ISSUE-028 追補，PR-FILE-19）
+
+2026-10-30，使用者在 Penpot 介面實測上一節的增量檔：Tokens 面板右下角「工具 > 匯入」**取代整個 token 庫**，不是合併，原有設計變數被蓋掉；使用者已還原。還原後以 `execute_code` 讀回：板數 23；Base 39、Suite x Mode 各 29、Device 各 3，共 8 個 set；7 個 theme；啟用的只有 Professional / Dark，`Device/Mobile` 沒有啟用（還原時掉了，與先前的 Professional / Dark 加 Mobile 不同），`Device/Mobile` theme 的 set 引用順序為 Device/Mobile 在前、Base 在後。這些不影響已提交的匯出檔。
+
+因此 `scripts/design/penpot-accent.mjs` 改為輸出完整檔：`penpot-tokens.json` 全部內容加 4 個 Project Accent set，4 個 Suite x Mode theme 各多啟用對應的 set，Project Accent set 排在 `tokenSetOrder` 最後；先前只產生 4 個 set 的邏輯保留為 `buildAccentSets`。離線測試 `node --test scripts/design/penpot-accent.test.mjs`：18 項通過，涵蓋 6 組輸入逐值比對 `deriveAccent`、完整檔保留 `penpot-tokens.json` 全部 set 與 Device theme、4 個 theme 的 set 引用與排序、缺 theme 的 base 丟錯、命令列結束碼與連跑位元組相同。
+
+**未驗證。** 完整檔匯入後 Penpot 實際的 set 排序與 theme 啟用狀態；匯入完整檔後母版是否顯示新強調色。使用者尚未用完整檔再匯入一次。
+
 ## Penpot：匯出並提交元件庫設計檔，離線檢查（ISSUE-027，PR-FILE-16、18、26、27、32）
 
 2026-10-30，使用者在 Penpot 內把檔案改名為 `luca-style-library` 後手動匯出（`File.export` 在外掛端仍失敗，所以這一步只能由人做）：`luca-style-library.penpot`，353,025 bytes，210 個 zip 條目，`generatedBy: penpot/2.18.5-RC1`。匯出檔視為不受信任資料：先複製到暫存目錄，只在記憶體內解開（`read-zip.mjs`），沒有解到磁碟執行。

@@ -3,8 +3,9 @@
 // packages/tokens/dist/tokens.json（需先 npm run generate），本腳本不做任何顏色運算。
 // 用法：node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' [--out penpot-accent.tokens.json]
 // --accent 是 AccentInput 的 JSON：只有 light 必填，dark、secondary、soft:{light,dark} 有給就用。沒給 --out 則寫到 stdout。
-// 輸出是「增量檔」：只含 4 個新 set（Project Accent/<套系>-<明暗>）與 4 個 Suite x Mode theme，不含 Base、Device 與既有 set，
-// 使用端在設計檔裡改過的 token 不會被覆蓋；輸出的 tokenSetOrder 只列 Project Accent（意圖：排在 Suite x Mode 之後，同名 token 後者覆蓋前者；匯入後實際順序未驗證）。
+// 輸出是「完整檔」：docs/mockup/themes/penpot-tokens.json 全部內容，加上 4 個 Project Accent/<套系>-<明暗> set，並讓 4 個 Suite x Mode theme 各多啟用對應的 set。
+// 原因：Penpot 的 Tokens 面板「工具 > 匯入」會取代整個 token 庫（實測，2026-10-30），只含新 set 的增量檔會把設計變數蓋掉。
+// Project Accent set 排在 tokenSetOrder 最後，同名 token 後者覆蓋前者，所以排在 Suite x Mode 各 set 之後（匯入後實際順序仍請在 Penpot 內確認）。
 // 結束碼：0 成功；1 輸入不合；2 讀寫檔失敗。
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -27,10 +28,11 @@ export function validateInput(input) {
 }
 
 /**
+ * 只產生 4 個 Project Accent set 與對應的 theme 片段（不含 penpot-tokens.json 的內容）。
  * @param {{light:string; dark?:string; secondary?:string; soft?:{light?:string; dark?:string}}} input
  * @param {Record<string, Record<string, Record<string, string>>>} tokenData packages/tokens/dist/tokens.json 的內容（各套系各明暗的中性色）
  */
-export function buildAccentTokens(input, tokenData) {
+export function buildAccentSets(input, tokenData) {
   validateInput(input);
   const out = {};
   const themes = [];
@@ -51,6 +53,26 @@ export function buildAccentTokens(input, tokenData) {
     }
   }
   return { ...out, $themes: themes, $metadata: { tokenSetOrder: order } };
+}
+
+/**
+ * 完整的可匯入檔：base（penpot-tokens.json）原樣保留，再接上 Project Accent set。
+ * @param {object} base docs/mockup/themes/penpot-tokens.json 的內容
+ */
+export function buildAccentTokens(input, tokenData, base) {
+  const accent = buildAccentSets(input, tokenData);
+  const accentSets = Object.keys(accent).filter((key) => !key.startsWith('$'));
+  const missing = accent.$themes.find((theme) => !base.$themes.some((t) => t.id === theme.id));
+  if (missing) throw new Error(`penpot-tokens.json 沒有 theme ${missing.id}；請先 npm run generate`);
+  const themes = base.$themes.map((theme) => {
+    const extra = accent.$themes.find((t) => t.id === theme.id);
+    if (!extra) return theme;
+    const added = Object.keys(extra.selectedTokenSets).filter((name) => name.startsWith('Project Accent/'));
+    return { ...theme, selectedTokenSets: { ...theme.selectedTokenSets, ...Object.fromEntries(added.map((name) => [name, 'enabled'])) } };
+  });
+  const { $themes, $metadata, ...baseSets } = base;
+  const kept = $metadata.tokenSetOrder.filter((name) => !accentSets.includes(name));
+  return { ...baseSets, ...Object.fromEntries(accentSets.map((name) => [name, accent[name]])), $themes: themes, $metadata: { ...$metadata, tokenSetOrder: [...kept, ...accentSets] } };
 }
 
 // ---------- 命令列 ----------
@@ -76,9 +98,15 @@ function main(args) {
   } catch {
     fail('讀不到 packages/tokens/dist/tokens.json；請先在 luca-style 檢出執行 npm run generate', 2);
   }
+  let base;
+  try {
+    base = JSON.parse(readFileSync(resolve(root, 'docs/mockup/themes/penpot-tokens.json'), 'utf8'));
+  } catch {
+    fail('讀不到 docs/mockup/themes/penpot-tokens.json；請先在 luca-style 檢出執行 npm run generate', 2);
+  }
   let result;
   try {
-    result = buildAccentTokens(input, tokenData);
+    result = buildAccentTokens(input, tokenData, base);
   } catch (error) {
     fail(error.message, 1);
   }
@@ -90,7 +118,7 @@ function main(args) {
   } catch (error) {
     fail(`寫不進 ${out}：${error.message}`, 2);
   }
-  console.log(`已產生 Penpot 強調色 token：${resolve(out)}`);
+  console.log(`已產生 Penpot 完整 token 檔（含強調色）：${resolve(out)}`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv.slice(2));

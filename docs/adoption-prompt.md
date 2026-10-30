@@ -24,7 +24,7 @@
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
    - packages/tokens/src/（DTCG 分層檔）：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 Penpot 開啟元件庫設計檔 docs/mockup/luca-style-library.penpot（Penpot 匯出檔，只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準；版本與自架方式見 docs/penpot-self-hosting.md），以 token theme Suite x Mode 的四種組合切換套系與明暗。工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，匯入此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/penpot-accent.mjs 產生 token JSON 並在 Penpot 匯入（此管道的實際匯入未驗證，依該節的備案處理）；luca-style 更新後的重新匯入也寫在該節。
+3. 需要核對視覺設計時，使用 Penpot 開啟元件庫設計檔 docs/mockup/luca-style-library.penpot（Penpot 匯出檔，只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準；版本與自架方式見 docs/penpot-self-hosting.md），以 token theme Suite x Mode 的四種組合切換套系與明暗。工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，匯入此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/penpot-accent.mjs 產生完整的 token JSON 並在 Penpot 的 Tokens 面板「工具 > 匯入」匯入（匯入會取代整個 token 庫，匯入後的排序與啟用狀態依該節〈匯入後檢查〉確認）；luca-style 更新後的重新匯入也寫在該節。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】
