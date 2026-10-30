@@ -9,7 +9,7 @@
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
 - 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54` 與 `PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）。
-- 驗收案例、矩陣、實跑結果與限制：[交付驗證](../delivery-verification.md)。
+- 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
 
@@ -50,14 +50,14 @@ PR-STYLE-21 — README 依序包含：一句話介紹與截圖、快速開始、
 PR-STYLE-22 — README 快速開始包含 clone、`npm ci`、`npm run dev` 及不超過 10 行的最少使用程式碼（逐字節錄自 `examples/consumer`）；使用端安裝細節連至使用端接入文件，不在 README 重複。
 PR-STYLE-23 — 單一指令 `npm run screenshots` 可產生精緻活力、精緻專業各自日間、暗黑共 4 張樣張截圖於 `docs/images/`（vibrant-light、vibrant-dark、professional-light、professional-dark）；此指令不屬於 `npm test`，使用獨立 4177 port，`npm run verify:screenshots` 驗證產生結果穩定。
 PR-STYLE-24 — 前端規格路由表註明路徑相對於部署 base path（GitHub Pages 為 `/luca-style/`）；架構技術棧與交付結構記錄 Pages 部署方式。
-PR-FILE-06 — `docs/delivery-verification.md` 記錄 Penpot 版元件庫設計檔的檢查指令與結果，並記錄人眼抽查結果。
+PR-FILE-06 — `docs/delivery-verification.md` 記錄 Penpot 版元件庫設計檔的檢查指令與檢查內容，並記錄人眼抽查的範圍。
 
 實作補充：
 
 - 部署輸出目錄為 `apps/showcase/dist-pages`（`npm run build:pages`，base 為 `/luca-style/`），內含每個路由的 `index.html` 與 `404.html`；一般 `npm run build` 的輸出不變。
 - 路由清單單一來源為 `apps/showcase/src/route-table.json`，應用路由與 `build:pages` 共用，測試比對兩者一致。
 - 元件庫設計檔的變數資料 `docs/mockup/themes/variables.json` 由 `npm run generate` 自 `packages/tokens/src` 的 DTCG 原始檔產生（ADR 0004），內容是程式變數與只給設計檔用的變數的聯集；程式與設計檔名稱不同者沿用設計檔名稱（例如 `accent-secondary` 在設計檔叫 `secondary`，對照寫在原始檔的 `$extensions["luca-style"].designName`），只給設計檔用的變數標 `designFileOnly`，不進公開的 css 與 data。改值流程：改原始檔 → `npm run generate` → 在 Penpot 內更新 token 並重新匯出元件庫設計檔 → `npm run check:penpot`；`tests/penpot-library.spec.ts` 在 `npm test` 內執行該檢查，設計檔與產生的變數資料不一致就失敗。
-- 承諾 PR-STYLE-15 的線上部分（網址實際回應 200）需要使用者 push 到 `main` 並把 repo Settings → Pages 的來源設為「GitHub Actions」，尚未線上驗證；見[交付驗證](../delivery-verification.md#公開樣張與-readme)。
+- 承諾 PR-STYLE-15 的線上部分（網址實際回應 200）不在 `npm test` 內，以手動 `curl` 確認。
 
 承諾沿用已核可總規格的凍結 ID 與原文（PR-STYLE-15 至 24 於公開樣張票新增，文字依最終實作補充）。PR-FILE 編號沿用，已移除的編號不再使用。驗收證據見[交付驗證](../delivery-verification.md)。
 

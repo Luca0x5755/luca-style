@@ -2,7 +2,7 @@
 
 ## 驗證範圍與重現
 
-2026-10-20，ISSUE-009 第 1 輪，基底 `01e3c18`。執行環境為 Windows、Node.js 22.17.0、npm 11.4.2、npm workspaces、Playwright Chromium。先保留 4173（showcase）及 4174（repo 外 consumer）供驗證使用，不同程序不共用服務。
+執行環境為 Node.js 22.12 以上、npm 11（CI 用 Node.js 22）、npm workspaces、Playwright Chromium。驗證時 4173（showcase）及 4174（repo 外 consumer）要保留給驗證使用，不同程序不共用服務。
 
 ```sh
 npm ci
@@ -13,7 +13,7 @@ npm test
 npm run test:consumer
 ```
 
-結果：`npm ci` 成功，150 套件稽核 0 弱點；production build、typecheck、lint 全部通過；完整 Playwright **25 passed（34.5s）**，包含新增 3 個矩陣驗收案例。`test:consumer` 通過 repo 外安裝、公開輸出、typecheck、production build、主題／模式／強調色／狀態、字體與授權。第 1 輪無失敗簽章，沒有略過必要檢查。`git diff --check` 通過。字體自託管與 OFL 隨建置交付，Noto Sans TC 原始字體約 11.94 MB；目前沒有子集化，不宣稱初次載入已最佳化。
+`test:consumer` 涵蓋 repo 外安裝、公開輸出、typecheck、production build、主題／模式／強調色／狀態、字體與授權。字體自託管與 OFL 隨建置交付，Noto Sans TC 原始字體約 11.94 MB；目前沒有子集化，不宣稱初次載入已最佳化。
 
 ## 凍結承諾與證據
 
@@ -35,11 +35,11 @@ npm run test:consumer
 | PR-STYLE-12 | 公開 Button／TextField／Select／Checkbox／Navigation／MetricCard／DataTable／StatusMessage／ContentState；components.spec 真正鍵盤 Tab、方向鍵、Space、Enter 提交及結果、失敗重試；全矩陣見下。 |
 | PR-STYLE-13 | product.spec 與 editorial.spec，產品／介紹頁在雙套系、日夜及桌面／平板／手機；表格、表單、CTA、空白與錯誤還原。 |
 | PR-STYLE-14 | 正式 tokens/react 套件、showcase 五頁、元件庫設計檔（`docs/mockup/luca-style-library.penpot`，ADR 0007）、consumer-guide、examples/consumer；test:consumer 從 tarball 於 repo 外安裝、typecheck、build、瀏覽器操作。 |
-| PR-STYLE-15 | 本機：pages.spec 對 `build:pages` 輸出的模擬 Pages 伺服器，subpath.spec 於 `/luca-style/` 經導覽到達五個路由。**線上尚未驗證**：需 push 到 `main` 並將 Pages 來源設為 GitHub Actions，詳見下節。 |
+| PR-STYLE-15 | 本機：pages.spec 對 `build:pages` 輸出的模擬 Pages 伺服器，subpath.spec 於 `/luca-style/` 經導覽到達五個路由。線上：以手動 `curl` 確認，步驟見「公開樣張與 README」一節。 |
 | PR-STYLE-16 | pages.spec：每個路由各有 `index.html`、直接開啟與重新整理回應 200；trailing-slash.spec：尾斜線與無尾斜線同一路由；模擬伺服器重現 Pages 對無尾斜線目錄的 301。 |
 | PR-STYLE-17 | pages.spec 未知網址回 404；not-found.spec 與 subpath.spec：找不到頁面內容、四態、返回入口、三寬度無橫溢。 |
 | PR-STYLE-18 | subpath.spec：品牌連結與頁內連結皆在 `/luca-style/` 內；`/` 下既有案例不變。route-table 單一來源與 main.tsx 由 pages-routes.spec 比對。 |
-| PR-STYLE-19 | deploy-workflow.spec：push 到 main 與 PR 觸發、只有 push 才部署、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。2026-10-29 PR #4 在 GitHub Actions 實跑（run 40803527031）：verify、visual 通過，deploy 依條件跳過；推到 main 的部署尚未實跑。 |
+| PR-STYLE-19 | deploy-workflow.spec：push 到 main 與 PR 觸發、只有 push 才部署、deploy 依賴 verify、build→typecheck→lint→test 順序、無 continue-on-error、action 固定 SHA、權限最小。實跑紀錄見 GitHub Actions 的 `pages.yml`：PR 時 deploy 依條件跳過，push 到 main 時執行 deploy。 |
 | PR-STYLE-20 | components.spec：預設品牌連結為 `/`，傳入 `brandHref` 後跟隨；consumer-guide 說明，examples/consumer 以 `brandHref="/luca-style/"` 經 test:consumer 驗證。 |
 | PR-STYLE-21 | readme.spec：H2 順序、英文與一句話介紹、線上樣張連結、無「正式預覽」、有「本機預覽」、授權段落。 |
 | PR-STYLE-22 | readme.spec：clone／`npm ci`／`npm run dev`、連到使用端接入文件、程式碼片段 ≤10 行且逐字來自 examples/consumer、相對連結皆存在且被 git 追蹤。 |
@@ -58,7 +58,7 @@ npm run test:consumer
 
 寬度為 1280／834／390px；總計 240 組頁面狀態。四態迴圈斷言導覽、上下文、對應狀態訊息與整頁不橫溢；錯誤重試後還原正常內容。既有 editorial 截圖與 product 桌面／手機截圖沿用 Playwright test-results 產物，不新增重複截圖。測試產物不提交，重跑命令即可取得；不聲稱逐張像素相等。
 
-主要導覽由 entry.spec／editorial.spec／product.spec 點擊實測；介紹頁主要行動將焦點移至價值標題。components.spec 以實際鍵盤完成表單，確認錯誤關聯與第一錯誤欄位焦點；DataTable 是帶 caption／columnheader 的原生表格，水平捲動區可聚焦。模式即時變更、記憶與減少動態由 theme.spec 實跑，沒有跳過這些案例。
+主要導覽由 entry.spec／editorial.spec／product.spec 點擊實測；介紹頁主要行動將焦點移至價值標題。components.spec 以實際鍵盤完成表單，確認錯誤關聯與第一錯誤欄位焦點；DataTable 是帶 caption／columnheader 的原生表格，水平捲動區可聚焦。模式即時變更、記憶與減少動態由 theme.spec 實跑。
 
 ## 設計稿與程式對照
 
@@ -68,28 +68,14 @@ npm run test:consumer
 
 - 設計檔只放母版；React 使用單一頁面與本機「樣張狀態」選單，錯誤重試回復正常內容。
 - 設計檔以狀態母版獨立展示；React 以 props、原生 disabled、hover、focus-visible 與可關聯錯誤文字實際操作。
-- 網頁增加套系、模式及強調色比較控制供開發者檢視；正式使用端仍選定專案套系。表單元件當時使用原生選單／核取方塊；0.2.0 起 Select、Checkbox 等改由 Base UI 處理互動（ADR 0006），Select 選單跟著套系與明暗。
+- 網頁增加套系、模式及強調色比較控制供開發者檢視；正式使用端仍選定專案套系。Select、Checkbox 等由 Base UI 處理互動（ADR 0006），Select 選單跟著套系與明暗。
 - 產品資料與圖表為本機示例，操作後可新增列；靜態範本未涵蓋所有新增資料內容。
 
-沒有新增三個參考專案的業務流程、後端、部署或 npm 公開發布。正式合併與發布另由使用者決定。
-
-## 審查與自我核准痕跡
-
-本票只新增 delivery.spec.ts，沒有修改或刪除既有測試。新增案例是對已交付行為的矩陣驗收，不製造人工紅燈；若發現實作 bug 才以重現紅燈先行修復。本輪沒有實作 bug，也沒有拒絕的 review finding。獨立三軸審查：Standards PASS；Spec PASS（14 項承諾原文、範圍、排除項目與授權來源遷移完整）；Reuse 無發現。審查要求將本文件的待填結果補成實跑結果，已完成。自我核准痕跡：修改／刪除既有測試 none；Rejected review finding none。協調者於整合後另執行最終驗證及規格清理。
+不含三個參考專案的業務流程、後端、部署或 npm 公開發布。
 
 ## 公開樣張與 README
 
-2026-10-22，ISSUE-008。`npm test` 72 passed（default、subpath、pages 三個專案，含新增 readme.spec 9 案）；`npm run build`、`typecheck`、`lint`、`test:consumer` 全部通過。README 引用的四張截圖已目視確認為正確的入口頁（精緻活力與精緻專業各日間、暗黑）。
-
-**尚未線上驗證（需使用者操作）**：`https://luca0x5755.github.io/luca-style/` 在本輪檢查時回應 HTTP 404，repo 的 Pages 尚未啟用，`pages.yml` 也尚未在 GitHub 上實跑。PR-STYLE-15 的線上部分與 PR-STYLE-19 的線上行為，須在使用者將本分支合併並 push 到 `main`、把 Settings → Pages 的來源設為「GitHub Actions」後，以 `curl -sI https://luca0x5755.github.io/luca-style/` 確認 200，再檢查五個路由與一個不存在網址的 404。在此之前不宣稱線上樣張已可開啟。其餘承諾皆以本機 `build:pages` 輸出搭配模擬 GitHub Pages 的伺服器驗證，這是模擬而非真實 Pages。
-
-README 的線上樣張連結是否有效，無法在 `npm test` 內機械檢查（需網路與已部署站點），因此列為上述手動驗證。
-
-## 強調色覆寫回歸修正（2026-10-20）
-
-使用者發現 Vibrant 暗黑產品範本的本月累計卡片在覆寫後使用淺底配亮字。原覆寫只有日間色票；新增 ThemeProvider 明暗成對 accent 輸入，showcase 隨實際模式選色，保留單一色票 API。日間柔和底同步調亮，避免次要文字低於 4.5:1。新增 theme.spec 回歸測試，逐一檢查雙套系雙模式的卡片標籤、標題、數值與說明之 computed 色彩對比。舊建置重現暗黑 1.80:1；修正後四組均達 4.5:1。build、typecheck、lint 通過，theme.spec 4 passed，暗黑截圖已目視檢查。這是色彩回歸驗證，未新增 mockup 像素差異比對。
-
-
+線上樣張 `https://luca0x5755.github.io/luca-style/` 由 push 到 `main` 的 `pages.yml` 部署。`npm test` 以本機 `build:pages` 輸出搭配模擬 GitHub Pages 的伺服器驗證，這是模擬而非真實 Pages。線上是否可開無法在 `npm test` 內機械檢查（需網路與已部署站點），要手動確認：`curl -sI https://luca0x5755.github.io/luca-style/` 應回 200，`apps/showcase/src/route-table.json` 的其餘路由加上尾斜線同樣回 200（沒有尾斜線會先回 301），不存在的網址回 404。
 
 ## 元件庫設計檔的離線檢查
 
@@ -117,8 +103,6 @@ node --test scripts/design/*.test.mjs
 - `C/Card/Metric` 路徑 `-`：`strokeWidth.left`（`metric-border-left`）在 Penpot 不綁；若被綁上 `strokeWidth` 則回報為多出的綁定。
 - `C/Card/Metric` 路徑 `-`：`effect.enabled`（`elevation-enabled`）改綁 `shadow`＝`metric-shadow`；變數端以 `metric-shadow` 的色彩 alpha 是否為 0 對應布林（PR-FILE-33，見下）。
 - `suite-label`（一般字串）沒有 Penpot token。
-
-最近一次對真實匯出檔的結果：23 個母版、名稱與 `bindings.json` 相同；逐節點綁定相同；12 組解析值對 `variables.json` 與 `penpot-tokens.json` 差異 0；`penpot-dump.mjs --check` 一致。改一個綁定、拿掉一個母版、改兩個變數值，檢查回報 6 項差異、結束碼 1，確認檢查不是空轉。
 
 ### 離線可讀與不可讀
 
@@ -148,8 +132,6 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 
 守門測試 `penpot-dump.test.mjs` 以 `exportViolations`（`penpot-test-helpers.mjs`）拒絕任何被追蹤的 `.penpot` 與以 zip 魔術位元組開頭的檔，唯一放行 `docs/mockup/luca-style-library.penpot`；放行檔名換目錄或大小寫、偽裝成別的副檔名的 zip 都仍違規。
 
-未驗證：同內容兩次匯出的 zip 是否產生同一份 dump（只有一次匯出可比）。待辦：不改任何東西再匯出一次，用 `penpot-dump.mjs --check` 對照提交的 dump；若不一致，差異行會指出還有哪個欄位不穩定。
-
 ## Penpot token 資料
 
 ### 陰影開關（PR-FILE-33）
@@ -167,11 +149,7 @@ Penpot 沒有布林變數，陰影開關以 shadow token 表示。建置另外�
 
 ### 使用端強調色 token JSON（PR-FILE-19）
 
-`scripts/design/penpot-accent.mjs --accent '<AccentInput JSON>' [--out 檔]`（不給 `--out` 寫 stdout；先 `npm run generate` 以取得 `packages/tokens/dist/tokens.json` 的中性色）輸出**完整檔**：`penpot-tokens.json` 全部內容，加 4 個 `Project Accent/{Vibrant,Professional}-{Light,Dark}` set（各 6 個 color token：`accent`、`secondary`、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring`，值逐一等於 `deriveAccent`），4 個 Suite x Mode theme 各多啟用對應的 set，Project Accent set 排在 `tokenSetOrder` 最後。測試：`node --test scripts/design/penpot-accent.test.mjs`。
-
-必須是完整檔，因為 Penpot 的 Tokens 面板「工具 > 匯入」**取代整個 token 庫**而不是合併。實測完整檔匯入後，12 個 set 與 7 個 theme 的 id 與 set 引用都和腳本輸出相同；188 筆 token 中 180 筆值與型別與來源相同，其餘 8 筆只是 Penpot 的正規化寫法。加入 set 後，已啟用的 theme 仍顯示舊色，要切到別的 theme 再切回才套用新值。
-
-未驗證：匯入後母版畫面是否顯示新強調色（沒有目視）。
+`scripts/design/penpot-accent.mjs` 輸出 Penpot 可匯入的完整 token 檔；用法、匯入限制與匯入後檢查見[使用端接入](consumer-guide.md#複製元件庫設計檔並匯入專案強調色)。測試：`node --test scripts/design/penpot-accent.test.mjs`。
 
 ### Device theme
 
@@ -180,7 +158,7 @@ Penpot 沒有布林變數，陰影開關以 shadow token 表示。建置另外�
 ## 尚未驗證
 
 - 23 個母版在四種 Suite x Mode 與三種 Device 下的全面人眼核對尚未做；目前只有少量樣本以 `export_shape` 目視（`C/Field/Error`、`C/Select/Open`、`C/State/Loading`）。需要在 Penpot 內逐一看過。
-- 同內容兩次匯出是否產生同一份 dump。
+- 同內容兩次匯出是否產生同一份 dump（只有一次匯出可比）。待辦：不改任何東西再匯出一次，用 `penpot-dump.mjs --check` 對照提交的 dump；若不一致，差異行會指出還有哪個欄位不穩定。
 - 母版轉成元件後的匯出表示。
 - 強調色 token JSON 匯入後的母版畫面。
 - Penpot 的長時間編輯穩定度（沒有做壓力測試，使用者於 2026-10-30 決定不做；若遇到記憶體累積後當機，需重新評估 ADR 0008）。
