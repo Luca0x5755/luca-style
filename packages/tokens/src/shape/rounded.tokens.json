@@ -25,7 +25,7 @@
     "$description": "指標卡的陰影；none 表示不加陰影。設計檔以布林變數 elevation-enabled 表示（none 為 false，其他為 true）",
     "$extensions": {
       "luca-style": {
-        "figName": "elevation-enabled"
+        "designName": "elevation-enabled"
       }
     }
   },
@@ -35,7 +35,7 @@
     "$description": "指標卡的底色，可參照其他變數。設計檔中名為 card-highlight",
     "$extensions": {
       "luca-style": {
-        "figName": "card-highlight"
+        "designName": "card-highlight"
       }
     }
   }

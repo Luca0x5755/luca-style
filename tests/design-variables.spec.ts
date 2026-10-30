@@ -9,19 +9,19 @@ import { expectedAgainstSnapshot, makeWorkspace, neutralValues, readJson, readTe
 // 內容是程式變數與原設計檔 48 個變數的聯集（含集合與每個變數所在的集合）；
 // penpot-tokens.json 與 npm run check:penpot 的解析值比對都以它為基準，所以它與 DTCG 的一致性在這裡守住（ISSUE-029 由舊的設計檔變數規格移植，斷言不變）。
 
-type FigVariable = { name: string; type: string; collection?: string; values: Record<string, unknown> };
-type FigCollection = { name: string; axes: string[]; modes: string[] };
-type FigData = { $generated?: string; axes: Record<string, string[]>; collections?: FigCollection[]; count: number; variables: FigVariable[] };
+type DesignVariable = { name: string; type: string; collection?: string; values: Record<string, unknown> };
+type DesignCollection = { name: string; axes: string[]; modes: string[] };
+type DesignData = { $generated?: string; axes: Record<string, string[]>; collections?: DesignCollection[]; count: number; variables: DesignVariable[] };
 
 // 0.1.0 時設計檔的 48 個變數（由舊設計檔擷取的 variables.json 原樣保存）。
 const legacyFixture = fileURLToPath(new URL('./fixtures/design-variables-0.1.0.json', import.meta.url));
 
-async function generateFig(edit?: (source: string) => Promise<void>) {
+async function generateDesign(edit?: (source: string) => Promise<void>) {
   const workspace = await makeWorkspace();
   try {
     if (edit) await edit(workspace.source);
-    const result = runGenerator(workspace.root, 'src', 'out', ['--variables', 'fig/variables.json']);
-    const data = result.status === 0 ? await readJson(join(workspace.root, 'fig/variables.json')) as FigData : undefined;
+    const result = runGenerator(workspace.root, 'src', 'out', ['--variables', 'design/variables.json']);
+    const data = result.status === 0 ? await readJson(join(workspace.root, 'design/variables.json')) as DesignData : undefined;
     return { ...result, data };
   } finally {
     await workspace.dispose();
@@ -38,8 +38,8 @@ function expectedLegacyValue(name: string, combo: string, legacy: unknown) {
   return expectedAgainstSnapshot(name, lowerMode, legacy);
 }
 
-async function legacyProblems(data: FigData) {
-  const legacy = await readJson(legacyFixture) as FigData;
+async function legacyProblems(data: DesignData) {
+  const legacy = await readJson(legacyFixture) as DesignData;
   const byName = new Map(data.variables.map(variable => [variable.name, variable]));
   const problems: string[] = [];
   if (!isDeepStrictEqual(data.axes, legacy.axes)) problems.push(`axes: ${JSON.stringify(data.axes)}`);
@@ -56,14 +56,14 @@ async function legacyProblems(data: FigData) {
 }
 
 test('generated design-file data keeps the 48 legacy variables with the same type and 12 values each, neutral roles at the PR-STYLE-48 values', async () => {
-  const { status, stderr, data } = await generateFig();
+  const { status, stderr, data } = await generateDesign();
   expect(stderr).toBe('');
   expect(status).toBe(0);
   expect(await legacyProblems(data!)).toEqual([]);
 });
 
 test('pointing the sharp metric-background at another neutral fails the legacy comparison on card-highlight', async () => {
-  const { status, data } = await generateFig(async source => {
+  const { status, data } = await generateDesign(async source => {
     const file = join(source, 'shape/sharp.tokens.json');
     const tokens = await readJson(file);
     tokens['metric-background'].$value = 'var(--surface-subtle)';
@@ -91,10 +91,10 @@ const merged: Record<string, string> = {
 test('every published CSS variable is in the design-file data, under its legacy name when merged, with no duplicates', async () => {
   const workspace = await makeWorkspace();
   try {
-    expect(runGenerator(workspace.root, 'src', 'out', ['--variables', 'fig.json']).status).toBe(0);
+    expect(runGenerator(workspace.root, 'src', 'out', ['--variables', 'design.json']).status).toBe(0);
     const css = await readText(join(workspace.out, 'tokens.css'));
     const cssNames = new Set([...css.matchAll(/--([a-z0-9-]+):/g)].map(match => match[1]));
-    const data = await readJson(join(workspace.root, 'fig.json')) as FigData;
+    const data = await readJson(join(workspace.root, 'design.json')) as DesignData;
     const names = data.variables.map(variable => variable.name);
     expect(new Set(names).size).toBe(names.length);
     expect([...cssNames].map(name => merged[name] ?? name).filter(name => !names.includes(name))).toEqual([]);
@@ -109,7 +109,7 @@ test('every published CSS variable is in the design-file data, under its legacy 
 });
 
 test('code-only variables reach the design-file data converted to design-file units', async () => {
-  const { data } = await generateFig();
+  const { data } = await generateDesign();
   const value = (name: string, combo = 'Light/Vibrant/Desktop') => data!.variables.find(variable => variable.name === name)?.values[combo];
   expect(value('control-height')).toBe(48);
   expect(value('font-body')).toBe('Inter');
@@ -119,7 +119,7 @@ test('code-only variables reach the design-file data converted to design-file un
 });
 
 test('a value changed in the DTCG source changes the design-file data for that combination only', async () => {
-  const { data } = await generateFig(async source => {
+  const { data } = await generateDesign(async source => {
     const file = join(source, 'suite/vibrant/light.tokens.json');
     const tokens = await readJson(file);
     tokens.accent.$value = '#123456';
@@ -148,7 +148,7 @@ test('design-file-only variables stay out of tokens.css and tokens.json, and not
 });
 
 test('a token type with no design-file form fails the build naming the token, and writes nothing', async () => {
-  const result = await generateFig(async source => {
+  const result = await generateDesign(async source => {
     const file = join(source, 'base.tokens.json');
     const tokens = await readJson(file);
     tokens['ease-standard'] = { $value: [0.2, 0, 0, 1], $type: 'cubicBezier', $description: '測試用' };
@@ -160,7 +160,7 @@ test('a token type with no design-file form fails the build naming the token, an
 });
 
 test('a shadow token other than metric-shadow fails the build instead of becoming a boolean', async () => {
-  const result = await generateFig(async source => {
+  const result = await generateDesign(async source => {
     const file = join(source, 'base.tokens.json');
     const tokens = await readJson(file);
     tokens['popup-shadow'] = { $value: '0 4px 16px #00000014', $type: 'shadow', $description: '測試用' };
@@ -171,10 +171,10 @@ test('a shadow token other than metric-shadow fails the build instead of becomin
 });
 
 test('two tokens claiming the same design-file name fail the build naming both', async () => {
-  const result = await generateFig(async source => {
+  const result = await generateDesign(async source => {
     const file = join(source, 'base.tokens.json');
     const tokens = await readJson(file);
-    tokens['space-1'].$extensions = { 'luca-style': { figName: 'space-2' } };
+    tokens['space-1'].$extensions = { 'luca-style': { designName: 'space-2' } };
     await writeFile(file, JSON.stringify(tokens));
   });
   expect(result.status).not.toBe(0);
@@ -183,7 +183,7 @@ test('two tokens claiming the same design-file name fail the build naming both',
 });
 
 test('no design-file variable varies by both mode and device, which a Penpot theme group cannot model', async () => {
-  const { data } = await generateFig();
+  const { data } = await generateDesign();
   const both = data!.variables.filter(({ values }) => {
     const byMode = data!.axes.suite.some(suite => data!.axes.device.some(device =>
       new Set(data!.axes.mode.map(mode => JSON.stringify(values[`${mode}/${suite}/${device}`]))).size > 1));
@@ -197,7 +197,7 @@ test('no design-file variable varies by both mode and device, which a Penpot the
 // ISSUE-004：設計檔的集合與模式由產生器決定（一個節點在每個集合只持有一個模式；Penpot 的 theme 同一群組也只啟用一個組合）。
 // ISSUE-015：依套系或明暗變化的變數全放進 4 個模式的「Suite x Mode」集合，切換套系與明暗只設這一個集合。
 test('every design-file variable that varies by suite or mode is in Suite x Mode, so one collection switches both', async () => {
-  const { data } = await generateFig();
+  const { data } = await generateDesign();
   expect(data!.collections).toEqual([
     { name: 'Base', axes: [], modes: ['Default'] },
     { name: 'Device', axes: ['device'], modes: ['Desktop', 'Tablet', 'Mobile'] },
@@ -216,9 +216,9 @@ test('the committed docs/mockup/themes/variables.json is generated output, ident
   const committed = await readText(fileURLToPath(new URL('../docs/mockup/themes/variables.json', import.meta.url)));
   const workspace = await makeWorkspace();
   try {
-    expect(runGenerator(workspace.root, 'src', 'out', ['--variables', 'fig.json']).status).toBe(0);
+    expect(runGenerator(workspace.root, 'src', 'out', ['--variables', 'design.json']).status).toBe(0);
     expect(JSON.parse(committed).$generated).toContain('npm run generate');
-    expect(committed).toBe(await readText(join(workspace.root, 'fig.json')));
+    expect(committed).toBe(await readText(join(workspace.root, 'design.json')));
   } finally {
     await workspace.dispose();
   }
