@@ -17,7 +17,7 @@ async function generate(edit?: (source: string) => Promise<void>) {
   const workspace = await makeWorkspace();
   try {
     if (edit) await edit(workspace.source);
-    const result = runGenerator(workspace.root, 'src', 'out', ['--fig', 'fig.json']);
+    const result = runGenerator(workspace.root, 'src', 'out', ['--variables', 'fig.json']);
     expect(result.stderr).toBe('');
     expect(result.status).toBe(0);
     return {

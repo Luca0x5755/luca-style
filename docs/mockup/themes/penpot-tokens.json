@@ -1,0 +1,779 @@
+{
+ "Base": {
+  "font-en": {
+   "$value": "Inter",
+   "$type": "fontFamilies"
+  },
+  "font-zh": {
+   "$value": "Noto Sans TC",
+   "$type": "fontFamilies"
+  },
+  "font-body": {
+   "$value": "Inter",
+   "$type": "fontFamilies"
+  },
+  "font-data": {
+   "$value": "IBM Plex Mono",
+   "$type": "fontFamilies"
+  },
+  "space-1": {
+   "$value": "4",
+   "$type": "spacing"
+  },
+  "space-2": {
+   "$value": "8",
+   "$type": "spacing"
+  },
+  "space-3": {
+   "$value": "12",
+   "$type": "spacing"
+  },
+  "space-4": {
+   "$value": "16",
+   "$type": "spacing"
+  },
+  "space-6": {
+   "$value": "24",
+   "$type": "spacing"
+  },
+  "space-8": {
+   "$value": "32",
+   "$type": "spacing"
+  },
+  "space-12": {
+   "$value": "48",
+   "$type": "spacing"
+  },
+  "space-16": {
+   "$value": "64",
+   "$type": "spacing"
+  },
+  "motion-feedback": {
+   "$value": "120",
+   "$type": "number"
+  },
+  "motion-standard": {
+   "$value": "180",
+   "$type": "number"
+  },
+  "motion-region": {
+   "$value": "240",
+   "$type": "number"
+  },
+  "control-height": {
+   "$value": "48",
+   "$type": "number"
+  },
+  "table-cell-padding-block": {
+   "$value": "12",
+   "$type": "spacing"
+  },
+  "table-cell-padding-inline": {
+   "$value": "8",
+   "$type": "spacing"
+  },
+  "type-hero-weight": {
+   "$value": "700",
+   "$type": "fontWeights"
+  },
+  "type-hero-line-height": {
+   "$value": "1.2",
+   "$type": "number"
+  },
+  "type-title-weight": {
+   "$value": "700",
+   "$type": "fontWeights"
+  },
+  "type-title-line-height": {
+   "$value": "1.3",
+   "$type": "number"
+  },
+  "type-section-weight": {
+   "$value": "600",
+   "$type": "fontWeights"
+  },
+  "type-section-line-height": {
+   "$value": "1.4",
+   "$type": "number"
+  },
+  "fs-card": {
+   "$value": "18",
+   "$type": "fontSizes"
+  },
+  "type-card-weight": {
+   "$value": "600",
+   "$type": "fontWeights"
+  },
+  "type-card-line-height": {
+   "$value": "1.5",
+   "$type": "number"
+  },
+  "fs-body": {
+   "$value": "16",
+   "$type": "fontSizes"
+  },
+  "type-body-weight": {
+   "$value": "400",
+   "$type": "fontWeights"
+  },
+  "type-body-line-height": {
+   "$value": "1.75",
+   "$type": "number"
+  },
+  "type-control-size": {
+   "$value": "16",
+   "$type": "fontSizes"
+  },
+  "type-control-weight": {
+   "$value": "500",
+   "$type": "fontWeights"
+  },
+  "type-control-line-height": {
+   "$value": "1.5",
+   "$type": "number"
+  },
+  "fs-small": {
+   "$value": "14",
+   "$type": "fontSizes"
+  },
+  "type-secondary-weight": {
+   "$value": "400",
+   "$type": "fontWeights"
+  },
+  "type-secondary-line-height": {
+   "$value": "1.6",
+   "$type": "number"
+  },
+  "fs-label": {
+   "$value": "12",
+   "$type": "fontSizes"
+  },
+  "type-helper-weight": {
+   "$value": "500",
+   "$type": "fontWeights"
+  },
+  "type-helper-line-height": {
+   "$value": "1.5",
+   "$type": "number"
+  }
+ },
+ "Suite x Mode/Vibrant-Light": {
+  "loading-tide-light-opacity": {
+   "$value": "100%",
+   "$type": "opacity"
+  },
+  "loading-tide-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "accent-hover": {
+   "$value": "#007072",
+   "$type": "color"
+  },
+  "accent-pressed": {
+   "$value": "#006062",
+   "$type": "color"
+  },
+  "focus-ring": {
+   "$value": "#147F82",
+   "$type": "color"
+  },
+  "bg": {
+   "$value": "#F7F8FA",
+   "$type": "color"
+  },
+  "surface": {
+   "$value": "#FFFFFF",
+   "$type": "color"
+  },
+  "surface-subtle": {
+   "$value": "#F1F3F5",
+   "$type": "color"
+  },
+  "text": {
+   "$value": "#2C2E31",
+   "$type": "color"
+  },
+  "muted": {
+   "$value": "#696B6F",
+   "$type": "color"
+  },
+  "border": {
+   "$value": "#E0E2E6",
+   "$type": "color"
+  },
+  "control-border": {
+   "$value": "#85878B",
+   "$type": "color"
+  },
+  "accent-ink": {
+   "$value": "#FFFFFF",
+   "$type": "color"
+  },
+  "card-padding": {
+   "$value": "24",
+   "$type": "spacing"
+  },
+  "gap-section": {
+   "$value": "32",
+   "$type": "spacing"
+  },
+  "radius-card": {
+   "$value": "20",
+   "$type": "borderRadius"
+  },
+  "radius-control": {
+   "$value": "16",
+   "$type": "borderRadius"
+  },
+  "border-width": {
+   "$value": "1",
+   "$type": "borderWidth"
+  },
+  "metric-border-left": {
+   "$value": "1",
+   "$type": "number"
+  },
+  "card-highlight": {
+   "$value": "#E3F2F0",
+   "$type": "color"
+  },
+  "success": {
+   "$value": "#237354",
+   "$type": "color"
+  },
+  "warning": {
+   "$value": "#886018",
+   "$type": "color"
+  },
+  "error": {
+   "$value": "#B24445",
+   "$type": "color"
+  },
+  "accent": {
+   "$value": "#147F82",
+   "$type": "color"
+  },
+  "secondary": {
+   "$value": "#DF826D",
+   "$type": "color"
+  },
+  "accent-soft": {
+   "$value": "#E3F2F0",
+   "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000008",
+    "offsetX": "0",
+    "offsetY": "4",
+    "blur": "16",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
+  }
+ },
+ "Suite x Mode/Vibrant-Dark": {
+  "loading-tide-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-tide-dark-opacity": {
+   "$value": "100%",
+   "$type": "opacity"
+  },
+  "loading-square-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "accent-hover": {
+   "$value": "#75D2CC",
+   "$type": "color"
+  },
+  "accent-pressed": {
+   "$value": "#85E3DC",
+   "$type": "color"
+  },
+  "focus-ring": {
+   "$value": "#64C2BC",
+   "$type": "color"
+  },
+  "bg": {
+   "$value": "#111317",
+   "$type": "color"
+  },
+  "surface": {
+   "$value": "#1A1D22",
+   "$type": "color"
+  },
+  "surface-subtle": {
+   "$value": "#23272D",
+   "$type": "color"
+  },
+  "text": {
+   "$value": "#EFF1F5",
+   "$type": "color"
+  },
+  "muted": {
+   "$value": "#AEB0B4",
+   "$type": "color"
+  },
+  "border": {
+   "$value": "#3C3E41",
+   "$type": "color"
+  },
+  "control-border": {
+   "$value": "#6F7175",
+   "$type": "color"
+  },
+  "accent-ink": {
+   "$value": "#111317",
+   "$type": "color"
+  },
+  "card-padding": {
+   "$value": "24",
+   "$type": "spacing"
+  },
+  "gap-section": {
+   "$value": "32",
+   "$type": "spacing"
+  },
+  "radius-card": {
+   "$value": "20",
+   "$type": "borderRadius"
+  },
+  "radius-control": {
+   "$value": "16",
+   "$type": "borderRadius"
+  },
+  "border-width": {
+   "$value": "1",
+   "$type": "borderWidth"
+  },
+  "metric-border-left": {
+   "$value": "1",
+   "$type": "number"
+  },
+  "card-highlight": {
+   "$value": "#173637",
+   "$type": "color"
+  },
+  "success": {
+   "$value": "#7ED4AB",
+   "$type": "color"
+  },
+  "warning": {
+   "$value": "#EAC678",
+   "$type": "color"
+  },
+  "error": {
+   "$value": "#F29C96",
+   "$type": "color"
+  },
+  "accent": {
+   "$value": "#64C2BC",
+   "$type": "color"
+  },
+  "secondary": {
+   "$value": "#E8A18B",
+   "$type": "color"
+  },
+  "accent-soft": {
+   "$value": "#173637",
+   "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000008",
+    "offsetX": "0",
+    "offsetY": "4",
+    "blur": "16",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
+  }
+ },
+ "Suite x Mode/Professional-Light": {
+  "loading-tide-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-tide-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-light-opacity": {
+   "$value": "100%",
+   "$type": "opacity"
+  },
+  "loading-square-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "accent-hover": {
+   "$value": "#544E74",
+   "$type": "color"
+  },
+  "accent-pressed": {
+   "$value": "#474065",
+   "$type": "color"
+  },
+  "focus-ring": {
+   "$value": "#625C83",
+   "$type": "color"
+  },
+  "bg": {
+   "$value": "#F7F8FA",
+   "$type": "color"
+  },
+  "surface": {
+   "$value": "#FFFFFF",
+   "$type": "color"
+  },
+  "surface-subtle": {
+   "$value": "#F1F3F5",
+   "$type": "color"
+  },
+  "text": {
+   "$value": "#2C2E31",
+   "$type": "color"
+  },
+  "muted": {
+   "$value": "#696B6F",
+   "$type": "color"
+  },
+  "border": {
+   "$value": "#E0E2E6",
+   "$type": "color"
+  },
+  "control-border": {
+   "$value": "#85878B",
+   "$type": "color"
+  },
+  "accent-ink": {
+   "$value": "#FFFFFF",
+   "$type": "color"
+  },
+  "card-padding": {
+   "$value": "20",
+   "$type": "spacing"
+  },
+  "gap-section": {
+   "$value": "24",
+   "$type": "spacing"
+  },
+  "radius-card": {
+   "$value": "3",
+   "$type": "borderRadius"
+  },
+  "radius-control": {
+   "$value": "3",
+   "$type": "borderRadius"
+  },
+  "border-width": {
+   "$value": "1.5",
+   "$type": "borderWidth"
+  },
+  "metric-border-left": {
+   "$value": "3",
+   "$type": "number"
+  },
+  "card-highlight": {
+   "$value": "#FFFFFF",
+   "$type": "color"
+  },
+  "success": {
+   "$value": "#356858",
+   "$type": "color"
+  },
+  "warning": {
+   "$value": "#80601F",
+   "$type": "color"
+  },
+  "error": {
+   "$value": "#A34B5C",
+   "$type": "color"
+  },
+  "accent": {
+   "$value": "#625C83",
+   "$type": "color"
+  },
+  "secondary": {
+   "$value": "#6799B9",
+   "$type": "color"
+  },
+  "accent-soft": {
+   "$value": "#EEEDF4",
+   "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000000",
+    "offsetX": "0",
+    "offsetY": "0",
+    "blur": "0",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
+  }
+ },
+ "Suite x Mode/Professional-Dark": {
+  "loading-tide-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-tide-dark-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-light-opacity": {
+   "$value": "0%",
+   "$type": "opacity"
+  },
+  "loading-square-dark-opacity": {
+   "$value": "100%",
+   "$type": "opacity"
+  },
+  "accent-hover": {
+   "$value": "#BBB4E8",
+   "$type": "color"
+  },
+  "accent-pressed": {
+   "$value": "#CBC4F9",
+   "$type": "color"
+  },
+  "focus-ring": {
+   "$value": "#ABA4D7",
+   "$type": "color"
+  },
+  "bg": {
+   "$value": "#111317",
+   "$type": "color"
+  },
+  "surface": {
+   "$value": "#1A1D22",
+   "$type": "color"
+  },
+  "surface-subtle": {
+   "$value": "#23272D",
+   "$type": "color"
+  },
+  "text": {
+   "$value": "#EFF1F5",
+   "$type": "color"
+  },
+  "muted": {
+   "$value": "#AEB0B4",
+   "$type": "color"
+  },
+  "border": {
+   "$value": "#3C3E41",
+   "$type": "color"
+  },
+  "control-border": {
+   "$value": "#6F7175",
+   "$type": "color"
+  },
+  "accent-ink": {
+   "$value": "#111317",
+   "$type": "color"
+  },
+  "card-padding": {
+   "$value": "20",
+   "$type": "spacing"
+  },
+  "gap-section": {
+   "$value": "24",
+   "$type": "spacing"
+  },
+  "radius-card": {
+   "$value": "3",
+   "$type": "borderRadius"
+  },
+  "radius-control": {
+   "$value": "3",
+   "$type": "borderRadius"
+  },
+  "border-width": {
+   "$value": "1.5",
+   "$type": "borderWidth"
+  },
+  "metric-border-left": {
+   "$value": "3",
+   "$type": "number"
+  },
+  "card-highlight": {
+   "$value": "#1A1D22",
+   "$type": "color"
+  },
+  "success": {
+   "$value": "#93C6B2",
+   "$type": "color"
+  },
+  "warning": {
+   "$value": "#DBC28B",
+   "$type": "color"
+  },
+  "error": {
+   "$value": "#DDA3B2",
+   "$type": "color"
+  },
+  "accent": {
+   "$value": "#ABA4D7",
+   "$type": "color"
+  },
+  "secondary": {
+   "$value": "#8BBDD8",
+   "$type": "color"
+  },
+  "accent-soft": {
+   "$value": "#2D2A3B",
+   "$type": "color"
+  },
+  "metric-shadow": {
+   "$value": {
+    "color": "#00000000",
+    "offsetX": "0",
+    "offsetY": "0",
+    "blur": "0",
+    "spread": "0",
+    "inset": false
+   },
+   "$type": "shadow"
+  }
+ },
+ "Device/Desktop": {
+  "fs-hero": {
+   "$value": "56",
+   "$type": "fontSizes"
+  },
+  "fs-title": {
+   "$value": "32",
+   "$type": "fontSizes"
+  },
+  "fs-section": {
+   "$value": "24",
+   "$type": "fontSizes"
+  }
+ },
+ "Device/Tablet": {
+  "fs-hero": {
+   "$value": "44",
+   "$type": "fontSizes"
+  },
+  "fs-title": {
+   "$value": "28",
+   "$type": "fontSizes"
+  },
+  "fs-section": {
+   "$value": "22",
+   "$type": "fontSizes"
+  }
+ },
+ "Device/Mobile": {
+  "fs-hero": {
+   "$value": "32",
+   "$type": "fontSizes"
+  },
+  "fs-title": {
+   "$value": "24",
+   "$type": "fontSizes"
+  },
+  "fs-section": {
+   "$value": "20",
+   "$type": "fontSizes"
+  }
+ },
+ "$themes": [
+  {
+   "id": "suite-x-mode-vibrant-light",
+   "name": "Vibrant / Light",
+   "group": "Suite x Mode",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Suite x Mode/Vibrant-Light": "enabled"
+   }
+  },
+  {
+   "id": "suite-x-mode-vibrant-dark",
+   "name": "Vibrant / Dark",
+   "group": "Suite x Mode",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Suite x Mode/Vibrant-Dark": "enabled"
+   }
+  },
+  {
+   "id": "suite-x-mode-professional-light",
+   "name": "Professional / Light",
+   "group": "Suite x Mode",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Suite x Mode/Professional-Light": "enabled"
+   }
+  },
+  {
+   "id": "suite-x-mode-professional-dark",
+   "name": "Professional / Dark",
+   "group": "Suite x Mode",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Suite x Mode/Professional-Dark": "enabled"
+   }
+  },
+  {
+   "id": "device-desktop",
+   "name": "Desktop",
+   "group": "Device",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Device/Desktop": "enabled"
+   }
+  },
+  {
+   "id": "device-tablet",
+   "name": "Tablet",
+   "group": "Device",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Device/Tablet": "enabled"
+   }
+  },
+  {
+   "id": "device-mobile",
+   "name": "Mobile",
+   "group": "Device",
+   "selectedTokenSets": {
+    "Base": "enabled",
+    "Device/Mobile": "enabled"
+   }
+  }
+ ],
+ "$metadata": {
+  "tokenSetOrder": [
+   "Base",
+   "Suite x Mode/Vibrant-Light",
+   "Suite x Mode/Vibrant-Dark",
+   "Suite x Mode/Professional-Light",
+   "Suite x Mode/Professional-Dark",
+   "Device/Desktop",
+   "Device/Tablet",
+   "Device/Mobile"
+  ]
+ }
+}

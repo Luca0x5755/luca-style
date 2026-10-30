@@ -1,0 +1,122 @@
+{
+  "manifest.json": {
+    "type": "penpot/export-files",
+    "version": 1,
+    "generatedBy": "penpot/test",
+    "files": [
+      {
+        "id": "f1",
+        "name": "mini"
+      }
+    ],
+    "relations": []
+  },
+  "files/f1.json": {
+    "id": "f1",
+    "name": "mini"
+  },
+  "files/f1/pages/p1.json": {
+    "id": "p1",
+    "name": "Page 1",
+    "index": 0
+  },
+  "files/f1/pages/p1/00000000-0000-0000-0000-000000000000.json": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "name": "Root Frame",
+    "type": "frame",
+    "parentId": "00000000-0000-0000-0000-000000000000",
+    "frameId": "00000000-0000-0000-0000-000000000000",
+    "shapes": [
+      "b1",
+      "b2"
+    ]
+  },
+  "files/f1/pages/p1/b1.json": {
+    "id": "b1",
+    "name": "C / A",
+    "type": "frame",
+    "parentId": "00000000-0000-0000-0000-000000000000",
+    "frameId": "00000000-0000-0000-0000-000000000000",
+    "appliedTokens": {
+      "fill": "accent",
+      "r1": "radius"
+    },
+    "shapes": [
+      "t1"
+    ]
+  },
+  "files/f1/pages/p1/t1.json": {
+    "id": "t1",
+    "name": "Label",
+    "type": "text",
+    "parentId": "b1",
+    "frameId": "b1",
+    "appliedTokens": {
+      "fontFamily": "font-zh"
+    }
+  },
+  "files/f1/pages/p1/b2.json": {
+    "id": "b2",
+    "name": "C / B",
+    "type": "frame",
+    "parentId": "00000000-0000-0000-0000-000000000000",
+    "frameId": "00000000-0000-0000-0000-000000000000",
+    "shapes": [
+      "n1"
+    ]
+  },
+  "files/f1/pages/p1/n1.json": {
+    "id": "n1",
+    "name": "Nested",
+    "type": "frame",
+    "parentId": "b2",
+    "frameId": "b2",
+    "shapes": []
+  },
+  "files/f1/media/m1.json": {
+    "id": "m1"
+  },
+  "files/f1/tokens.json": {
+    "Base": {
+      "accent": {
+        "$value": "#111111",
+        "$type": "color"
+      },
+      "radius": {
+        "$value": "3",
+        "$type": "borderRadius"
+      },
+      "font-zh": {
+        "$value": [
+          "Noto Sans TC"
+        ],
+        "$type": "fontFamilies"
+      }
+    },
+    "Mode/Dark": {
+      "accent": {
+        "$value": "#222222",
+        "$type": "color"
+      }
+    },
+    "$themes": [
+      {
+        "group": "Mode",
+        "name": "Dark",
+        "selectedTokenSets": {
+          "Base": "enabled",
+          "Mode/Dark": "enabled"
+        }
+      }
+    ],
+    "$metadata": {
+      "tokenSetOrder": [
+        "Base",
+        "Mode/Dark"
+      ],
+      "activeThemes": [
+        "Mode/Dark"
+      ]
+    }
+  }
+}

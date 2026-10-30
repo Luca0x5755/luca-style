@@ -1,5 +1,5 @@
 {
- "$generated": "由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑，再執行 node scripts/design/apply-variables.js 寫入設計檔。",
+ "$generated": "由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改；改值請改原始檔後重跑；Penpot 設計檔以 npm run check:penpot 檢查。",
  "axes": {
   "mode": [
    "Light",

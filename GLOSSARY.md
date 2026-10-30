@@ -17,16 +17,12 @@ _避免_：用高彩度覆蓋所有內容、把每個元件都做成裝飾焦點
 _避免_：縮小文字到難以閱讀、以密度取代清楚的資訊層次。
 
 **元件庫設計檔**：
-唯一的設計檔 `docs/mockup/luca-style-library.fig`（ADR 0007），只含設計變數與 23 個母版，沒有頁面 frame。套系與明暗只以 `Suite x Mode` 一個集合的四個模式（例如 `Vibrant / Dark`）切換，裝置以 `Device` 切換，不變的常數在 `Base`。使用端的設計稿複製此檔開始，頁面範本以樣張網站為準。設計稿正本是這個檔案，不是 `.pen`。
-_避免_：套系設計檔、兩份設計檔、components-vibrant.fig、components-professional.fig、components.pen。
-
-**畫布頁**：
-OpenPencil 的一個 page（App 左側頁籤）。元件庫設計檔只有一個有內容的畫布頁，放 23 個母版；另有 App 為存放變數自動維持的空頁 `Internal Only Canvas`，不放內容。畫布頁不用來分組頁面 frame（設計檔不再有頁面 frame），也不是另一份設計檔。
-_避免_：把畫布頁叫「頁面」（那是產品頁面）、為產品頁面另開畫布頁。
+唯一的設計檔 `docs/mockup/luca-style-library.penpot`（Penpot 匯出檔，ADR 0007、0008；另附供審查的文字 dump `luca-style-library.dump.json`），只含設計變數與 23 個母版，沒有頁面 frame。套系與明暗以 token theme `Suite x Mode` 的四種組合（例如 `Vibrant / Dark`）切換，裝置以 theme `Device` 切換，不變的常數在 `Base`。使用端的設計稿複製此檔開始，頁面範本以樣張網站為準。設計稿正本是這個檔案，不是 dump。
+_避免_：套系設計檔、兩份設計檔、把文字 dump 當成可編輯或可匯回的設計檔、已退役的舊工具設計檔。
 
 **頁面**：
 樣張與範本中的一個產品畫面群，例如 Home、Foundations、Components、Product、Intro、NotFound；頁面範本以樣張網站為準，設計檔不畫頁面。
-_避免_：用來指 OpenPencil 的 page（請用「畫布頁」）。
+_避免_：用來指設計工具裡的 page（設計檔不用 page 分組，母版放在同一頁）。
 
 **明暗模式**：
 同一風格套系下的日間與暗黑呈現。首次跟隨裝置設定，使用者手動選擇後記住該選擇。
@@ -45,7 +41,7 @@ _避免_：背景顏色（說不清是一層還是三層）、表面色（易誤
 _避免_：把品牌色直接當成成功、警告或錯誤的意思；以為有給的顏色會被自動修正對比。
 
 **設計變數**：
-色彩、間距、圓角、字級等具名值。正本是 `packages/tokens/src` 的 DTCG 原始檔，每個變數附用途說明；CSS、程式資料與元件庫設計檔的變數都由它產生或匯入（ADR 0004），不在設計檔手改。
+色彩、間距、圓角、字級等具名值。正本是 `packages/tokens/src` 的 DTCG 原始檔，每個變數附用途說明；CSS、程式資料與元件庫設計檔的變數（Penpot 的 design token）都由它產生，設計檔以 `docs/mockup/themes/penpot-tokens.json` 在 Penpot 內匯入（ADR 0004、0008），不在設計檔手改。
 _避免_：把設計檔裡的變數當正本、同一個值在程式與設計檔各維護一份。
 
 **焦點框**：

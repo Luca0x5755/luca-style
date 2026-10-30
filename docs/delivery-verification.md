@@ -250,7 +250,7 @@ exit=1
 
 ## 設計稿與程式對照
 
-以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#openpencil-與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，先由 ADR 0003 拆成兩檔，現為元件庫設計檔 `docs/mockup/luca-style-library.fig`，見 ADR 0007）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
+以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#penpot-設計稿與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，先由 ADR 0003 拆成兩檔，現為元件庫設計檔 `docs/mockup/luca-style-library.fig`，見 ADR 0007）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
 
 實作保留設計角色與內容層次，以下差異由可操作網頁需要而來：
 
@@ -661,3 +661,314 @@ node scripts/design/apply-bindings.js --check   # exit 0
 - `apply-bindings.js --check`：節點數 112，23 個母版、244 筆綁定，綁定與儲存值全部一致。
 - 三支腳本各自的 `*.test.js`（含故意改壞副本的失敗案例）在 `node --test scripts/design/*.test.js` 內執行。
 - **人眼抽查：** 2026-10-29 使用者在 OpenPencil App 開啟元件庫設計檔檢查，回報「已經看完沒問題」（在 ISSUE-015 合併集合與 `c5cd3fc` 文字置中之後）。使用者沒有說明看了哪些母版與模式，所以這裡不記抽查範圍，也不聲稱做過像素比對。
+
+## Penpot 試點：母版與 theme 切換（ISSUE-018、ISSUE-019，PR-FILE-20）
+
+2026-10-30，在連線的暫存檔「嗨嗨」以 Penpot 外掛 API（MCP `execute_code`）操作；暫存檔不進 repo，建置用的一次性腳本也不留。token 來自 `docs/mockup/themes/penpot-tokens.json`（8 個 set、7 個 theme，各 theme 啟用 Base 加一個 set）。
+
+**母版與綁定。** `C/Button/Primary`（ISSUE-018）、`C/State/Loading`、`C/Nav/Mobile` 三個母版都是板（board），沒有轉成元件。綁定依 `bindings.json`：
+
+- `C/State/Loading`（4 個形狀加外框）：外框 fill `surface`、stroke `border`、圓角 `radius-card`、描邊寬 `border-width`；標題 fill `text`、說明 fill `muted`，字型 `font-zh`；四張圖各一個矩形，不透明度分別綁 `loading-tide-light-opacity`、`loading-tide-dark-opacity`、`loading-square-light-opacity`、`loading-square-dark-opacity`。另外為了觀察 hug，外框內距綁 `card-padding`（`bindings.json` 沒有列在這個母版）。
+- `C/Nav/Mobile`（2 個節點）：fill `surface`、stroke `border`；Logo fill `text`、字型 `font-en`。另外為了觀察 hug，Logo 字級綁 `fs-section`（`bindings.json` 沒有列）。
+- 載入圖片是替身：四張 24x24 純色 PNG（tide 兩張為青綠系，square 兩張為灰系），不是 `packages/react/loading/*.png`。原因：手動複製 base64 到外掛程式碼時出錯，`uploadMediaData` 回 `http error`；`uploadMediaUrl` 抓本機 HTTP 也回 `http error`（Penpot 後端抓不到，或不允許）。透明度是否切換與圖片內容無關，但這裡沒有證明真實圖片可用。
+
+**解析值比對。** 對 Suite x Mode 四種 x Device 三種（共 12 組）逐組切換後讀回，與 `variables.json` 比：Loading 的 surface、border、text、muted、radius-card、border-width、四個 opacity；Nav 的 surface、border、text、字級 `fs-section`（Desktop 24、Tablet 22、Mobile 20）。12 組、全部欄位差異 0。顏色為十六進位大寫字串全等；`C/Button/Primary` 的比對見 ISSUE-018。
+
+| Suite x Mode | surface | border | text | muted | radius-card | border-width |
+| --- | --- | --- | --- | --- | --- | --- |
+| Vibrant / Light | #FFFFFF | #E0E2E6 | #2C2E31 | #696B6F | 20 | 1 |
+| Vibrant / Dark | #1A1D22 | #3C3E41 | #EFF1F5 | #AEB0B4 | 20 | 1 |
+| Professional / Light | #FFFFFF | #E0E2E6 | #2C2E31 | #696B6F | 3 | 1.5 |
+| Professional / Dark | #1A1D22 | #3C3E41 | #EFF1F5 | #AEB0B4 | 3 | 1.5 |
+
+`C/Nav/Mobile` 只用 surface、border、text 三欄，值同上表。`muted`、`radius-card`、`border-width` 只在 Loading 驗證。
+
+**`.fig` 只存預設模式的三項，在 Penpot 是否隨 theme 切換。**
+
+- hug 版面尺寸：會。`C/Nav/Mobile` 自動高度隨 `fs-section` 變，Desktop 53、Tablet 51、Mobile 48；`C/State/Loading` 內距綁 `card-padding` 後高度 Vibrant 181、Professional 173（內距 24 對 20）。限制：只驗證字級與內距這兩種綁定引起的 hug；沒驗證 `gap-section` 與其他尺寸綁定。（這兩筆額外綁定 `card-padding`、`fs-section` 已於 ISSUE-026 移除，兩個試點板依 `.fig` 重建，見〈Penpot：重建第二批母版 7 個並對齊試點 2 個〉。）
+- 陰影開關：值會隨 theme 變，但「關」只能用零偏移、零模糊、透明度 0 的陰影表示，形狀上仍留著一筆 `hidden: false` 的陰影，不是真的沒有。探測用的 `shadow` token（Vibrant 兩組 0/4/12 模糊、透明度 0.2 與 0.4；Professional 兩組全零透明）綁在一塊探測板上，四組合讀回的 `shadows` 都跟著變。探測 token 與探測板已移除，母版沒有綁陰影。`elevation-enabled` 是布林，`penpot-tokens.json` 不輸出，所以正式做法要新增一個 shadow token（要改建置輸出與測試）。
+- 載入圖片不透明度：會，且可以每個 Suite x Mode 恰好顯示一張。Penpot 的不透明度 token 綁在形狀上（不是填色的第幾層），所以做法是四個疊在一起的矩形各綁一個 token，不是一個形狀四個填色。12 組讀回的不透明度為 Vibrant/Light 1,0,0,0、Vibrant/Dark 0,1,0,0、Professional/Light 0,0,1,0、Professional/Dark 0,0,0,1（順序 tide-light、tide-dark、square-light、square-dark），與 `variables.json` 一致。`export_shape` 目視抽查一次（Professional / Dark / Mobile 只看到深灰替身圖）；沒有逐組目視。
+
+**`font-zh` 的 `fontFamilies` 綁定（ISSUE-018 遺留）：** 有替代方法。`applyToken(token, ['fontFamilies'])` 一律失敗（錯誤 `should be a set of strings`），連值是單字 `Inter` 的 token 也失敗，所以不是 token 值格式的問題（加引號、逗號分隔都一樣）。不傳 `properties`（`applyToken(token)`）會成功，綁成 `fontFamily`，`fontFamily` 讀回 `Noto Sans TC`（`gfont-noto-sans-tc`）與 `Inter`。已把 `font-zh` 綁在 `C/Button/Primary` 標籤與 Loading 標題、說明，`font-en` 綁在 Nav Logo。注意 `token.resolvedValue` 會把 `Noto Sans TC` 拆成 `[["Noto","Sans","TC"]]`，單字字型不會；沒有影響綁定結果。
+
+**暫存檔現況：** 頁面上三個母版（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`；Penpot 把名稱的斜線兩側補上空白）。token 沒有改動：探測用的 7 個 token 已刪除，8 個 set 的 token 數仍是 39、28x4、3x3。目前啟用 Professional / Dark 與 Mobile。
+
+## Penpot：以 shadow token 表示陰影開關（ISSUE-024，PR-FILE-33）
+
+2026-10-30，建置另外輸出 `metric-shadow`：每個 `Suite x Mode/*` set 一個 `shadow` token，值取自該套系與明暗已解析的 DTCG `metric-shadow`。開（Vibrant）為 `0 4px 16px #00000008`，輸出為 `offsetX 0、offsetY 4、blur 16、spread 0、color #00000008、inset false`；關（Professional，DTCG 為 `none`）為 `0/0/0/0、color #00000000`。離線測試（`tests/penpot-tokens.spec.ts`）以獨立的 `tokens.json` 比對 4 個組合，並驗證改 DTCG 陰影值會改 token。`elevation-enabled` 的設計檔布林輸出不變；已發布的 `@luca-style/tokens` 輸出不變（只有 `penpot-tokens.json` 重新產生）。
+
+**暫存檔驗證**（MCP `execute_code`，同日）：Penpot 沒有匯入 JSON 的外掛 API，所以以 `set.addToken({ type: 'shadow', name: 'metric-shadow', value: [組合物件] })` 對 4 個 Suite x Mode set 各加一個 token（值逐欄與 `penpot-tokens.json` 相同，`inset` 為字串 `'false'`），不是實際匯入檔案；匯入該 JSON 的路徑未驗證。目前母版沒有綁陰影，所以建一塊探測板，先給一筆紅色 1/1/1 的陰影，再 `applyToken(token, ['shadow'])`（API 屬性 `shadow` 可用，綁定一次成功，`tokens` 讀回 `{ shadow: 'metric-shadow' }`）。依序切換 4 個 Suite x Mode theme（Device 維持 Mobile；每次切換後等 700 ms 讀回 `shadows`）：
+
+| Suite x Mode | 陰影筆數 | offsetX / offsetY / blur / spread | 顏色 | 不透明度 | hidden |
+| --- | --- | --- | --- | --- | --- |
+| Vibrant / Light | 1 | 0 / 4 / 16 / 0 | #000000 | 0.0314（8/255） | false |
+| Vibrant / Dark | 1 | 0 / 4 / 16 / 0 | #000000 | 0.0314 | false |
+| Professional / Light | 1 | 0 / 0 / 0 / 0 | #000000 | 0 | false |
+| Professional / Dark | 1 | 0 / 0 / 0 / 0 | #000000 | 0 | false |
+
+與 `variables.json` 的 `elevation-enabled`（Vibrant 開、Professional 關）和 DTCG 陰影值一致，4 組差異 0。限制：只驗證 Device 為 Mobile；「關」仍是一筆 `hidden: false` 的零值陰影（PR-FILE-33 已接受）；沒有目視。探測板已移除，4 個 Suite x Mode set 各留下 `metric-shadow`，token 數由 28 變 29；目前啟用 Professional / Dark 與 Mobile。
+
+## Penpot：重建第一批母版 13 個（ISSUE-025，PR-FILE-18、26）
+
+2026-10-30，在連線的暫存檔「嗨嗨」以 Penpot 外掛 API（MCP `execute_code`）建置與驗證；建置與驗證用的一次性腳本不進 repo。母版與試點一樣是 board，不是 component（轉換問題留給 ISSUE-027 匯出後觀察）。
+
+**建置。** 13 個母版為 `C/Button/{Primary,Secondary,Hover,Focus,Disabled,Loading}`、`C/Field/{Default,Focus,Error,Disabled}`、`C/Status/{Success,Warning,Error}`、`C/Checkbox`；其中 `C/Button/Primary` 是試點的板，已依 `.fig` 重建（見下）。幾何與文字取自 `luca-style-library.fig`（以 `openpencil eval` 讀）：Button 240x48，水平 flex，間距 12，內距 上下 12 左右 20，圓角 16，字級 16，Focus 外框 3；Field 320x121，垂直 flex，間距 12，標籤、48 高輸入框（內距 12/16，圓角 16，Focus 外框 2）與說明；Status 320x53，內距 16，圖示 20；Checkbox 320x48，20 的勾選框（圓角 3，不綁）內含 14 的勾。`.fig` 的圖示都是 FRAME（無子節點），所以在 Penpot 以「帶填色的小板」表示（Button/Loading 18、Status 20、Checkbox 勾 14），`bindings.json` 的 icon 只綁 `fill`，讀的就是該板的填色。字型以 `Font.applyToText` 設成 `Noto Sans TC`，再用不帶屬性的 `applyToken` 綁成 `fontFamily`。
+
+**決策一：名稱比對規則。** Penpot 一律把板名斜線兩側補成空白（`C / Button / Primary`；建立與改名皆然）。所以規則是：Penpot 名稱經 `name.replace(/\s*\/\s*/g, "/")` 後須等於 `.fig` 名稱；全部 16 個板（本批 13 加試點 3）都採 Penpot 這種儲存形式。ISSUE-026、ISSUE-027 要用同一個正規化。
+
+**決策二：試點 `C/Button/Primary` 對齊 `.fig`。** 原本是 160x48、字級 14、文字 `Button`、無 flex；PR-FILE-18、26 談的是與 `.fig` 等價，所以重建為 240x48、字級 16、文字 `開始使用`、flex，並重新綁定。另外兩個試點板（`C/State/Loading`、`C/Nav/Mobile`）屬於 ISSUE-026，維持試點狀態不動，它們的額外綁定（`card-padding` 等）是已記錄的例外。
+
+**驗證**（`execute_code` 程式化，同日）：
+- 頂層：頁面頂層恰為 16 個板，名稱正規化後與預期名單一致，不多不缺。檔案只有一頁。
+- 結構與綁定（`bindings.json` 為準）：13 個母版逐節點依 `path` 走子節點索引；後代節點數等於 `nodeCount`（13／13），型別 frame、icon→board，text→text 全對；`shape.tokens` 的鍵與 token 名完全一致（fill→`fill`、stroke→`strokeColor`、cornerRadius→四個 `borderRadius*` 角、strokeWidth→`strokeWidth`、字型→`fontFamily`），且沒有 `bindings.json` 以外的多餘鍵；沒有 `strokeWidth` 綁定的 10 個板，確認只有單筆描邊且寬度大於 0。檢查項共 393 筆通過，0 筆失敗（筆數是檢查項，不是獨立斷言數）。
+- 解析值：Vibrant／Professional × Light／Dark × Desktop／Tablet／Mobile 共 12 組，逐組切換 theme；每次切換前讀 `active`，只對狀態不符者 `toggleActive`，切換後輪詢到恰有一個 Suite x Mode theme 與一個 Device theme 啟用且為目標組合才讀值（12 組全數一次到位）。每組讀回 161 筆（fillColor、strokeColor、strokeWidth、四個圓角、`fontFamily`）與 `variables.json` 逐筆比對，共 1932 筆，差異 0。顏色不分大小寫比對，數值容差 1e-6。字型讀回為顯示名 `Noto Sans TC`（`fontId` 為 `gfont-noto-sans-tc`），與 `variables.json` 字串直接相等，不需轉換。結束時 theme 回到 Professional / Dark 與 Mobile。
+- 目視：`export_shape` 抽查 `C/Field/Error`（Professional / Dark，Mobile）一張，外框與說明文字呈現 error 色。`export_shape` 取整頁（`page`）逾時失敗，沒有整頁目視。
+
+**限制與未驗證：**
+- 檔名：`penpot.currentFile.name` 只能讀不能寫，讀回仍是「嗨嗨」。Done when 的「先重新命名為 `luca-style-library`」是使用者在 Penpot 介面的動作，沒有完成；ISSUE-027 匯出前需要先改名。
+- Device 軸：這 13 個母版沒有綁任何隨尺寸變的 token，所以 3 種尺寸只能證明切換不影響值，抓不到 Device 軸的殘留或缺漏。
+- `C/Field/Error` 的輸入文字在 `.fig` 是空字串；Penpot 的文字不能是空字串，所以放一個空白字元（長度 1）。
+- 幾何只檢查板的尺寸，沒有逐節點比對位置、flex 排版結果與 `.fig` 的像素；文字寬度因字型度量與 `.fig` 不同。
+- 母版是 board 而非 component，也沒有匯出再解析；匯出檔結構留給 ISSUE-027。
+- 這批的 `execute_code` 不能一次綁太久（單次超過 120 秒逾時），所以分批綁定、每次綁定間等 400 ms；外掛分頁偶爾被瀏覽器暫停，等待數分鐘後恢復。
+
+## Penpot：重建第二批母版 7 個並對齊試點 2 個（ISSUE-026，PR-FILE-18、26）
+
+2026-10-30，同一個暫存檔「嗨嗨」，以 MCP `execute_code` 建置與驗證；建置與驗證用的一次性腳本不進 repo。方法沿用〈重建第一批母版 13 個〉：母版是 board（不是 component）、名稱以 `name.replace(/s*/s*/g, "/")` 正規化後比對、icon 為帶填色的小板、字型用不帶屬性的 `applyToken` 綁成 `fontFamily`。
+
+**建置。** 新建 `C/State/Empty`、`C/State/Error`、`C/Card/Metric`、`C/Table`、`C/Nav/Desktop`、`C/Select`、`C/Select/Open`；試點的 `C/State/Loading`、`C/Nav/Mobile` 刪除後依 `.fig` 重建（載入圖的四個替身圖片填色從舊板取出再貼回）。幾何、flex（方向、間距、內距、對齊、各軸 fix／hug／fill）、字級、字重、文字內容取自 `luca-style-library.fig`（以 `openpencil eval` 讀）。文字行高設成 `.fig` 的行高／字級（例如 28／16 = 1.75），所以 hug 高度與 `.fig` 一致（第一批 13 個板沿用預設行高 1.2，沒有改）。`C/Select/Open` 的 `Focus ring` 用 `layoutChild.absolute`；`Retry button`（`.fig` 為 INSTANCE）是 board。`C/Card/Metric` 先給一筆紅色 1/1/1 的陰影再 `applyToken(token, [shadow])` 綁 `metric-shadow`（做法同 ISSUE-024）；`C/Select/Open` 的 Popup 是 `.fig` 的固定陰影（0／8／24／0、`#24312A`、alpha 0.12），不綁 token。圓角與內距一次 `applyToken(token, [四個屬性])` 即可。試點兩個額外綁定（Loading 的 `card-padding`、Nav/Mobile Logo 的 `fs-section`）已拿掉，改用 `.fig` 固定值（內距 32、字級 18）。
+
+**驗證**（`execute_code` 程式化，同日；預期值取自 `bindings.json`、`variables.json`、`penpot-tokens.json`）：
+- 名稱：頁面 1 頁，頂層恰為 23 個 board；正規化後每個名稱恰出現 1 次，與 `bindings.json` 的 `frame` 欄一致；另以 `openpencil eval` 讀 `.fig` 得 23 個 COMPONENT 母版，與 `bindings.json` 的名單集合相等、無重複。三者一對一相符（PR-FILE-26）。
+- 結構與綁定（靜態，含第一批 13 個，共 23 個）：後代節點數等於 `nodeCount`（`C/State/Loading` 預期 `nodeCount` + 4，見下）；型別 frame／component／INSTANCE→board、text→text、icon→board；每個節點 `shape.tokens` 的鍵集合與 token 名完全等於 `bindings.json` 換算結果，沒有多餘綁定（`bindings.json` 沒列的節點 `tokens` 為空）。檢查項 670 筆通過，0 筆失敗（筆數是檢查項，不是獨立斷言數）。沒有 `strokeWidth` 綁定的描邊節點確認只有單筆描邊且寬度大於 0。
+- 解析值：Vibrant／Professional × Light／Dark × Desktop／Tablet／Mobile 共 12 組逐組切換；每次讀值前斷言「恰有一個 Suite x Mode theme 與一個 Device theme 啟用且為目標組合」（12 組全數通過；切換用 `toggleActive`，在同群組啟用另一個 theme 會自動關掉原本的）。每組對 23 個板只讀 `bindings.json` 有綁的節點與屬性：fill、stroke、strokeWidth、fontFamily 各 1，cornerRadius 4（四角）、padding 4（四邊）、載入矩形的 `opacity` 各 1，Metric 的陰影 8 項（筆數、offsetX、offsetY、blur、spread、色、alpha、hidden）。再加固定值斷言（Select/Open Popup 陰影 7 項、其餘節點無陰影、Loading 內距 32、Nav/Mobile Logo 字級 18、`metric-border-left` token 的 `resolvedValue`）。每組 479 筆，12 組共 5748 筆，差異 0。顏色不分大小寫，數值容差 1e-6，`opacity` token 值 `100%` 讀回 1（`variables.json` 100 除以 100）。字型直接讀回顯示名：`font-zh`＝`Noto Sans TC`、`font-en`＝`Inter`、`font-data`＝`IBM Plex Mono`，與 `variables.json` 字串相等（`IBM Plex Mono` 是本批首次用到，沒有出問題）。`variables.json` 中被綁定的 token 值 12 組內不隨 Device 變，所以預期值以 Suite x Mode 4 組索引。陰影：Vibrant 為 `0／4／16／0`、`#000000`、alpha 0.0314（8／255），Professional 為零值陰影，與 `elevation-enabled`（Vibrant 開、Professional 關）一致。結束時 theme 的狀態見下「暫存檔現況」。
+- 筆數對照：`bindings.json` 的綁定項依權重加總是每組 354 筆（23 個母版，Metric 陰影以 6 項算）；讀回把陰影多算 `count` 與 `hidden` 兩項成 356，程式的計數在陰影分支少記 1 筆（記帳誤差，不影響通過與否），所以綁定部分記為 355。固定值斷言 124 筆：非陰影節點的「無陰影」110（全部 112 個節點扣 Metric 根與 Popup）、Popup 陰影 8、Loading 內距 4、Logo 字級 1、`metric-border-left` token 1。355 + 124 = 479。
+
+**無法照字面綁定或與 `.fig` 不同的地方（表示法差異）：**
+- `C/State/Loading`：`.fig` 的 path `0` 是一個 frame 帶 4 層填色（`fill[i].opacity`），Penpot 的不透明度 token 綁在形狀上，所以該板含 4 個疊在一起的矩形各綁一個 `opacity` token，節點數是 8（`nodeCount` 4 加 4）。圖片是試點的 24x24 替身（不是 `packages/react/loading/*.png`，上傳真實圖片在試點時失敗），12 組讀回的不透明度與 `variables.json` 一致（每組恰一張為 1）。
+- `C/Card/Metric` 的 `strokeWidth.left`→`metric-border-left`：該 token 型別是 `number`（Vibrant 1、Professional 3）。實測 `applyToken(token, [strokeWidth])` 呼叫成功但 `tokens` 讀回空物件，`[borderWidth]` 回錯誤（`should be a set of strings`），不帶屬性則被綁成 `rotation`（不可用）。Penpot 也沒有單邊描邊寬。所以沒有綁，描邊取 `.fig` 的固定值 1，Penpot 上是四邊外框，Professional 的「左邊 3」沒有對應。若要在 Penpot 表示，要改 `penpot-tokens.json` 的輸出（例如輸出為 `borderWidth` 型別），而 Penpot 仍無單邊寬度，這項留給 ISSUE-027 之後決定，本票未處理。
+- 單邊描邊：`.fig` 中 `C/Table` 的 3 個列、`C/Nav/Desktop`、`C/Nav/Mobile` 是只有底線（bottom 1），`C/Card/Metric` 是只有左邊（left 1）；Penpot 一律是四邊 1px 外框。外觀與 `.fig` 不同，值（顏色）仍是綁定的。
+- Popup 的固定陰影在 `bindings.json` 沒綁，所以不綁；Metric 的陰影「關」是一筆 `hidden: false` 的零值陰影（PR-FILE-33 已接受）。
+
+**hug 與版面行為（Penpot 如何隨 theme／Device 變）：**
+- sizing：9 個板（本批 7 加兩個試點）的根都是寬 fixed、高 hug；`C/Table` 的 3 個列、`C/Select/Open` 的 `Field`、`Popup` 為寬 fill、高 hug；`Retry button` 寬 fill、高 48 固定；文字為 fill 寬加 auto-height，或 auto-width。建置時設成與 `.fig` 相同，62 個節點的尺寸與位置在預設組合（Vibrant／Light／Desktop）與 `.fig` 比對：62 個節點（9 個板）中 61 個尺寸與位置相同（容差 0.01），差 1 個：`C/State/Error` 的 `Button label` 文字寬 Penpot 64、`.fig` 65（字型度量），位置 96／95.5。板的 `width`、各軸 sizing、hug 高度全部相同（`C/Table` 234、`C/Card/Metric` 198 等）。
+- 隨 theme／Device 的結果（讀 `width`×`height`，下表是版面穩定後的讀值；同一次切換後立刻讀到的是前一組的版面，見下「延遲」）：
+
+| 組合 | C/Table | C/Card/Metric | 其餘 7 個 hug 板 |
+| --- | --- | --- | --- |
+| Vibrant / Light / Desktop | 640x234 | 320x198 | 不變 |
+| Vibrant / Dark / Tablet | 640x234 | 320x198 | 不變 |
+| Professional / Light / Mobile | 640x226 | 320x190 | 不變 |
+| Professional / Dark / Desktop | 640x226 | 320x190 | 不變 |
+| Professional / Dark / Mobile | 640x226 | 320x190 | 不變 |
+
+其餘 7 個為 `C/Nav/Desktop` 960x59、`C/Nav/Mobile` 350x59、`C/State/Loading` 320x216、`C/State/Empty` 320x176、`C/State/Error` 320x240、`C/Select` 320x88、`C/Select/Open` 320x266，在這 5 組都不變，且與 `.fig` 相同。結論：`C/Table` 與 `C/Card/Metric` 的 hug 高度隨 Suite 變（`card-padding` Vibrant 24、Professional 20，高度差 8，與預測相符），Light／Dark 與 Device 不變（5 組內）；`.fig` 只存預設模式的 640x234、320x198，正是 Vibrant 的值，Professional 在 Penpot 會變矮。`C/Nav/*`、`C/State/*`、`C/Select*` 沒有綁尺寸 token，12 組預期相同，實測 5 組相同。Device 軸：這 9 個板沒有綁任何 Device token，所以 Device 只能證明切換不影響值與尺寸，對值的檢查沒有鑑別力；試點時 `C/Nav/Mobile` 的 `fs-section` 綁定會隨 Device 變高（Desktop 53、Tablet 51、Mobile 48），拿掉後不再變。
+- 延遲：切換 theme 後，token 綁定的屬性值（填色、圓角、`flex.topPadding` 等）立刻讀得到新值，但 hug 版面（board 高度與子節點位置）要等到外掛分頁被瀏覽器喚醒、重新排版後才更新；切換後立刻讀到的是前一組的版面（12 組切換後第一次讀，Table 都是前一組的 226 或 234）。所以尺寸只採信「分頁恢復後、兩次讀值一致」的值；曾在切換 theme 後試著微調 `rowGap` 想強迫重排，沒有立即奏效。建置時也有同樣現象（新建 board 的文字寬度為 1、位置為 0，之後才收斂）。
+
+**限制與未驗證：**
+- 第一批 13 個板的文字行高沿用預設 1.2，沒有對 `.fig` 的行高調整，它們的 hug 高度與 `.fig` 的對照沒有做（ISSUE-025 只驗板尺寸）。
+- 檔名：`penpot.currentFile.name` 只能讀不能寫（讀回仍是「嗨嗨」）。「重新命名為 `luca-style-library`」是使用者在 Penpot 介面的動作，沒有完成；ISSUE-027 匯出前需要先改名。
+- hug 尺寸只在 5 個組合上讀到穩定值（12 組中的 Vibrant／Light／Desktop、Vibrant／Dark／Tablet、Professional／Light／Mobile、Professional／Dark／Desktop、Professional／Dark／Mobile），其餘 7 組的值（綁定與解析值已逐組驗證）沒有穩定的尺寸讀值。外掛分頁常被暫停，每組都要等待分頁恢復。
+- 與 `.fig` 的幾何比對只在預設組合做，比對尺寸與位置，不比像素；文字寬度因字型度量可能不同（本批實測 62 個節點中的差異見上）。
+- 目視：`export_shape` 目視抽查 `C/Select/Open`（Professional / Dark / Mobile，Popup 陰影、選中與 hover 選項、Focus ring 都在）與 `C/State/Loading`（只看到深灰替身圖）各一張；沒有逐板、逐組目視，也沒有取整頁。
+- 母版是 board 而非 component，也沒有匯出再解析；匯出檔結構留給 ISSUE-027。
+- 單次 `execute_code` 超過 120 秒會逾時；在分頁被節流時，`setTimeout` 等待會變得很長，所以綁定改成不等待（與 ISSUE-025 每次綁定間等 400 ms 的做法不同；連續 `applyToken` 約 3 秒完成 Table 全部綁定），再以另一次呼叫讀回驗證。
+
+**暫存檔現況：** 頁面上 23 個板（無其他頂層節點）。token 沒有改動（8 個 set，Suite x Mode 各 29 個）。目前啟用的 theme：Professional / Dark 與 Mobile（讀回確認）。
+
+## Penpot 試點：離線解析匯出檔（ISSUE-020，PR-FILE-23）
+
+2026-10-30，使用者手動從暫存檔「嗨嗨」匯出 `hihi.penpot`（34,111 bytes，41 個條目，`generatedBy: penpot/2.18.5-RC1`，匯出格式 `penpot/export-files` 版本 1）。匯出檔是不受信任的資料：另解到新的空目錄檢視，原檔未動；試點腳本只在記憶體內讀 zip。匯出檔不進 repo。
+
+```sh
+node scripts/design/parse-export.mjs <匯出檔.penpot> [--json]
+node --test scripts/design/parse-export.test.mjs
+```
+
+**腳本結果**（結束碼 0）：檔案「嗨嗨」、媒體 4、母版 3（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`）、token set 8、theme 7。測試 19 項全過（由 `fixtures/minimal-export.json` 即時組 zip；含 store 與 deflate、非 zip、缺 manifest、壞 JSON、無母版、懸空 token 綁定、路徑可疑、子節點循環、壞壓縮資料、解壓總量超限、manifest id 含正規表示式字元、檔案不存在、用法錯誤）。
+
+**與 Penpot 內實際內容比對**（同日以 `execute_code` 讀回）：3 個頂層形狀的型別為 `board`，名稱相同；8 個 set 的 token 數 39、28x4、3x3，7 個 theme 的群組與名稱相同；每個形狀的 token 綁定與匯出檔一致（只差鍵名，見下）。`library.local.components` 長度為 0，與匯出檔沒有元件資料相符。
+
+### 壓縮檔結構
+
+- `manifest.json`：型別、版本、`generatedBy`、檔案清單（id、名稱、features）。
+- `files/<檔案id>.json`：檔案層資料（名稱、`revn`、`modifiedAt`、`migrations` 清單），不含頁面內容。
+- `files/<檔案id>/pages/<頁面id>.json`：頁面 id、名稱、索引；每個形狀一個檔，`pages/<頁面id>/<形狀id>.json`，另有根 frame（id 全零，名稱 `Root Frame`）的 `shapes` 陣列給出頂層順序。形狀以 `parentId`／`shapes` 連結，不是巢狀。
+- `files/<檔案id>/tokens.json`：所有 token set（鍵為 set 名稱）、`$themes`、`$metadata`（`tokenSetOrder`、`activeThemes`、`activeSets`）。
+- `files/<檔案id>/media/*.json`、`objects/*.png` 與 `*.json`：載入圖片替身（4 張）與縮圖；`thumbnails/frame/…`：板的縮圖記錄。
+
+### 離線可讀與不可讀
+
+| 項目 | 離線可讀 | 說明 |
+| --- | --- | --- |
+| 母版名稱與數量 | 是 | 頁面根 frame 的 `shapes` 中 `type: frame` 的直接子節點。巢狀的 `Loading image` 板不算；母版是板，不是元件。 |
+| token set 與 theme | 是 | 8 個 set、7 個 theme（群組、名稱、各自啟用的 set）。比對 160 個 token：全部在字面上不同，原因是匯出檔多 `$description: ""`，且 `fontFamilies` 值包成陣列（`["Inter"]`）；正規化這兩處後仍有 12 個不同，全是來源值 `0%` 在匯出檔變成 `0` 的不透明度 token（值為 0 的那幾個），數值相同、寫法不同。正式比對要正規化這三處。theme 與 set 的順序不一致：`tokens.json` 的鍵序是雜湊序，順序以 `$metadata.tokenSetOrder` 為準。 |
+| 每個形狀的 token 綁定 | 是 | 讀 `appliedTokens`，但鍵是儲存用的短鍵，與外掛 API 的屬性名不同：字型綁定為 `fontFamily`（不是 `fontFamilies`）、`fontSize`；填色 `fill`、描邊 `strokeColor`、`strokeWidth`、`opacity`；圓角 `r1`～`r4`（API 為 `borderRadiusTopLeft` 等）；內距 `p1`～`p4`（API 為 `paddingTop` 等）。 |
+| 解析後的值（PR-FILE-27 離線檢查） | 部分 | 形狀上存的是匯出當下啟用的 theme 的解析值（本檔為 Professional / Dark 加 Mobile，並記在 `$metadata.activeThemes`），其他 theme 的值不在形狀上，必須由 `tokens.json` 的 set 重新解析。以一次性腳本驗證：用 `activeSets` 解析 28 筆綁定（fill、strokeColor、strokeWidth、圓角、不透明度、字型、字級），27 筆與形狀儲存值相同；1 筆差異只是單位（token 值 `100%`、形狀存 `1`）。內距 `p1`～`p4` 未比（形狀存的是 `layoutPadding`）。文字節點的色彩與字型在 `content` 樹的 run 上，不在形狀頂層。所以離線檢查母版名稱、數量、綁定鍵與 token 是否存在可行；逐 theme 比對解析色彩則要自寫 set 解析（最後啟用者覆蓋），可行但是額外工作。 |
+| 母版是否為元件 | 未驗證 | 匯出檔沒有元件，腳本以 `componentId`／`mainInstance` 欄位名判斷是猜的，沒有真實元件可驗。 |
+| 載入圖片真實內容 | 不適用 | 圖片是純色替身，且 `objects/*.png` 是 Penpot 產生的縮圖。 |
+
+### 能否提交進 repo
+
+- 大小：34 KB，是二進位 zip，審查時看不出差異；若要進版控，需另有展開文字檢視（本腳本的 `--json` 可當一種）。真實母版（23 個含 Select）的大小未測；形狀每個一個 JSON，每個約 1.3 至 3 KB，粗估 23 個母版加子節點在數百 KB 之內，是估計不是量測。
+- 決定性：只有一次匯出，無法實測兩次匯出是否位元組相同，因為 `File.export` 這次在外掛端回 `No matching clause`，無法從 Penpot 重匯。從這一份可見的不穩定來源：zip 條目時間戳（17:05，晚於 `modifiedAt` 17:00，應是匯出時間）；縮圖的 `hash`／`id` 為隨機 uuid（`objects/` 與 `thumbnails/`）；`tokens.json` 的 set 與 theme 內部鍵序是雜湊序；theme id 在匯入來源 JSON 後被重新產生（來源是 `suite-x-mode-vibrant-light` 這種可讀 id，匯出是 uuid）；檔案層有 `revn`、`modifiedAt`。因此推測同內容兩次匯出的位元組會不同；若要進版控，需要規格化（略過縮圖與時間、正規化鍵序）的文字展開，不能直接比對 zip。這是推測，不是量測。
+
+### 正規化文字 dump（ISSUE-023，PR-FILE-32）
+
+```sh
+node scripts/design/penpot-dump.mjs <匯出檔.penpot> [--out <dump>]          # 產生，預設寫在匯出檔旁（.dump.json）
+node scripts/design/penpot-dump.mjs <匯出檔.penpot> --check [--out <dump>]  # 比對已提交的 dump，不一致結束碼 1 並以 - / + 列出差異行
+node --test scripts/design/*.test.mjs
+```
+
+dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出：所有 id（形狀、頁面、檔案、媒體、theme）、`revn`、`vern`、`modifiedAt`、`createdAt`、`hash`、`teamId`、`migrations`、`generatedBy`、`features`、縮圖與 `objects/`、可由位置與大小推得的 `selrect`、`points`、`transform`。順序有意義的清單保留來源順序：頁面根與各形狀的 `shapes`、`tokenSetOrder`。實測：同一份試點檔連續兩次產生，位元組相同（56,797 bytes、1,725 行，不含任何 uuid）。**沒有量測**：同內容兩次匯出的 zip 是否真的位元組不同，仍只有一次匯出；測試以人工改動時間戳、uuid、條目與鍵序的 zip 模擬重新匯出。元件的匯出表示未驗證，dump 對元件相關欄位照原樣輸出。
+
+### 把母版轉成元件對匯出表示的影響
+
+未做。重匯無法進行（`File.export` 失敗，見上），而在暫存檔轉換後不能匯出就看不到差異，也不為此改動暫存檔。階段二若母版要成為元件，解析規則（是否出現在 `components`、`componentId`／`mainInstance` 欄位、主元件所在位置）要在實際有元件的匯出檔上重驗。
+
+### PR-FILE-23 判定
+
+通過：腳本能離線列出母版名稱與數量，結果與 Penpot 內一致。限制如上：母版是板、元件表示未驗證、匯出檔不可決定性。
+
+## Penpot 試點結論（ISSUE-022，PR-FILE-24）
+
+2026-10-30。使用者在試點收尾時回覆「確認」，同意記錄結論；「確認」沒有指定下列兩項待決的選項，所以它們帶進階段二，不當成已決定。
+
+| 承諾 | 結果 | 依據 |
+| --- | --- | --- |
+| PR-FILE-20 | 通過 | 三個母版在 Suite x Mode 四種 × Device 三種共 12 組，解析值與 `variables.json` 全等；見「母版與 theme 切換」章節。限制：載入圖片是純色替身，母版是板不是元件，`font-zh` 要以不帶屬性的 `applyToken` 綁成 `fontFamily` |
+| PR-FILE-21 | retired | 使用者決定不做長時間編輯的壓力測試（2026-10-30） |
+| PR-FILE-22 | retired | 隨 PR-FILE-21 不做 |
+| PR-FILE-23 | 通過 | 腳本離線列出 3 個母版，與 Penpot 內一致；見「離線解析匯出檔」章節。限制：元件表示未驗證，匯出檔位元組不可決定 |
+
+**沒有驗證的事：Penpot 是否比 OpenPencil 穩定。** 這是 ADR 0008 的立論原因（記憶體累積後當機），試點只證明 theme 切換正確與匯出檔可離線解析。切換後若在 Penpot 遇到同樣的當機，要重新評估。
+
+**帶進階段二的待決項**
+
+- 陰影「關閉」在 Penpot 沒有對應，只能用零偏移、零模糊、透明度 0 的陰影代替；使用者於 2026-10-30 接受（PR-FILE-33）。
+- 匯出檔是二進位 zip，不適合單獨審查；使用者於 2026-10-30 決定另提交一份正規化文字 dump（PR-FILE-32），ADR 0008 已修訂。
+- 使用端匯入強調色的做法（`import-accent.js` 沒有 Penpot 等價路徑）。ISSUE-028 已先照建議做出 token JSON（見〈使用端強調色 token JSON〉），使用者仍未確認，且實際匯入未驗證。
+- 母版轉成元件後匯出表示是否改變，需先能重新匯出（外掛 `File.export` 現在失敗）。
+
+**階段二要切的票（尚未寫檔，兩項已決定，可用 `/to-tickets` 切，並含 PR-FILE-32、33）**
+
+- 重建其餘 20 個母版（含 `C/Select/Open`），依大小分 2 至 3 張（PR-FILE-18、26）。
+- 離線驗證腳本：把 `scripts/penpot-pilot/parse-export.mjs` 正式化（ISSUE-023 已搬到 `scripts/design/`），加其他 theme 的解析值比對（PR-FILE-27）。
+- 刪除 OpenPencil 產物並改文件：`.fig`、`scripts/design/` 的腳本與測試、`fig-variables.spec.ts`、consumer-guide、adoption-prompt、GLOSSARY，ADR 0008 改 Accepted（PR-FILE-28、07、08、30、31、09、06）。
+- Penpot 自架說明文件（PR-FILE-29）。
+- 使用端強調色匯入（PR-FILE-19），做法待決。
+
+## Penpot：使用端強調色 token JSON（ISSUE-028，PR-FILE-19）
+
+2026-10-30。**做法是建議、使用者尚未確認：** 產生 token JSON，由使用端在 Penpot 內手動匯入（ISSUE-017 開放問題）。
+
+**產物。** `scripts/design/penpot-accent.mjs --accent '<AccentInput JSON>' [--out 檔]`（不給 `--out` 寫 stdout；先 `npm run generate` 以取得 `packages/tokens/dist/tokens.json` 的中性色）。輸出是增量檔，不含 Base、Device 與既有 set：4 個新 set `Project Accent/{Vibrant,Professional}-{Light,Dark}`，各 6 個 color token（`accent`、`secondary`、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring`），值逐一等於 `deriveAccent`；`$themes` 為 4 個 Suite x Mode theme（同 id／名稱／群組），多啟用對應的 Project Accent set；輸出的 `tokenSetOrder` 只列這 4 個 set（意圖是排在 Suite x Mode 之後、同名 token 後者覆蓋前者）；匯入後 Penpot 實際把它們排在哪裡未驗證（模擬時是手動加在最後，在 Device 之後）。成功、警告、錯誤色與其他 token 不動（ADR 0002）。
+
+**離線測試。** `node --test scripts/design/penpot-accent.test.mjs`：15 項通過。6 組輸入（只給 light、加 dark、加 secondary、加 soft.light、加 soft.dark、全給）逐 set 逐 token 比對 `deriveAccent`；依 `penpot-tokens.json` 的 `tokenSetOrder` 合併後，6 個 token 等於推算值、其餘 token 與原檔相同；結構、錯誤結束碼 1／2、連跑兩次位元組相同。
+
+**Penpot 內驗證（模擬匯入，不是實際匯入檔案）。** Penpot 沒有匯入 JSON 的外掛 API，所以用 MCP `execute_code` 以 `addSet`、`addToken`、`theme.addSet` 重建同樣的 4 個 set 與 theme 引用，輸入為 `{"light":"#B5179E"}`，值取自該腳本的輸出。連線檔「嗨嗨」的基準：23 個板；Base 39、Suite x Mode 各 29、Device 各 3；7 個 theme；啟用 Professional / Dark 與 Mobile。讀 `C/Button/Primary` 的填色、`C/Button/Hover` 的填色、`C/Button/Focus` 的外框、`Option / selected`（`C/Select/Open` 內，綁 `accent-soft`）的填色，4 組 Suite x Mode 各讀一次：
+
+| 組合 | 加入前（accent／hover／focus／soft） | 加入後 |
+|---|---|---|
+| Vibrant / Light | #147f82／#007072／#147f82／#e3f2f0 | #b5179e／#a1008c／#b5179e／#fee6f8 |
+| Vibrant / Dark | #64c2bc／#75d2cc／#64c2bc／#173637 | #ff6ce3／#ff91e7／#ff6ce3／#392735 |
+| Professional / Light | #625c83／#544e74／#625c83／#eeedf4 | #b5179e／#a1008c／#b5179e／#fee6f8 |
+| Professional / Dark | #aba4d7／#bbb4e8／#aba4d7／#2d2a3b | #ff6ce3／#ff91e7／#ff6ce3／#392735 |
+
+「加入後」與腳本輸出（即 `deriveAccent`）逐值相同。新增的 set 排在 Device 之後，同名 token 蓋過 Suite x Mode 的值，母版顯示新強調色。觀察：加入 set 後立刻讀 Professional / Dark（已啟用的 theme）仍是舊色，要切到別的 theme 再切回才套用新值；實際匯入時使用端若停在目前 theme，需切換一次。
+
+**還原。** 對 4 個 theme 呼叫 `removeSet`，再 `remove()` 4 個 Project Accent set，然後逐 theme 切換重讀：4 組顏色與加入前完全相同；板數 23；set 與 token 數與基準相同（Base 39、Suite x Mode 各 29、Device 各 3，共 8 個 set）；各 Suite x Mode theme 的 set 引用回到 Base 加一個（沒有在加入前記錄 theme 的 set 引用順序，這項是事後讀回、非逐項比對）；啟用 Professional / Dark 與 Mobile。沒有殘留。
+
+**限制。** (1) 「在 Penpot 介面實際匯入該 JSON」未驗證：Penpot 匯入時是合併或取代既有 token 庫，我不知道；增量檔的設計即為了降低取代的風險，但不保證。若匯入取代整個庫，使用端需改為手動建立 4 個 set 並在 4 個 Suite x Mode theme 啟用它們（見 ISSUE-030 Notes）。(2) 只讀 4 個母版的 4 個欄位，其餘母版沒有逐一讀。(3) 沒做目視 `export_shape`。(4) Done-when 的「匯入後」以模擬代替，是否接受須使用者決定。
+
+## Penpot：強調色匯入實測與改為完整檔（ISSUE-028 追補，PR-FILE-19）
+
+2026-10-30，使用者在 Penpot 介面實測上一節的增量檔：Tokens 面板右下角「工具 > 匯入」**取代整個 token 庫**，不是合併，原有設計變數被蓋掉；使用者已還原。還原後以 `execute_code` 讀回：板數 23；Base 39、Suite x Mode 各 29、Device 各 3，共 8 個 set；7 個 theme；啟用的只有 Professional / Dark，`Device/Mobile` 沒有啟用（還原時掉了，與先前的 Professional / Dark 加 Mobile 不同），`Device/Mobile` theme 的 set 引用順序為 Device/Mobile 在前、Base 在後。這些不影響已提交的匯出檔。
+
+因此 `scripts/design/penpot-accent.mjs` 改為輸出完整檔：`penpot-tokens.json` 全部內容加 4 個 Project Accent set，4 個 Suite x Mode theme 各多啟用對應的 set，Project Accent set 排在 `tokenSetOrder` 最後；先前只產生 4 個 set 的邏輯保留為 `buildAccentSets`。離線測試 `node --test scripts/design/penpot-accent.test.mjs`：18 項通過，涵蓋 6 組輸入逐值比對 `deriveAccent`、完整檔保留 `penpot-tokens.json` 全部 set 與 Device theme、4 個 theme 的 set 引用與排序、缺 theme 的 base 丟錯、命令列結束碼與連跑位元組相同。
+
+**完整檔匯入實測。** 使用者用完整檔（強調色 `#B5179E`）匯入後，在 Penpot 匯出 token（`tokens (1).json`，不進 repo）：12 個 set 都在（Base 39、Suite x Mode 各 29、Device 各 3、Project Accent 各 6），`tokenSetOrder` 與腳本輸出完全相同（Project Accent 在最後），7 個 theme 的 id 與 set 引用與腳本輸出完全相同；188 筆 token 中 180 筆值與型別與 `accent.tokens.json` 相同，其餘 8 筆是 Penpot 的正規化寫法（`fontFamilies` 值由字串變成陣列、`metric-shadow` 由物件變成陣列，值本身相同）。匯出的 `$metadata` 顯示匯入後啟用的 theme 只有 `Suite x Mode/Vibrant / Dark`，沒有啟用任何 `Device` theme。
+
+**未驗證。** 母版畫面是否顯示新強調色（沒有目視）；Device theme 沒有啟用是匯入造成，或是使用者匯入前的狀態，沒有區分（使用者先前還原後 `Device/Mobile` 就已經沒啟用）。
+
+**`Device` theme 實測（2026-10-30）。** 使用者在 Penpot 啟用 `Device` theme 後切換三個尺寸，母版畫面沒有變化。原因：dump 中沒有任何 `fontSize` 綁到 `fs-*`，母版文字只綁 `fill` 與 `fontFamily`；全檔僅 `C / Card / Metric > Metric value` 一處 32px，程式碼（`packages/react/src/styles.css` 的 `.luca-metric strong`）也是固定 2rem，不是 `fs-title`，所以不是漏綁。處理：不改母版，於使用端指南說明 `Device` 只影響 `fs-hero`、`fs-title`、`fs-section`，須由使用端頁面綁定才有效果。**未驗證：** 在使用端頁面綁定 `fs-*` 後切換 `Device` 的實際畫面。
+
+## Penpot：匯出並提交元件庫設計檔，離線檢查（ISSUE-027，PR-FILE-16、18、26、27、32）
+
+2026-10-30，使用者在 Penpot 內把檔案改名為 `luca-style-library` 後手動匯出（`File.export` 在外掛端仍失敗，所以這一步只能由人做）：`luca-style-library.penpot`，353,025 bytes，210 個 zip 條目，`generatedBy: penpot/2.18.5-RC1`。匯出檔視為不受信任資料：先複製到暫存目錄，只在記憶體內解開（`read-zip.mjs`），沒有解到磁碟執行。
+
+**提交的檔案。** `docs/mockup/luca-style-library.penpot`（353,025 bytes，`.gitattributes` 標為 `binary`）與 `docs/mockup/luca-style-library.dump.json`（`penpot-dump.mjs` 預設輸出名，375,885 bytes，9,701 行）。大小：匯出檔含 31 組縮圖（`objects/*.png`＋`.json`）與 27 筆板縮圖記錄，設計內容本體是 113 個頁面形狀 JSON；dump 比匯出檔大是因為 zip 已壓縮、dump 是 2 格縮排的純文字。兩份加起來約 730 KB，可接受；之後每次改設計都會多一份 353 KB 的二進位 blob 進 git 歷史。
+
+**檢查指令。**
+
+```sh
+npm run check:penpot    # = node scripts/design/check-penpot.mjs && node scripts/design/penpot-dump.mjs docs/mockup/luca-style-library.penpot --check
+node --test scripts/design/check-penpot.test.mjs
+```
+
+`npm test`（CI 的 verify job 跑）內的 `tests/penpot-library.spec.ts` 以兩個獨立測試執行 `npm run check:penpot` 與 `scripts/design/*.test.mjs`（逐檔列出）。
+
+**檢查什麼（`check-penpot.mjs`，差異時結束碼 1，逐行列出）。**
+1. 檔名必須是 `luca-style-library`；頂層只能是 board。
+2. 母版：名稱以 `name.replace(/\s*\/\s*/g, "/")` 正規化後，數量與集合等於 `bindings.json` 的 23 個 `frame`（缺、多、重複都列出）。
+3. 綁定：每個母版依 `path` 走節點（子節點索引取 Penpot `shapes` 的反向序），比對節點型別、節點數與 `appliedTokens` 短鍵（`fill`、`strokeColor`、`strokeWidth`、`fontFamily`、`r1`～`r4`、`p1`～`p4`、`shadow`、`opacity`）；`bindings.json` 沒列的節點必須沒有任何綁定。
+4. 解析值：12 組 Suite x Mode x Device，依 `tokenSetOrder` 與該 theme 啟用的 set 疊加（後者覆蓋前者）在匯出檔內解析，逐筆比對 `variables.json` 的 72 個變數（除下列兩項）；同樣的解析再套在 `penpot-tokens.json`，匯出檔與它逐 token 比對（含 `metric-shadow`），以分辨是 Penpot 檔漂移還是產生器漂移。
+
+**已接受的表示差異（程式內 `ACCEPTED`，限定母版與路徑，範圍外同類差異照樣回報）。**
+- `C/State/Loading` 路徑 `0`：`fill[i].opacity` 以 4 個命名為 token 名去掉 `-opacity` 的疊放矩形（各綁一個 `opacity`）表示，節點數 8（`nodeCount` 4 加 4）。順序、型別 `rect`、名稱、token 逐一檢查。
+- `C/Card/Metric` 路徑 `-`：`strokeWidth.left`（`metric-border-left`）在 Penpot 不綁；若被綁上 `strokeWidth` 則回報為多出的綁定。
+- `C/Card/Metric` 路徑 `-`：`effect.enabled`（`elevation-enabled`）改綁 `shadow`＝`metric-shadow`；變數端以 `metric-shadow` 的色彩 alpha 是否為 0 對應布林。
+- `suite-label`（一般字串）沒有 Penpot token。
+- 其他兩項（單邊描邊只有底線或左邊、`C/Field/Error` 的空白文字替身）不影響 token 綁定，檢查不看。
+
+**結果。** 對真實匯出檔：23 個母版、名稱與 `bindings.json` 相同；逐節點綁定全部相同（`C/State/Loading` 因疊放矩形多 4 個節點，屬接受差異）；12 組解析值對 `variables.json` 差異 0，對 `penpot-tokens.json` 差異 0；`penpot-dump.mjs --check` 一致。沒有發現 Penpot 檔本身與 `bindings.json` 的實質差異。為確認檢查不是空轉：改一個綁定、拿掉一個母版、改兩個變數值，檢查回報 6 項差異、結束碼 1。
+
+**離線可解析的範圍與限制。** 解析的是「token set 疊加」；形狀上存的解析值只對應匯出當下啟用的 theme（`activeThemes`＝Professional / Dark 與 Mobile），其他 theme 的值不在形狀上，所以檢查的是「綁定正確」乘上「各 theme 的 token 值正確」，沒有檢查母版在各 theme 下實際顯示的顏色（那是 ISSUE-025、026 在 Penpot 內逐組讀回驗過的）。不解析別名（遇到回報「無法離線解析」）、theme 的 set 狀態只認 `enabled`；幾何、版面、文字內容、字重、元件表示都不檢查。Device 軸的鑑別力有限：23 個母版沒有綁任何 Device token。
+
+**與先前在 Penpot 內觀察的差異。**
+- 母版在匯出檔中都是 `type: frame`（board），沒有 `componentId`／`mainInstance` 欄位，檔案層沒有元件資料，與「母版是 board 而非 component」一致。`C/Select/Open` 的 `.fig` 型別是 COMPONENT，在 Penpot 同樣是 board。
+- 「母版轉成元件後匯出表示是否改變」：**未驗證**。這份匯出的母版都不是元件，也無法由我們重匯（`File.export` 失敗），所以沒有轉換前後的對照。階段二若把母版轉成元件，要在有元件的匯出檔上重驗 `parse-export.mjs` 的元件欄位猜測。
+- 這份匯出的形狀有 113 個頁面形狀（1 個根＋23 個母版＋89 個後代）；沒有出現試點沒見過的新形狀型別，只有 `frame`、`text`、`rect`（4 個疊放矩形）。`thumbnails/frame/…` 有 27 筆記錄，`objects/` 有 31 組縮圖，都不進 dump。
+- **dump 的 uuid 洩漏（已修）。** 第一次對這份匯出檔產生 dump 發現 2 個 uuid：`shadow` 項目的 `id`（`C/Card/Metric` 與 `C/Select/Open` 的 Popup；Penpot 在建立陰影時產生的隨機 id）。`penpot-dump.mjs` 現在在 `shadow` 陣列的項目上丟掉 `id`（`penpot-dump.test.mjs` 有測試，換掉陰影 id 的重新匯出位元組相同）；修後 dump 含 uuid 0 個。
+- **dump 穩定性。** 同一份匯出檔連續產生 3 次，位元組相同。**沒有量測**：同內容兩次匯出的 zip 是否產生同一份 dump，仍只有這一次匯出；選用的待辦是使用者不改任何東西再匯出一次，用 `penpot-dump.mjs --check` 對照提交的 dump（預期一致；若不一致，差異行會指出還有哪個欄位不穩定）。
+
+**守門測試的修改。** `penpot-dump.test.mjs` 原本拒絕任何被追蹤的 `.penpot` 與以 zip 魔術位元組開頭的檔。現改為純函式 `exportViolations`（`penpot-test-helpers.mjs`），唯一放行 `docs/mockup/luca-style-library.penpot`；其他 `.penpot`、放行檔名換目錄或大小寫、偽裝成別的副檔名的 zip 都仍違規（`.fig` 的既有例外不變），並新增單測證明。
+
+**開放問題「路徑與檔名」的決定。** `docs/mockup/luca-style-library.penpot` 與 `docs/mockup/luca-style-library.dump.json`（沿用 `penpot-dump.mjs` 的預設輸出名，不另加 `--out`）。
+
+**未驗證。** 元件表示；兩次匯出的決定性；`C/Card/Metric` 單邊描邊寬的 Penpot 表示（ISSUE-026 留給本票之後決定，這張票沒有處理，維持接受差異）。
+
+## Penpot：退役 OpenPencil 產物與設計檔檢查總覽（ISSUE-029，PR-FILE-06、07、08、28）
+
+2026-10-30。這一章記錄 Penpot 版元件庫設計檔 `docs/mockup/luca-style-library.penpot` 的檢查指令與結果（PR-FILE-06），以及 OpenPencil 產物退場的範圍。過往章節（含 `.fig`、`check-masters.js` 等當時的指令）是歷史記錄，不改。
+
+**檢查指令與結果（退場後）。**
+
+| 指令 | 結果 |
+| --- | --- |
+| `npm run check:penpot` | 通過：23 個母版名稱與綁定、各 theme 組合的解析值與 `variables.json`、`penpot-tokens.json` 一致；`docs/mockup/luca-style-library.dump.json` 與匯出檔一致 |
+| `node --test scripts/design/*.test.mjs` | 94 項通過、0 失敗 |
+| `npm test` | 257 passed（Playwright，2.4 分鐘）；退場前基準同為 257 passed |
+| `npm run typecheck`、`npm run lint` | 無輸出錯誤，結束碼 0 |
+| `npm run generate` | 產出與已提交檔案相同，唯一差異是 `variables.json` 的 `$generated` 字串（不再指向已刪除的 `apply-variables.js`），已一併提交 |
+
+`npm test` 內的 `tests/penpot-library.spec.ts` 以兩個獨立測試執行 `npm run check:penpot` 與 `scripts/design/*.test.mjs`，所以 CI 的 verify job 會跑。
+
+**人眼抽查（誠實記錄）。** 做過的只有 Penpot 內以 `export_shape` 取的少量樣本，沒有全面核對：`C/Field/Error` 一張（ISSUE-026）、`C/Select/Open` 與 `C/State/Loading` 各一張（ISSUE-027 前後，後者只看到深灰替身圖）。`export_shape` 取整頁逾時失敗，沒有整頁目視；沒有逐板、逐 theme 組合目視。**23 個母版的全面人眼核對尚未做，是交接項目**：需要使用者在 Penpot 內逐一看過 23 個母版在四種 Suite x Mode 與三種 Device 下的樣子，並判定是否可接受；在此之前，「母版顯示正確」只由 `check:penpot` 對綁定與 token 值的離線比對支持，不含實際渲染。
+
+**刪除了什麼（PR-FILE-08、28）。** `docs/mockup/luca-style-library.fig`；`scripts/design/` 的 `apply-bindings.js`、`apply-variables.js`、`check-masters.js`、`import-accent.js`、`test-helpers.js` 與四個對應的 `*.test.js`（約 44 個測試，依賴 `openpencil` CLI，本來就不在 `npm test` 內）；`tests/fig-variables.spec.ts`（見下）。`package.json` 與 `.github/workflows/*` 在這張票之前就已沒有 `openpencil` 呼叫，驗證為 0 命中。`penpot-test-helpers.mjs` 的 `exportViolations` 移除 `.fig` 例外，單測改為斷言 zip 內容的 `.fig` 一樣違規。
+
+**保留了什麼與原因。** `docs/mockup/themes/variables.json`、`bindings.json`、`penpot-tokens.json`：`check-penpot.mjs` 的比對基準；`variables.json` 仍由 `npm run generate` 產生，是 `penpot-tokens.json` 的來源。`scripts/design/` 的 `penpot-*.mjs`、`parse-export.mjs`、`read-zip.mjs`、`check-penpot.mjs` 與其測試、`fixtures/`。
+
+**覆蓋移到哪。** `tests/fig-variables.spec.ts` 的 12 個測試守的是 `variables.json` 與 DTCG 的一致性（舊 48 變數保值、72 變數涵蓋全部 CSS 變數、不可轉型別與重複名稱讓建置失敗、集合分配、已提交檔等於新產生、沒有旗標不寫檔）。`penpot-tokens.spec.ts` 只驗 color 與 fontSizes 的值，`check:penpot` 把 `variables.json` 當信任的基準，兩者取代不了，所以**移植而非刪除**：改名為 `tests/design-variables.spec.ts`，測試數仍是 12，只改旗標名（建置選項 `--fig` 改名 `--variables`，`package.json`、`packages/tokens/build.mjs`、`tests/tokens-derived.spec.ts` 同步）與措辭；fixture 改名為 `tests/fixtures/design-variables-0.1.0.json`。`apply-*.test.js` 與 `check-masters.test.js` 測的是被刪的腳本，由 `check-penpot.mjs` 及其測試（母版名稱、綁定、解析值）承接同一件事，`import-accent.test.js` 由 `penpot-accent.test.mjs`（15 項）承接。
+
+**文件改動。** `DESIGN.md`、`docs/03_architecture_design.md`、`docs/05_frontend_spec.md`（§5.5 標題改為「共用元件庫元件」）、`docs/capabilities/design-system.md`（工具敘述；PR-FILE-06、07、08 改為 ISSUE-017 的修訂文字；移除只適用 OpenPencil 的 `Internal Only Canvas` 備註）、`README.md`、`packages/tokens/build.mjs` 註解改指向 `.penpot`。留給 ISSUE-030 的：`GLOSSARY.md`、`docs/consumer-guide.md`、`docs/adoption-prompt.md` 與 ADR 0008 狀態；它們仍寫 OpenPencil，`docs/consumer-guide.md` 指向已刪腳本的步驟已登記在 ISSUE-030 Notes。
+
+**未驗證。** 上述人眼抽查；`variables.json` 的檔名與 `$extensions` 的 `figName` 鍵沿用舊名（改名會動 DTCG 原始檔，不在本票）。
+
+## Penpot：文件、詞彙表與 ADR 收尾（ISSUE-030，PR-FILE-09、19、29、30、31）
+
+2026-10-30。ADR 0008 改 `Accepted`，ADR 0003、0004、0007 的狀態列同步；GLOSSARY 改寫 `元件庫設計檔`、`設計變數`，移除 `畫布頁`；`docs/penpot-self-hosting.md` 新增；`docs/consumer-guide.md`、`docs/adoption-prompt.md` 的設計稿起點改為 `docs/mockup/luca-style-library.penpot`；ISSUE-017 的承諾已搬進 `docs/capabilities/design-system.md`。
+
+**未驗證。** (1) 強調色 token JSON 在 Penpot 介面的實際匯入（合併或取代、set 排序）；產生管道本身是建議做法，使用者尚未確認。(2) 自架說明中標「待確認」的項目：映像標籤 `2.18` 與 2.18.5-RC1 的對應、首次登入帳號建立方式、本機 MCP 容器實際採用的外掛接法。(3) Penpot 的穩定度。

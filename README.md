@@ -36,7 +36,7 @@ import '@luca-style/react/css';
   </ThemeProvider>;
 ```
 
-封裝、安裝、公開 API、字體授權與 OpenPencil 同步見[使用端接入文件](docs/consumer-guide.md)。
+封裝、安裝、公開 API、字體授權與設計變數同步見[使用端接入文件](docs/consumer-guide.md)。
 
 ## 公開套件與文件導覽
 
@@ -50,7 +50,7 @@ import '@luca-style/react/css';
 | 讓其他專案的代理執行接入 | [跨專案套用提示詞](docs/adoption-prompt.md)，內附精緻活力與精緻專業的輸入範例 |
 | 讓代理使用設計系統 | [DESIGN.md](DESIGN.md) 與 [llms.txt](llms.txt)；每個設計變數的值與用途見[設計變數規格](docs/design-tokens.md)（產生物） |
 | 了解設計系統的承諾與範圍 | [設計系統能力規格](docs/capabilities/design-system.md) |
-| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為元件庫設計檔 `docs/mockup/luca-style-library.fig`（兩套風格的母版與設計變數合為一檔） |
+| 查視覺、路由與頁面規則 | [前端規格](docs/05_frontend_spec.md)；設計稿為元件庫設計檔 `docs/mockup/luca-style-library.penpot`（兩套風格的母版與設計變數合為一檔） |
 | 查架構與部署方式 | [架構設計](docs/03_architecture_design.md) |
 | 查驗收證據與限制 | [交付驗證](docs/delivery-verification.md) |
 | 查領域術語 | [術語表](GLOSSARY.md) |

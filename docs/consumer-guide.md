@@ -60,9 +60,9 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 
 Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/react/licenses/inter?url'`；另有 `notosanstc`、`ibmplexmono`。部署時保留建置產物中的字體與授權資產；不要只複製 CSS。
 
-## OpenPencil 與程式同步
+## Penpot 設計稿與程式同步
 
-設計稿是一個以 OpenPencil 編輯的元件庫設計檔：`docs/mockup/luca-style-library.fig`，含設計變數與 23 個母版；兩套風格與明暗以 `Suite x Mode` 集合的四個模式切換（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`），裝置以 `Device` 切換。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。
+設計稿是一個以 Penpot 編輯的元件庫設計檔：`docs/mockup/luca-style-library.penpot`（Penpot 匯出檔，含設計變數與 23 個母版；審查用的文字 dump 是同目錄的 `luca-style-library.dump.json`，不能匯回 Penpot）。兩套風格與明暗以 token theme `Suite x Mode` 的四種組合切換（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`），裝置以 theme `Device` 切換。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。自架 Penpot 的版本與啟動步驟見[Penpot 自架說明](penpot-self-hosting.md)。
 
 | 設計稿名稱 | 程式公開對應 |
 | --- | --- |
@@ -73,36 +73,60 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 | C/Select、C/Checkbox、C/Status/*、C/State/* | Select、Checkbox、StatusMessage、ContentState |
 | C/Card/Metric、C/Table、C/Nav/* | MetricCard、DataTable、Navigation |
 
-人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 generate；以 OpenPencil 工具同步相同角色與母版（母版只有一份，本 repo 以 `scripts/design/check-masters.js` 核對母版齊全、已綁定且四種套系與明暗組合的解析值等於 variables.json）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與元件庫設計檔。元件命名對應不是自動同步或像素保證。
+**`Device` theme 的作用範圍：** 三個 `Device` theme 只管 `fs-hero`、`fs-title`、`fs-section` 三個字級 token，值隨裝置變（Desktop 56/32/24、Tablet 44/28/22、Mobile 32/24/20）。元件庫的母版沒有使用這三個角色（程式碼的按鈕、標籤、指標數字都是固定字級，例如 `C/Card/Metric` 的數字固定 2rem），所以啟用或切換 `Device` 時母版畫面不會變，這是預期行為。要看到效果，請在自己頁面的 hero、標題、區段標題文字上綁定對應的 `fs-*` token。
+
+人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 `npm run generate`；在 Penpot 內同步相同角色與母版（母版只有一份，本 repo 以 `npm run check:penpot` 核對母版名稱齊全、已綁定，且各 `Suite x Mode` 與 `Device` 組合的解析值等於 `variables.json`）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與元件庫設計檔。元件命名對應不是自動同步或像素保證。
+
+### 更新元件庫設計檔（維護 luca-style 的人）
+
+1. 在 Penpot 內改母版，並確認檔名是 `luca-style-library`。
+2. 匯出，覆蓋 `docs/mockup/luca-style-library.penpot`。
+3. 執行 `node scripts/design/penpot-dump.mjs docs/mockup/luca-style-library.penpot`，重新產生 `docs/mockup/luca-style-library.dump.json`。
+4. 執行 `npm run check:penpot`。
+5. 兩個檔案一起提交。匯出檔是二進位（約 353 KB），審查看 dump 的差異。
+
+設計變數的值不在 Penpot 內改：改 `packages/tokens/src` 的 DTCG 原始檔，`npm run generate` 後把 `docs/mockup/themes/penpot-tokens.json` 重新匯入 Penpot 的 Tokens 面板，再依上列步驟匯出。
 
 ## 複製元件庫設計檔並匯入專案強調色
 
-使用端的設計稿從元件庫設計檔複製開始（ADR 0007）：檔案含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準。
+使用端的設計稿從元件庫設計檔複製開始（ADR 0007、0008）：檔案含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準。
 
-前提：需要一份 luca-style 檢出，並先在檢出內執行 `npm ci` 與 `npm run generate`（匯入腳本從 `packages/tokens/dist/tokens.json` 取各套系的中性色）。腳本與設計檔都不在 npm 套件內，不能只靠安裝 `@luca-style/react`。另需安裝 `openpencil` CLI（離線編輯，不需開 App）。
+**匯入會取代整個 token 庫（實測，2026-10-30）：** Penpot 的 Tokens 面板「工具 > 匯入」不是合併，而是用匯入檔取代設計檔現有的全部 token set 與 theme。所以強調色腳本輸出的是**完整檔**（`penpot-tokens.json` 全部內容加上強調色 set），不是只含強調色的增量檔；匯入後設計變數不會消失。代價：你在複本裡手動加的 token 會被取代，設計變數只在 luca-style 的 DTCG 來源改（ADR 0004），不在 Penpot 內手改。
+**完整檔匯入實測（2026-10-30）：** 匯入 `accent.tokens.json` 後再從 Penpot 匯出 token，12 個 set 都在，`Project Accent/*` 排在最後，7 個 theme 的 set 引用正確，強調色 token 與腳本輸出逐值相同；匯入後只啟用了一個 `Suite x Mode` theme，沒有啟用 `Device` theme，要自己選。**尚未驗證：** 母版畫面是否顯示新強調色（沒有目視）；「產生 token JSON、在 Penpot 手動匯入」這個管道是建議做法，使用者尚未最後確認。
+
+前提：需要一份 luca-style 檢出，並先在檢出內執行 `npm ci` 與 `npm run generate`（產生腳本從 `packages/tokens/dist/tokens.json` 取各套系的中性色）。腳本與設計檔都不在 npm 套件內，不能只靠安裝 `@luca-style/react`。
 
 ### 第一次：複製並匯入強調色
 
-1. 把檢出內的 `docs/mockup/luca-style-library.fig` 複製到自己專案，例如 `docs/mockup/my-library.fig`。之後在這份複本上畫稿，不要改 luca-style 的原檔。
-2. 在 luca-style 檢出內執行。第一個參數是你複製出來的 .fig 路徑；`--accent` 與 `ThemeProvider` 的 `accent` 屬性是同一種 `AccentInput`（只有 `light` 必填）：
+1. 把檢出內的 `docs/mockup/luca-style-library.penpot` 匯入自己的 Penpot（Penpot 的匯入檔案功能），之後在這份複本上畫稿，不要改 luca-style 的原檔。
+2. 在 luca-style 檢出內產生強調色 token JSON。`--accent` 與 `ThemeProvider` 的 `accent` 屬性是同一種 `AccentInput`（只有 `light` 必填）：
 
 ```sh
-node scripts/design/import-accent.js /path/to/my-project/docs/mockup/my-library.fig --accent '{"light":"#B5179E"}'
+node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' --out accent.tokens.json
 ```
 
-腳本呼叫與 `ThemeProvider` 同一份 `deriveAccent`，把 `Suite x Mode` 集合內的 `accent`、`secondary`（點綴色）、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring` 寫成推算值；Vibrant／Professional × Light／Dark 四個模式各以該套系該明暗的中性色推算。成功、警告、錯誤色與其他變數不動（ADR 0002）。重跑同樣的輸入會回報「已是最新」而不寫檔。
+腳本呼叫與 `ThemeProvider` 同一份 `deriveAccent`，輸出**完整檔**：`penpot-tokens.json` 的全部內容（Base、4 個 `Suite x Mode` set、3 個 `Device` set、7 個 theme），再加 4 個新 set `Project Accent/{Vibrant,Professional}-{Light,Dark}`，各含 `accent`、`secondary`（點綴色）、`accent-soft`、`accent-hover`、`accent-pressed`、`focus-ring` 六個 token；4 個 `Suite x Mode` theme 各多啟用對應的 Project Accent set，Project Accent set 排在 `tokenSetOrder` 最後。成功、警告、錯誤色與其他變數不動（ADR 0002）。
+3. 在 Penpot 左邊的 Tokens 面板，點右下角的「工具」，選「匯入」，選 `accent.tokens.json`。匯入會取代整個 token 庫，匯入前先備份複本。匯入後切換一次 theme，讓畫面套用新色（實測以 API 重建 set 時，已啟用的 theme 要切走再切回才更新）。
 
-匯入後母版畫面會顯示這組強調色（主要按鈕、滑過、焦點框、Select 選單等）。`accent-pressed` 沒有對應的按下狀態母版，只存在於變數；畫稿需要按下色時綁這個變數。
+匯入後母版畫面應顯示這組強調色（主要按鈕、滑過、焦點框、Select 選單等）。`accent-pressed` 沒有對應的按下狀態母版，只存在於變數；畫稿需要按下色時綁這個變數。
+
+匯入後檢查（set 排序與 theme 引用已實測正確，啟用狀態要自己確認）：
+
+- Tokens 面板的 set 應有 Base、`Suite x Mode`、`Device`，再加 `Project Accent`；`Project Accent/*` 要排在 `Suite x Mode` 各 set 之後（同名 token 後者覆蓋前者），順序不對時手動拖到後面。
+- 7 個 theme 都在，且每個群組各啟用一個（`Suite x Mode` 一個、`Device` 一個）；匯入後 `Device` 沒有啟用任何 theme（實測），請手動選 Desktop、Tablet 或 Mobile 其中一個。
+- 備案：若匯入的結果不對，從備份的複本還原，或改為手動建立 4 個 set、貼入 6 個 token，並在 4 個 `Suite x Mode` theme 各啟用對應的 `Project Accent/*` set。
+- 還原強調色：重新匯入 luca-style 檢出內的 `docs/mockup/themes/penpot-tokens.json`（不含強調色），或在 4 個 theme 取消啟用並刪除 4 個 `Project Accent/*` set。
 
 ### luca-style 更新後：重新匯入設計變數
 
 複本裡的母版與變數不會自動更新。luca-style 有新版（設計變數或母版變動）時：
 
 1. 更新 luca-style 檢出並重新 `npm run generate`。
-2. 要取得新版變數與母版：把新版 `luca-style-library.fig` 重新複製成你的複本（會覆蓋複本上的畫稿，先備份），再重跑上面的 `import-accent.js`。
-3. 只是專案換了主色：直接對現有複本重跑 `import-accent.js` 並給新的 `--accent`。
+2. 只是設計變數變了：重新產生 `accent.tokens.json`（它已含最新的 `penpot-tokens.json`）並依上列步驟匯入。不要只匯入 `penpot-tokens.json`，那會連強調色一起取代掉。匯入會取代整個 token 庫（實測），先備份複本。
+3. 母版也變了：把新版 `luca-style-library.penpot` 重新匯入成新檔再重做強調色匯入；舊複本上的畫稿需要時自行比對新母版調整。
+4. 只是專案換了主色：用新的 `--accent` 重新產生 `accent.tokens.json` 並匯入，整個 token 庫會被新檔取代。
 
-沒有把新版母版合併進舊設計稿的腳本；舊設計稿上的畫面需要時自行比對新母版調整。
+沒有把新版母版合併進舊設計稿的腳本。
 
 ## 內容載入動畫
 
@@ -129,7 +153,7 @@ npm run test:consumer
 - **中性色**：頁面底色、卡片表面、次要表面、文字與邊框改為冷藍灰；寫死 0.1.0 色碼的地方改用設計變數（見〈中性色改為冷藍灰〉）。
 - **可能要調整的測試**：見〈要調整的測試〉；最常見的是 Select 不再是原生 `<select>`，`selectOption()` 不能用。
 - **不相容處**：Select、Checkbox、Navigation 的 DOM 與事件物件改變，逐條列在各元件小節。
-- **設計稿**：0.1.0 的 `components.pen` 與依套系拆開的 `.fig` 已移除，改從元件庫設計檔複製開始，見〈複製元件庫設計檔並匯入專案強調色〉。
+- **設計稿**：0.1.0 的舊設計檔（依套系拆開的版本）已移除，設計稿起點改為 Penpot 版元件庫設計檔，見〈複製元件庫設計檔並匯入專案強調色〉。
 
 ### 要調整的測試
 

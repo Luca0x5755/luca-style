@@ -24,7 +24,7 @@
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
    - packages/tokens/src/（DTCG 分層檔）：最新變數來源；數值以此與正式規範核對。
-3. 需要核對視覺設計時，使用 OpenPencil 工具開啟元件庫設計檔 docs/mockup/luca-style-library.fig（只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準），以 Suite x Mode 一個集合的四個模式切換套系與明暗。透過工具讀取 .fig，工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，複製此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/import-accent.js；luca-style 更新後的重新匯入也寫在該節。
+3. 需要核對視覺設計時，使用 Penpot 開啟元件庫設計檔 docs/mockup/luca-style-library.penpot（Penpot 匯出檔，只含設計變數與 23 個母版，沒有頁面 frame；頁面範本以樣張網站為準；版本與自架方式見 docs/penpot-self-hosting.md），以 token theme Suite x Mode 的四種組合切換套系與明暗。工具不可用時明確記錄尚未完成 mockup 比對。專案自己畫設計稿時，匯入此檔並匯入專案強調色：依 docs/consumer-guide.md〈複製元件庫設計檔並匯入專案強調色〉執行 scripts/design/penpot-accent.mjs 產生完整的 token JSON 並在 Penpot 的 Tokens 面板「工具 > 匯入」匯入（匯入會取代整個 token 庫，匯入後的排序與啟用狀態依該節〈匯入後檢查〉確認）；luca-style 更新後的重新匯入也寫在該節。
 4. 列出主要路由、共用元件與載入／空白／錯誤狀態的套用清單，說明採用的套系與接入方式，再持續執行。已有明確答案的事項直接依規範處理；僅在真正阻塞的產品或技術決策上詢問。
 
 【實作】
@@ -52,7 +52,7 @@
 
 ## 已套用舊版的專案：升級提示詞
 
-適用於已依 0.1.0 套用過 Luca Style 的專案。設計稿正本改為元件庫設計檔 `docs/mockup/luca-style-library.fig`（只含設計變數與母版），舊的 `components.pen` 已移除。tokens 與 React 套件升為 0.2.0，有不相容處（專案強調色寫法、Select 與 Checkbox 的 DOM、使用端測試的寫法），逐條列在 docs/consumer-guide.md〈0.2.0 升級說明〉；整頁主題與防閃爍的自補程式可以刪掉。套件升級依步驟 4 處理。
+適用於已依 0.1.0 套用過 Luca Style 的專案。設計稿正本是 Penpot 版元件庫設計檔 `docs/mockup/luca-style-library.penpot`（只含設計變數與母版），0.1.0 的舊設計檔已移除。tokens 與 React 套件升為 0.2.0，有不相容處（專案強調色寫法、Select 與 Checkbox 的 DOM、使用端測試的寫法），逐條列在 docs/consumer-guide.md〈0.2.0 升級說明〉；整頁主題與防閃爍的自補程式可以刪掉。套件升級依步驟 4 處理。
 
 先在設計來源 `git pull`（或重新 clone）取得最新內容，再複製下方提示詞。
 
@@ -69,9 +69,9 @@
 2. 在設計來源執行 `git log --oneline <舊 commit>..HEAD -- packages apps docs/05_frontend_spec.md docs/03_architecture_design.md`，列出舊 commit 之後與本專案有關的變更。舊 commit 不明時，改以下列差異清單核對。
 
 【已知差異與處理】
-3. 設計稿來源：原本比對的 `docs/mockup/components.pen` 已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.fig，透過 OpenPencil 工具讀取。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。
+3. 設計稿來源：原本比對的舊設計檔已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.penpot，用 Penpot 開啟。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。
 4. tokens 與套件：仍是 0.1.0 時，依 docs/consumer-guide.md 重新建置、封裝並安裝 0.2.0 tarball（兩個套件版本須一致），再逐條處理〈0.2.0 升級說明〉：改寫 `accent` 寫法、刪掉整頁主題與防閃爍的自補程式、調整操作 Select 與 Checkbox 的測試。其他框架則比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔，同步自建 tokens。
-5. 文件連結：專案文件中凡是指向 `components.pen`、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.fig` 的路徑。
+5. 文件連結：專案文件中凡是指向舊設計檔、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.penpot` 的路徑。
 6. 若專案在第 1 步記錄的 commit 之前就有自訂覆寫（強調色、密度、資料色），確認它們沒有被新的套系預設取代；覆寫值不變。
 
 【驗收】
