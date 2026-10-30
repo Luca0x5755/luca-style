@@ -52,7 +52,7 @@ function exportTokens() {
       border: { $type: 'color', $value: v.border, $description: '' },
       radius: { $type: 'borderRadius', $value: String(v.radius), $description: '' },
       'metric-border-left': { $type: 'borderWidth', $value: String(v.bwLeft), $description: '' },
-      // 試點觀察：值為 0 的不透明度在匯出檔寫成 "0"，非 0 寫成 "100%"。
+      // 匯出檔觀察：值為 0 的不透明度在匯出檔寫成 "0"，非 0 寫成 "100%"。
       'loading-a-opacity': { $type: 'opacity', $value: v.aOpacity ? '100%' : '0', $description: '' },
       'loading-b-opacity': { $type: 'opacity', $value: v.bOpacity ? '100%' : '0', $description: '' },
       'metric-shadow': { $type: 'shadow', $value: [v.shadow], $description: '' },

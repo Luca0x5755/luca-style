@@ -9,7 +9,7 @@ import { makeWorkspace, readJson, readText, runGenerator } from './tokens-helper
 
 type Theme = Record<string, string>;
 type Data = Record<string, Record<string, Theme>>;
-type FigData = { variables: { name: string; values: Record<string, unknown> }[] };
+type DesignData = { variables: { name: string; values: Record<string, unknown> }[] };
 const derivedNames = ['accent-hover', 'accent-pressed', 'focus-ring'] as const;
 const title = (word: string) => word[0].toUpperCase() + word.slice(1);
 
@@ -17,13 +17,13 @@ async function generate(edit?: (source: string) => Promise<void>) {
   const workspace = await makeWorkspace();
   try {
     if (edit) await edit(workspace.source);
-    const result = runGenerator(workspace.root, 'src', 'out', ['--variables', 'fig.json']);
+    const result = runGenerator(workspace.root, 'src', 'out', ['--variables', 'design.json']);
     expect(result.stderr).toBe('');
     expect(result.status).toBe(0);
     return {
       data: await readJson(join(workspace.out, 'tokens.json')) as Data,
       css: await readText(join(workspace.out, 'tokens.css')),
-      fig: await readJson(join(workspace.root, 'fig.json')) as FigData,
+      design: await readJson(join(workspace.root, 'design.json')) as DesignData,
     };
   } finally {
     await workspace.dispose();
@@ -38,7 +38,7 @@ function expectedFor(data: Data, suite: string, mode: 'light' | 'dark') {
 }
 
 test('every suite and mode gets accent-hover, accent-pressed and focus-ring derived from its own accent', async () => {
-  const { data, css, fig } = await generate();
+  const { data, css, design } = await generate();
   const problems: string[] = [];
   for (const suite of ['vibrant', 'professional']) for (const mode of ['light', 'dark'] as const) {
     const expected = expectedFor(data, suite, mode);
@@ -46,10 +46,10 @@ test('every suite and mode gets accent-hover, accent-pressed and focus-ring deri
     for (const name of derivedNames) {
       if (data[suite][mode][name] !== expected[name]) problems.push(`data ${suite}/${mode} ${name}: ${data[suite][mode][name]}，應為 ${expected[name]}`);
       if (!block.includes(`--${name}: ${expected[name]};`)) problems.push(`css ${suite}/${mode} ${name} 不是 ${expected[name]}`);
-      const variable = fig.variables.find(candidate => candidate.name === name);
+      const variable = design.variables.find(candidate => candidate.name === name);
       for (const device of ['Desktop', 'Tablet', 'Mobile']) {
         const value = variable?.values[`${title(mode)}/${title(suite)}/${device}`];
-        if (value !== expected[name]) problems.push(`fig ${name} ${mode}/${suite}/${device}: ${value}，應為 ${expected[name]}`);
+        if (value !== expected[name]) problems.push(`design ${name} ${mode}/${suite}/${device}: ${value}，應為 ${expected[name]}`);
       }
     }
   }

@@ -6,7 +6,7 @@
 
 ## 版本
 
-- 試點與全部母版重建所用：Penpot 2.18.5-RC1（`docs/mockup/luca-style-library.penpot` 匯出時記錄 `generatedBy: penpot/2.18.5-RC1`，見[交付驗證](delivery-verification.md)）。
+- 建置母版與匯出所用：Penpot 2.18.5-RC1（`docs/mockup/luca-style-library.penpot` 匯出時記錄 `generatedBy: penpot/2.18.5-RC1`，見[交付驗證](delivery-verification.md)）。
 - 維護者本機的容器映像標籤是 `2.18`（`penpotapp/frontend:2.18`、`backend`、`exporter`、`admin-console`、`mcp` 同標籤）。標籤 `2.18` 是否正好對應 2.18.5-RC1：待確認。
 - 是否固定版本的決定：不強制固定，只記錄「測試過的版本是 2.18.5-RC1」。更新版本的 Penpot 未測試；升級後請重跑 `npm run check:penpot`，並用新版匯出一次檔案確認匯出檔格式沒有變（`check:penpot` 與 `penpot-dump.mjs` 依賴匯出檔的內部結構）。
 - 想固定版本時，依官方文件在啟動前設環境變數 `PENPOT_VERSION`（官方建議固定版本，見下節網址）。
@@ -70,5 +70,6 @@ Penpot 的 MCP 有兩種接法，來源：[Penpot MCP 文件](https://help.penpo
 ## 與 repo 的關係
 
 - 設計檔改完後的匯出與提交流程（匯出覆蓋 `.penpot`、重新產生 `luca-style-library.dump.json`、`npm run check:penpot`，兩個檔案一起提交）見[使用端接入](consumer-guide.md#更新元件庫設計檔維護-luca-style-的人)。
-- 外掛 API 的 `File.export` 在試點時失敗，匯出只能由人在介面操作（見[交付驗證](delivery-verification.md)）。
+- 外掛 API 的 `File.export` 會失敗，匯出只能由人在介面操作（見[交付驗證](delivery-verification.md)）。
+- 匯出檔的位元組不可決定（時間戳、隨機縮圖 id、雜湊鍵序），所以審查與驗證用正規化文字 dump（`docs/mockup/luca-style-library.dump.json`），不直接比對 zip。
 - Penpot 是否比先前的設計工具穩定沒有驗證（ADR 0008）；長時間編輯若遇到同樣的當機，要重新評估。

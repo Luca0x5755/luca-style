@@ -7,7 +7,7 @@
 | 共用元件 | React + TypeScript；互動行為、鍵盤與焦點由 Base UI（`@base-ui/react` ^1.9）處理；peer 為 `react`、`react-dom` 19 | [ADR 0006](adr/0006-build-every-component-on-base-ui.md) |
 | 樣式 | CSS variables，承接風格套系、明暗模式、密度等級、元件外形及專案強調色覆寫 | [ADR 0005](adr/0005-style-suite-sets-overridable-density-and-shape-defaults.md) |
 | 套件管理 | npm workspaces | [決策紀錄](decision-log.md) |
-| 設計變數 | DTCG 格式的單一來源，經 Style Dictionary 產生 CSS、程式資料、元件庫設計檔變數與代理用規格文件 | [ADR 0004](adr/0004-design-variables-sourced-from-dtcg-tokens-and-imported-into-fig.md) |
+| 設計變數 | DTCG 格式的單一來源，經 Style Dictionary 產生 CSS、程式資料、元件庫設計檔變數與代理用規格文件 | [ADR 0004](adr/0004-design-variables-sourced-from-dtcg-tokens-and-imported-into-design-file.md) |
 | 樣張網站 | 引用正式套件，展示元件、雙風格、明暗模式及頁面範本；頁面範本以此為準 | [決策紀錄](decision-log.md) |
 | 設計資產 | 一份元件庫設計檔（Penpot 匯出檔 .penpot），只含設計變數與 23 個母版，以 `Suite x Mode` 一個集合的四個「套系 / 明暗」模式切換；使用端設計稿由它複製開始 | [ADR 0007](adr/0007-keep-one-component-library-design-file-without-pages.md) |
 | 品質檢查 | Playwright 搭配 `@axe-core/playwright`，並逐頁 × 套系 × 明暗截圖比對 | [決策紀錄](decision-log.md) |

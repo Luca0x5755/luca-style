@@ -228,7 +228,7 @@ const isAlias = (v) => (typeof v === 'string' ? v.includes('{') : v !== null && 
 const num = (v) => Number(String(v).replace('%', ''));
 const lower = (v) => String(v).toLowerCase();
 
-// 把 token 值正規化成可比較的形式（試點觀察的三種寫法差異：fontFamilies 陣列、0% 寫成 0、$description）。
+// 把 token 值正規化成可比較的形式（匯出檔與來源 JSON 的三種寫法差異：fontFamilies 陣列、0% 寫成 0、$description）。
 function normValue(type, value) {
   if (type === 'fontFamilies') return Array.isArray(value) ? value.join(', ') : String(value);
   if (type === 'color') return lower(value);
