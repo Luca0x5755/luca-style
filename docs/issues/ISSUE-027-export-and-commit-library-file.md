@@ -22,3 +22,4 @@ ISSUE-023, ISSUE-026
 
 - 這張票要使用者在中途操作，完成時需使用者確認。
 - 匯出檔視為不受信任資料。
+- 母版名稱含空白斜線（`C / Button / Primary`）；比對 `.fig` 名稱前先以 `name.replace(/\s*\/\s*/g, "/")` 正規化。匯出前檔案要已由使用者改名為 `luca-style-library`（外掛 API 不能改檔名，見 ISSUE-025 結果）。

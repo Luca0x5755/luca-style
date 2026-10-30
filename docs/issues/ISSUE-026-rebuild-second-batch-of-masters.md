@@ -20,3 +20,4 @@ ISSUE-025
 
 同一個 Penpot 檔，不可與 ISSUE-025 並行。
 - 綁陰影的母版名單（依 `bindings.json`）：只有 `C/Card/Metric`（根節點的 `effect.enabled` 綁 `elevation-enabled`）；綁定時用 Penpot 的 `metric-shadow` token，`applyToken(token, ['shadow'])`（ISSUE-024 已驗證可用）。其餘 6 個母版不綁陰影。
+- 名稱比對：Penpot 把板名斜線兩側補成空白，比對 `.fig` 名稱前先以 `name.replace(/\s*\/\s*/g, "/")` 正規化（見 `docs/delivery-verification.md`〈重建第一批母版 13 個〉）。

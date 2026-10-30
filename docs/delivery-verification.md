@@ -708,6 +708,30 @@ node scripts/design/apply-bindings.js --check   # exit 0
 
 與 `variables.json` 的 `elevation-enabled`（Vibrant 開、Professional 關）和 DTCG 陰影值一致，4 組差異 0。限制：只驗證 Device 為 Mobile；「關」仍是一筆 `hidden: false` 的零值陰影（PR-FILE-33 已接受）；沒有目視。探測板已移除，4 個 Suite x Mode set 各留下 `metric-shadow`，token 數由 28 變 29；目前啟用 Professional / Dark 與 Mobile。
 
+## Penpot：重建第一批母版 13 個（ISSUE-025，PR-FILE-18、26）
+
+2026-10-30，在連線的暫存檔「嗨嗨」以 Penpot 外掛 API（MCP `execute_code`）建置與驗證；建置與驗證用的一次性腳本不進 repo。母版與試點一樣是 board，不是 component（轉換問題留給 ISSUE-027 匯出後觀察）。
+
+**建置。** 13 個母版為 `C/Button/{Primary,Secondary,Hover,Focus,Disabled,Loading}`、`C/Field/{Default,Focus,Error,Disabled}`、`C/Status/{Success,Warning,Error}`、`C/Checkbox`；其中 `C/Button/Primary` 是試點的板，已依 `.fig` 重建（見下）。幾何與文字取自 `luca-style-library.fig`（以 `openpencil eval` 讀）：Button 240x48，水平 flex，間距 12，內距 上下 12 左右 20，圓角 16，字級 16，Focus 外框 3；Field 320x121，垂直 flex，間距 12，標籤、48 高輸入框（內距 12/16，圓角 16，Focus 外框 2）與說明；Status 320x53，內距 16，圖示 20；Checkbox 320x48，20 的勾選框（圓角 3，不綁）內含 14 的勾。`.fig` 的圖示都是 FRAME（無子節點），所以在 Penpot 以「帶填色的小板」表示（Button/Loading 18、Status 20、Checkbox 勾 14），`bindings.json` 的 icon 只綁 `fill`，讀的就是該板的填色。字型以 `Font.applyToText` 設成 `Noto Sans TC`，再用不帶屬性的 `applyToken` 綁成 `fontFamily`。
+
+**決策一：名稱比對規則。** Penpot 一律把板名斜線兩側補成空白（`C / Button / Primary`；建立與改名皆然）。所以規則是：Penpot 名稱經 `name.replace(/\s*\/\s*/g, "/")` 後須等於 `.fig` 名稱；全部 16 個板（本批 13 加試點 3）都採 Penpot 這種儲存形式。ISSUE-026、ISSUE-027 要用同一個正規化。
+
+**決策二：試點 `C/Button/Primary` 對齊 `.fig`。** 原本是 160x48、字級 14、文字 `Button`、無 flex；PR-FILE-18、26 談的是與 `.fig` 等價，所以重建為 240x48、字級 16、文字 `開始使用`、flex，並重新綁定。另外兩個試點板（`C/State/Loading`、`C/Nav/Mobile`）屬於 ISSUE-026，維持試點狀態不動，它們的額外綁定（`card-padding` 等）是已記錄的例外。
+
+**驗證**（`execute_code` 程式化，同日）：
+- 頂層：頁面頂層恰為 16 個板，名稱正規化後與預期名單一致，不多不缺。檔案只有一頁。
+- 結構與綁定（`bindings.json` 為準）：13 個母版逐節點依 `path` 走子節點索引；後代節點數等於 `nodeCount`（13／13），型別 frame、icon→board，text→text 全對；`shape.tokens` 的鍵與 token 名完全一致（fill→`fill`、stroke→`strokeColor`、cornerRadius→四個 `borderRadius*` 角、strokeWidth→`strokeWidth`、字型→`fontFamily`），且沒有 `bindings.json` 以外的多餘鍵；沒有 `strokeWidth` 綁定的 10 個板，確認只有單筆描邊且寬度大於 0。檢查項共 393 筆通過，0 筆失敗（筆數是檢查項，不是獨立斷言數）。
+- 解析值：Vibrant／Professional × Light／Dark × Desktop／Tablet／Mobile 共 12 組，逐組切換 theme；每次切換前讀 `active`，只對狀態不符者 `toggleActive`，切換後輪詢到恰有一個 Suite x Mode theme 與一個 Device theme 啟用且為目標組合才讀值（12 組全數一次到位）。每組讀回 161 筆（fillColor、strokeColor、strokeWidth、四個圓角、`fontFamily`）與 `variables.json` 逐筆比對，共 1932 筆，差異 0。顏色不分大小寫比對，數值容差 1e-6。字型讀回為顯示名 `Noto Sans TC`（`fontId` 為 `gfont-noto-sans-tc`），與 `variables.json` 字串直接相等，不需轉換。結束時 theme 回到 Professional / Dark 與 Mobile。
+- 目視：`export_shape` 抽查 `C/Field/Error`（Professional / Dark，Mobile）一張，外框與說明文字呈現 error 色。`export_shape` 取整頁（`page`）逾時失敗，沒有整頁目視。
+
+**限制與未驗證：**
+- 檔名：`penpot.currentFile.name` 只能讀不能寫，讀回仍是「嗨嗨」。Done when 的「先重新命名為 `luca-style-library`」是使用者在 Penpot 介面的動作，沒有完成；ISSUE-027 匯出前需要先改名。
+- Device 軸：這 13 個母版沒有綁任何隨尺寸變的 token，所以 3 種尺寸只能證明切換不影響值，抓不到 Device 軸的殘留或缺漏。
+- `C/Field/Error` 的輸入文字在 `.fig` 是空字串；Penpot 的文字不能是空字串，所以放一個空白字元（長度 1）。
+- 幾何只檢查板的尺寸，沒有逐節點比對位置、flex 排版結果與 `.fig` 的像素；文字寬度因字型度量與 `.fig` 不同。
+- 母版是 board 而非 component，也沒有匯出再解析；匯出檔結構留給 ISSUE-027。
+- 這批的 `execute_code` 不能一次綁太久（單次超過 120 秒逾時），所以分批綁定、每次綁定間等 400 ms；外掛分頁偶爾被瀏覽器暫停，等待數分鐘後恢復。
+
 ## Penpot 試點：離線解析匯出檔（ISSUE-020，PR-FILE-23）
 
 2026-10-30，使用者手動從暫存檔「嗨嗨」匯出 `hihi.penpot`（34,111 bytes，41 個條目，`generatedBy: penpot/2.18.5-RC1`，匯出格式 `penpot/export-files` 版本 1）。匯出檔是不受信任的資料：另解到新的空目錄檢視，原檔未動；試點腳本只在記憶體內讀 zip。匯出檔不進 repo。
