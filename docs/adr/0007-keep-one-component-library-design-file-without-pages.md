@@ -1,4 +1,4 @@
-Status: Accepted (tool and file format amended by ADR 0008, Proposed)
+Status: Accepted (tool and file format amended by ADR 0008, Accepted)
 
 # Keep one component library design file, without page frames
 

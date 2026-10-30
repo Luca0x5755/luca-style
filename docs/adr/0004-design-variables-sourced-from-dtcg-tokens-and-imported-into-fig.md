@@ -1,4 +1,4 @@
-Status: Accepted (import channel amended by ADR 0008, Proposed)
+Status: Accepted (import channel amended by ADR 0008, Accepted)
 
 # Source design variables from DTCG tokens in code and import them into the suite design files
 

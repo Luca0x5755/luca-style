@@ -250,7 +250,7 @@ exit=1
 
 ## 設計稿與程式對照
 
-以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#openpencil-與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，先由 ADR 0003 拆成兩檔，現為元件庫設計檔 `docs/mockup/luca-style-library.fig`，見 ADR 0007）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
+以[前端 §5.1–5.5.4](05_frontend_spec.md)及[公開對應表](consumer-guide.md#penpot-設計稿與程式同步)核對同名色彩／字體角色、22 母版對應的正式元件、產品與介紹頁代表結構。先前以 Pencil（當時工具，設計稿為單一 components.pen，先由 ADR 0003 拆成兩檔，現為元件庫設計檔 `docs/mockup/luca-style-library.fig`，見 ADR 0007）實際 QA 已確認 22 母版、12 檢視板、240 唯一 frame；各頁三寬度與 15 個 fallback 樣本曾目視核對。雙套系分區為左側 Vibrant、右側 Professional。這些是既有設計證據，本輪沒有重新開啟 components.pen：當時 Pencil MCP 開啟的是其他專案的設計檔，未讀取 .pen 的檔案系統內容，亦未修改其他設計檔。
 
 實作保留設計角色與內容層次，以下差異由可操作網頁需要而來：
 
@@ -954,3 +954,9 @@ node --test scripts/design/check-penpot.test.mjs
 **文件改動。** `DESIGN.md`、`docs/03_architecture_design.md`、`docs/05_frontend_spec.md`（§5.5 標題改為「共用元件庫元件」）、`docs/capabilities/design-system.md`（工具敘述；PR-FILE-06、07、08 改為 ISSUE-017 的修訂文字；移除只適用 OpenPencil 的 `Internal Only Canvas` 備註）、`README.md`、`packages/tokens/build.mjs` 註解改指向 `.penpot`。留給 ISSUE-030 的：`GLOSSARY.md`、`docs/consumer-guide.md`、`docs/adoption-prompt.md` 與 ADR 0008 狀態；它們仍寫 OpenPencil，`docs/consumer-guide.md` 指向已刪腳本的步驟已登記在 ISSUE-030 Notes。
 
 **未驗證。** 上述人眼抽查；`variables.json` 的檔名與 `$extensions` 的 `figName` 鍵沿用舊名（改名會動 DTCG 原始檔，不在本票）。
+
+## Penpot：文件、詞彙表與 ADR 收尾（ISSUE-030，PR-FILE-09、19、29、30、31）
+
+2026-10-30。ADR 0008 改 `Accepted`，ADR 0003、0004、0007 的狀態列同步；GLOSSARY 改寫 `元件庫設計檔`、`設計變數`，移除 `畫布頁`；`docs/penpot-self-hosting.md` 新增；`docs/consumer-guide.md`、`docs/adoption-prompt.md` 的設計稿起點改為 `docs/mockup/luca-style-library.penpot`；ISSUE-017 的承諾已搬進 `docs/capabilities/design-system.md`。
+
+**未驗證。** (1) 強調色 token JSON 在 Penpot 介面的實際匯入（合併或取代、set 排序）；產生管道本身是建議做法，使用者尚未確認。(2) 自架說明中標「待確認」的項目：映像標籤 `2.18` 與 2.18.5-RC1 的對應、首次登入帳號建立方式、本機 MCP 容器實際採用的外掛接法。(3) Penpot 的穩定度。

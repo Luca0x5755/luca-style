@@ -71,3 +71,4 @@
 2026-10-30 — Penpot 試點結束：PR-FILE-20、23 通過，21、22 retired（ISSUE-022）。陰影關閉的表示法與匯出檔是否改提交文字 dump 未決，帶進階段二；ADR 0008 維持 Proposed，待 Penpot 版落地時改 Accepted。
 2026-10-30 — 使用者接受 Penpot 的陰影「關閉」以零偏移、零模糊、透明度 0 的 shadow token 表示（PR-FILE-33）；Penpot 沒有真正的 off。
 2026-10-30 — 匯出檔除 `.penpot` 外另提交正規化文字 dump 供審查與驗證，兩者不一致時檢查失敗（PR-FILE-32，修訂 ADR 0008）；`.penpot` 仍是使用端複製的檔案，因為 dump 無法匯回 Penpot。原因：匯出檔是位元組不穩定的二進位 zip，審查時看不到差異。
+2026-10-30 — Penpot 版元件庫設計檔落地（ISSUE-030）：ADR 0008 改 Accepted，ADR 0003、0004、0007 的狀態列同步；GLOSSARY 改寫 元件庫設計檔、設計變數，並移除 畫布頁（Penpot 版沒有現行用法，與 ISSUE-017 PR-FILE-31 的「三條改寫」有意偏離）。新增 `docs/penpot-self-hosting.md`，版本只記錄測試過的 2.18.5-RC1、不強制固定，更新版本未測試。穩定度仍未驗證（試點項目 2、3 免做）。

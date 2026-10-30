@@ -83,6 +83,6 @@ declare function themeInitScript(options?: { suite?: StyleSuite }): string; // s
 
 前端規格定義電腦、平板與手機的字級角色、行高、字重、間距、元件狀態及版面響應規則。套系間以色彩、密度與元件外形形成差異，共用字體角色與元件行為。
 
-設計變數的程式輸出、CSS 與元件庫設計檔的變數由同一份 DTCG 來源產生；元件庫設計檔的變數以離線腳本 `scripts/design/apply-variables.js` 寫入，23 個母版人工維護並綁定設計變數。使用端的設計稿複製元件庫設計檔開始，設計變數可重新匯入。範本涵蓋產品介面與介紹頁的桌面、手機呈現，以樣張網站為準。
+設計變數的程式輸出、CSS 與元件庫設計檔的變數由同一份 DTCG 來源產生；元件庫設計檔的變數由建置輸出的 `docs/mockup/themes/penpot-tokens.json` 在 Penpot 內匯入，23 個母版在 Penpot 人工維護並綁定設計變數（`npm run check:penpot` 核對）。使用端的設計稿複製元件庫設計檔開始，設計變數可重新匯入。範本涵蓋產品介面與介紹頁的桌面、手機呈現，以樣張網站為準。
 
 能力對照見 [設計系統](capabilities/design-system.md)。
