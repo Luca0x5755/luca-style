@@ -892,6 +892,8 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 
 **未驗證。** 母版畫面是否顯示新強調色（沒有目視）；Device theme 沒有啟用是匯入造成，或是使用者匯入前的狀態，沒有區分（使用者先前還原後 `Device/Mobile` 就已經沒啟用）。
 
+**`Device` theme 實測（2026-10-30）。** 使用者在 Penpot 啟用 `Device` theme 後切換三個尺寸，母版畫面沒有變化。原因：dump 中沒有任何 `fontSize` 綁到 `fs-*`，母版文字只綁 `fill` 與 `fontFamily`；全檔僅 `C / Card / Metric > Metric value` 一處 32px，程式碼（`packages/react/src/styles.css` 的 `.luca-metric strong`）也是固定 2rem，不是 `fs-title`，所以不是漏綁。處理：不改母版，於使用端指南說明 `Device` 只影響 `fs-hero`、`fs-title`、`fs-section`，須由使用端頁面綁定才有效果。**未驗證：** 在使用端頁面綁定 `fs-*` 後切換 `Device` 的實際畫面。
+
 ## Penpot：匯出並提交元件庫設計檔，離線檢查（ISSUE-027，PR-FILE-16、18、26、27、32）
 
 2026-10-30，使用者在 Penpot 內把檔案改名為 `luca-style-library` 後手動匯出（`File.export` 在外掛端仍失敗，所以這一步只能由人做）：`luca-style-library.penpot`，353,025 bytes，210 個 zip 條目，`generatedBy: penpot/2.18.5-RC1`。匯出檔視為不受信任資料：先複製到暫存目錄，只在記憶體內解開（`read-zip.mjs`），沒有解到磁碟執行。

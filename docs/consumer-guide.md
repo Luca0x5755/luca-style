@@ -73,6 +73,8 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 | C/Select、C/Checkbox、C/Status/*、C/State/* | Select、Checkbox、StatusMessage、ContentState |
 | C/Card/Metric、C/Table、C/Nav/* | MetricCard、DataTable、Navigation |
 
+**`Device` theme 的作用範圍：** 三個 `Device` theme 只管 `fs-hero`、`fs-title`、`fs-section` 三個字級 token，值隨裝置變（Desktop 56/32/24、Tablet 44/28/22、Mobile 32/24/20）。元件庫的母版沒有使用這三個角色（程式碼的按鈕、標籤、指標數字都是固定字級，例如 `C/Card/Metric` 的數字固定 2rem），所以啟用或切換 `Device` 時母版畫面不會變，這是預期行為。要看到效果，請在自己頁面的 hero、標題、區段標題文字上綁定對應的 `fs-*` token。
+
 人工同步順序：先核對正式前端規格與核可變更，修改結構化 tokens 來源並 `npm run generate`；在 Penpot 內同步相同角色與母版（母版只有一份，本 repo 以 `npm run check:penpot` 核對母版名稱齊全、已綁定，且各 `Suite x Mode` 與 `Device` 組合的解析值等於 `variables.json`）；重建樣張，檢查雙套系日夜、三裝置及四態，核對字級、間距、狀態與換行；同一變更提交程式、規格與元件庫設計檔。元件命名對應不是自動同步或像素保證。
 
 ### 更新元件庫設計檔（維護 luca-style 的人）
