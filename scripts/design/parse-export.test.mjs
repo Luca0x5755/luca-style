@@ -1,5 +1,5 @@
-// 試點腳本（ISSUE-020）的測試：夾具由 fixtures/minimal-export.json 即時組成 zip，不提交真實匯出檔。
-// 執行：node --test scripts/penpot-pilot/parse-export.test.mjs
+// parse-export.mjs 的測試（源自 ISSUE-020 試點，ISSUE-023 搬到 scripts/design/）：夾具由 fixtures/minimal-export.json 即時組成 zip，不提交真實匯出檔。
+// 執行：node --test scripts/design/parse-export.test.mjs
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { crc32, deflateRawSync } from 'node:zlib';
+import { zip } from './penpot-test-helpers.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = resolve(here, 'parse-export.mjs');
@@ -16,50 +16,8 @@ const fixture = () => structuredClone(JSON.parse(readFileSync(join(here, 'fixtur
 const dirs = [];
 after(() => dirs.forEach((d) => rmSync(d, { recursive: true, force: true })));
 
-// 組一個 zip：entries 為 路徑 -> 內容（物件會轉 JSON，Buffer 原樣）；deflate 為 true 時用壓縮方式 8。
-function zip(entries, { deflate = false } = {}) {
-  const locals = [];
-  const central = [];
-  let offset = 0;
-  for (const [name, value] of Object.entries(entries)) {
-    const data = Buffer.isBuffer(value) ? value : Buffer.from(typeof value === 'string' ? value : JSON.stringify(value));
-    const comp = deflate ? deflateRawSync(data) : data;
-    const method = deflate ? 8 : 0;
-    const nameBuf = Buffer.from(name);
-    const head = Buffer.alloc(30);
-    head.writeUInt32LE(0x04034b50, 0);
-    head.writeUInt16LE(20, 4);
-    head.writeUInt16LE(method, 8);
-    head.writeUInt32LE(crc32(data), 14);
-    head.writeUInt32LE(comp.length, 18);
-    head.writeUInt32LE(data.length, 22);
-    head.writeUInt16LE(nameBuf.length, 26);
-    const cen = Buffer.alloc(46);
-    cen.writeUInt32LE(0x02014b50, 0);
-    cen.writeUInt16LE(20, 4);
-    cen.writeUInt16LE(20, 6);
-    cen.writeUInt16LE(method, 10);
-    cen.writeUInt32LE(crc32(data), 16);
-    cen.writeUInt32LE(comp.length, 20);
-    cen.writeUInt32LE(data.length, 24);
-    cen.writeUInt16LE(nameBuf.length, 28);
-    cen.writeUInt32LE(offset, 42);
-    locals.push(head, nameBuf, comp);
-    central.push(cen, nameBuf);
-    offset += head.length + nameBuf.length + comp.length;
-  }
-  const cd = Buffer.concat(central);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
-  end.writeUInt16LE(Object.keys(entries).length, 8);
-  end.writeUInt16LE(Object.keys(entries).length, 10);
-  end.writeUInt32LE(cd.length, 12);
-  end.writeUInt32LE(offset, 16);
-  return Buffer.concat([...locals, cd, end]);
-}
-
 function runCli(buf, extra = []) {
-  const dir = mkdtempSync(join(tmpdir(), 'penpot-pilot-'));
+  const dir = mkdtempSync(join(tmpdir(), 'penpot-export-'));
   dirs.push(dir);
   const file = join(dir, 'x.penpot');
   writeFileSync(file, buf);
@@ -189,7 +147,7 @@ test('exits 1 naming the entry when deflate data is corrupt', () => {
 });
 
 test('exits 1 when the input path does not exist', () => {
-  const r = spawnSync(process.execPath, [cli, join(tmpdir(), 'penpot-pilot-no-such-file.penpot')], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [cli, join(tmpdir(), 'penpot-export-no-such-file.penpot')], { encoding: 'utf8' });
   assert.equal(r.status, 1);
   assert.match(r.stderr, /錯誤：/);
 });

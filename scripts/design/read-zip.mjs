@@ -1,4 +1,4 @@
-// 試點腳本（ISSUE-020）：不屬於 scripts/design/，階段二才決定是否正式化。
+// ISSUE-020 試點、ISSUE-023 正式化。
 // 最小的 zip 讀取器，只在記憶體內解開，不寫入磁碟，所以不受條目路徑影響；
 // 匯出檔是不受信任的資料，因此拒絕加密、zip64、可疑路徑，並限制條目數與解壓後大小。
 import { inflateRawSync } from 'node:zlib';

@@ -698,8 +698,8 @@ node scripts/design/apply-bindings.js --check   # exit 0
 2026-10-30，使用者手動從暫存檔「嗨嗨」匯出 `hihi.penpot`（34,111 bytes，41 個條目，`generatedBy: penpot/2.18.5-RC1`，匯出格式 `penpot/export-files` 版本 1）。匯出檔是不受信任的資料：另解到新的空目錄檢視，原檔未動；試點腳本只在記憶體內讀 zip。匯出檔不進 repo。
 
 ```sh
-node scripts/penpot-pilot/parse-export.mjs <匯出檔.penpot> [--json]
-node --test scripts/penpot-pilot/parse-export.test.mjs
+node scripts/design/parse-export.mjs <匯出檔.penpot> [--json]
+node --test scripts/design/parse-export.test.mjs
 ```
 
 **腳本結果**（結束碼 0）：檔案「嗨嗨」、媒體 4、母版 3（`C / Button / Primary`、`C / State / Loading`、`C / Nav / Mobile`）、token set 8、theme 7。測試 19 項全過（由 `fixtures/minimal-export.json` 即時組 zip；含 store 與 deflate、非 zip、缺 manifest、壞 JSON、無母版、懸空 token 綁定、路徑可疑、子節點循環、壞壓縮資料、解壓總量超限、manifest id 含正規表示式字元、檔案不存在、用法錯誤）。
@@ -729,6 +729,16 @@ node --test scripts/penpot-pilot/parse-export.test.mjs
 
 - 大小：34 KB，是二進位 zip，審查時看不出差異；若要進版控，需另有展開文字檢視（本腳本的 `--json` 可當一種）。真實母版（23 個含 Select）的大小未測；形狀每個一個 JSON，每個約 1.3 至 3 KB，粗估 23 個母版加子節點在數百 KB 之內，是估計不是量測。
 - 決定性：只有一次匯出，無法實測兩次匯出是否位元組相同，因為 `File.export` 這次在外掛端回 `No matching clause`，無法從 Penpot 重匯。從這一份可見的不穩定來源：zip 條目時間戳（17:05，晚於 `modifiedAt` 17:00，應是匯出時間）；縮圖的 `hash`／`id` 為隨機 uuid（`objects/` 與 `thumbnails/`）；`tokens.json` 的 set 與 theme 內部鍵序是雜湊序；theme id 在匯入來源 JSON 後被重新產生（來源是 `suite-x-mode-vibrant-light` 這種可讀 id，匯出是 uuid）；檔案層有 `revn`、`modifiedAt`。因此推測同內容兩次匯出的位元組會不同；若要進版控，需要規格化（略過縮圖與時間、正規化鍵序）的文字展開，不能直接比對 zip。這是推測，不是量測。
+
+### 正規化文字 dump（ISSUE-023，PR-FILE-32）
+
+```sh
+node scripts/design/penpot-dump.mjs <匯出檔.penpot> [--out <dump>]          # 產生，預設寫在匯出檔旁（.dump.json）
+node scripts/design/penpot-dump.mjs <匯出檔.penpot> --check [--out <dump>]  # 比對已提交的 dump，不一致結束碼 1 並以 - / + 列出差異行
+node --test scripts/design/*.test.mjs
+```
+
+dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出：所有 id（形狀、頁面、檔案、媒體、theme）、`revn`、`vern`、`modifiedAt`、`createdAt`、`hash`、`teamId`、`migrations`、`generatedBy`、`features`、縮圖與 `objects/`、可由位置與大小推得的 `selrect`、`points`、`transform`。順序有意義的清單保留來源順序：頁面根與各形狀的 `shapes`、`tokenSetOrder`。實測：同一份試點檔連續兩次產生，位元組相同（56,797 bytes、1,725 行，不含任何 uuid）。**沒有量測**：同內容兩次匯出的 zip 是否真的位元組不同，仍只有一次匯出；測試以人工改動時間戳、uuid、條目與鍵序的 zip 模擬重新匯出。元件的匯出表示未驗證，dump 對元件相關欄位照原樣輸出。
 
 ### 把母版轉成元件對匯出表示的影響
 
@@ -761,7 +771,7 @@ node --test scripts/penpot-pilot/parse-export.test.mjs
 **階段二要切的票（尚未寫檔，兩項已決定，可用 `/to-tickets` 切，並含 PR-FILE-32、33）**
 
 - 重建其餘 20 個母版（含 `C/Select/Open`），依大小分 2 至 3 張（PR-FILE-18、26）。
-- 離線驗證腳本：把 `scripts/penpot-pilot/parse-export.mjs` 正式化，加其他 theme 的解析值比對（PR-FILE-27）。
+- 離線驗證腳本：把 `scripts/penpot-pilot/parse-export.mjs` 正式化（ISSUE-023 已搬到 `scripts/design/`），加其他 theme 的解析值比對（PR-FILE-27）。
 - 刪除 OpenPencil 產物並改文件：`.fig`、`scripts/design/` 的腳本與測試、`fig-variables.spec.ts`、consumer-guide、adoption-prompt、GLOSSARY，ADR 0008 改 Accepted（PR-FILE-28、07、08、30、31、09、06）。
 - Penpot 自架說明文件（PR-FILE-29）。
 - 使用端強調色匯入（PR-FILE-19），做法待決。

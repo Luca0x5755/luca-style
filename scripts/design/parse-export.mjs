@@ -1,15 +1,15 @@
-// 試點腳本（ISSUE-020、PR-FILE-23）：不屬於 scripts/design/，階段二才決定是否正式化。
+// 離線解析 Penpot 匯出檔（ISSUE-020 試點、ISSUE-023 正式化，PR-FILE-23）。
 // 離線讀取 Penpot 匯出的 `.penpot`（zip），列出母版名稱與數量，另列 token set、theme 與每個形狀的 token 綁定。
 // 匯出檔是不受信任的資料：只在記憶體內解開，不寫檔、不執行其中任何內容。
-// 用法：node scripts/penpot-pilot/parse-export.mjs <匯出檔.penpot> [--json]
+// 用法：node scripts/design/parse-export.mjs <匯出檔.penpot> [--json]
 // 結束碼：0 成功、1 解析失敗（原因印在 stderr）、2 用法錯誤。
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { readZip } from './read-zip.mjs';
 
-const ROOT_ID = '00000000-0000-0000-0000-000000000000';
+export const ROOT_ID = '00000000-0000-0000-0000-000000000000';
 
-function json(entries, name) {
+export function json(entries, name) {
   const data = entries.get(name);
   if (!data) throw new Error(`匯出檔缺少 ${name}`);
   try {
@@ -21,7 +21,11 @@ function json(entries, name) {
 
 // 母版 = 頁面根 frame 的直接子節點中的 board。巢狀 board（例如 Loading image）不算。
 export function parseExport(buf) {
-  const entries = readZip(buf);
+  return parseEntries(readZip(buf));
+}
+
+// 已解開的條目表版本，供 penpot-dump.mjs 共用同一組驗證。
+export function parseEntries(entries) {
   const manifest = json(entries, 'manifest.json');
   if (manifest.type !== 'penpot/export-files') throw new Error(`manifest.type 不是 penpot/export-files：${manifest.type}`);
   if (manifest.version !== 1) throw new Error(`不支援的匯出版本 ${manifest.version}`);
@@ -88,7 +92,7 @@ function parseFile(entries, entry) {
 function main(argv) {
   const args = argv.filter((a) => !a.startsWith('--'));
   if (args.length !== 1) {
-    console.error('用法：node scripts/penpot-pilot/parse-export.mjs <匯出檔.penpot> [--json]');
+    console.error('用法：node scripts/design/parse-export.mjs <匯出檔.penpot> [--json]');
     return 2;
   }
   let result;
