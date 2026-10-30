@@ -881,3 +881,48 @@ dump 是 JSON（鍵遞迴排序、2 格縮排、每欄位一行）。不輸出�
 **還原。** 對 4 個 theme 呼叫 `removeSet`，再 `remove()` 4 個 Project Accent set，然後逐 theme 切換重讀：4 組顏色與加入前完全相同；板數 23；set 與 token 數與基準相同（Base 39、Suite x Mode 各 29、Device 各 3，共 8 個 set）；各 Suite x Mode theme 的 set 引用回到 Base 加一個（沒有在加入前記錄 theme 的 set 引用順序，這項是事後讀回、非逐項比對）；啟用 Professional / Dark 與 Mobile。沒有殘留。
 
 **限制。** (1) 「在 Penpot 介面實際匯入該 JSON」未驗證：Penpot 匯入時是合併或取代既有 token 庫，我不知道；增量檔的設計即為了降低取代的風險，但不保證。若匯入取代整個庫，使用端需改為手動建立 4 個 set 並在 4 個 Suite x Mode theme 啟用它們（見 ISSUE-030 Notes）。(2) 只讀 4 個母版的 4 個欄位，其餘母版沒有逐一讀。(3) 沒做目視 `export_shape`。(4) Done-when 的「匯入後」以模擬代替，是否接受須使用者決定。
+
+## Penpot：匯出並提交元件庫設計檔，離線檢查（ISSUE-027，PR-FILE-16、18、26、27、32）
+
+2026-10-30，使用者在 Penpot 內把檔案改名為 `luca-style-library` 後手動匯出（`File.export` 在外掛端仍失敗，所以這一步只能由人做）：`luca-style-library.penpot`，353,025 bytes，210 個 zip 條目，`generatedBy: penpot/2.18.5-RC1`。匯出檔視為不受信任資料：先複製到暫存目錄，只在記憶體內解開（`read-zip.mjs`），沒有解到磁碟執行。
+
+**提交的檔案。** `docs/mockup/luca-style-library.penpot`（353,025 bytes，`.gitattributes` 標為 `binary`）與 `docs/mockup/luca-style-library.dump.json`（`penpot-dump.mjs` 預設輸出名，375,885 bytes，9,701 行）。大小：匯出檔含 31 組縮圖（`objects/*.png`＋`.json`）與 27 筆板縮圖記錄，設計內容本體是 113 個頁面形狀 JSON；dump 比匯出檔大是因為 zip 已壓縮、dump 是 2 格縮排的純文字。兩份加起來約 730 KB，可接受；之後每次改設計都會多一份 353 KB 的二進位 blob 進 git 歷史。
+
+**檢查指令。**
+
+```sh
+npm run check:penpot    # = node scripts/design/check-penpot.mjs && node scripts/design/penpot-dump.mjs docs/mockup/luca-style-library.penpot --check
+node --test scripts/design/check-penpot.test.mjs
+```
+
+`npm test`（CI 的 verify job 跑）內的 `tests/penpot-library.spec.ts` 以兩個獨立測試執行 `npm run check:penpot` 與 `scripts/design/*.test.mjs`（逐檔列出）。
+
+**檢查什麼（`check-penpot.mjs`，差異時結束碼 1，逐行列出）。**
+1. 檔名必須是 `luca-style-library`；頂層只能是 board。
+2. 母版：名稱以 `name.replace(/\s*\/\s*/g, "/")` 正規化後，數量與集合等於 `bindings.json` 的 23 個 `frame`（缺、多、重複都列出）。
+3. 綁定：每個母版依 `path` 走節點（子節點索引取 Penpot `shapes` 的反向序），比對節點型別、節點數與 `appliedTokens` 短鍵（`fill`、`strokeColor`、`strokeWidth`、`fontFamily`、`r1`～`r4`、`p1`～`p4`、`shadow`、`opacity`）；`bindings.json` 沒列的節點必須沒有任何綁定。
+4. 解析值：12 組 Suite x Mode x Device，依 `tokenSetOrder` 與該 theme 啟用的 set 疊加（後者覆蓋前者）在匯出檔內解析，逐筆比對 `variables.json` 的 72 個變數（除下列兩項）；同樣的解析再套在 `penpot-tokens.json`，匯出檔與它逐 token 比對（含 `metric-shadow`），以分辨是 Penpot 檔漂移還是產生器漂移。
+
+**已接受的表示差異（程式內 `ACCEPTED`，限定母版與路徑，範圍外同類差異照樣回報）。**
+- `C/State/Loading` 路徑 `0`：`fill[i].opacity` 以 4 個命名為 token 名去掉 `-opacity` 的疊放矩形（各綁一個 `opacity`）表示，節點數 8（`nodeCount` 4 加 4）。順序、型別 `rect`、名稱、token 逐一檢查。
+- `C/Card/Metric` 路徑 `-`：`strokeWidth.left`（`metric-border-left`）在 Penpot 不綁；若被綁上 `strokeWidth` 則回報為多出的綁定。
+- `C/Card/Metric` 路徑 `-`：`effect.enabled`（`elevation-enabled`）改綁 `shadow`＝`metric-shadow`；變數端以 `metric-shadow` 的色彩 alpha 是否為 0 對應布林。
+- `suite-label`（一般字串）沒有 Penpot token。
+- 其他兩項（單邊描邊只有底線或左邊、`C/Field/Error` 的空白文字替身）不影響 token 綁定，檢查不看。
+
+**結果。** 對真實匯出檔：23 個母版、名稱與 `bindings.json` 相同；逐節點綁定全部相同（`C/State/Loading` 因疊放矩形多 4 個節點，屬接受差異）；12 組解析值對 `variables.json` 差異 0，對 `penpot-tokens.json` 差異 0；`penpot-dump.mjs --check` 一致。沒有發現 Penpot 檔本身與 `bindings.json` 的實質差異。為確認檢查不是空轉：改一個綁定、拿掉一個母版、改兩個變數值，檢查回報 6 項差異、結束碼 1。
+
+**離線可解析的範圍與限制。** 解析的是「token set 疊加」；形狀上存的解析值只對應匯出當下啟用的 theme（`activeThemes`＝Professional / Dark 與 Mobile），其他 theme 的值不在形狀上，所以檢查的是「綁定正確」乘上「各 theme 的 token 值正確」，沒有檢查母版在各 theme 下實際顯示的顏色（那是 ISSUE-025、026 在 Penpot 內逐組讀回驗過的）。不解析別名（遇到回報「無法離線解析」）、theme 的 set 狀態只認 `enabled`；幾何、版面、文字內容、字重、元件表示都不檢查。Device 軸的鑑別力有限：23 個母版沒有綁任何 Device token。
+
+**與先前在 Penpot 內觀察的差異。**
+- 母版在匯出檔中都是 `type: frame`（board），沒有 `componentId`／`mainInstance` 欄位，檔案層沒有元件資料，與「母版是 board 而非 component」一致。`C/Select/Open` 的 `.fig` 型別是 COMPONENT，在 Penpot 同樣是 board。
+- 「母版轉成元件後匯出表示是否改變」：**未驗證**。這份匯出的母版都不是元件，也無法由我們重匯（`File.export` 失敗），所以沒有轉換前後的對照。階段二若把母版轉成元件，要在有元件的匯出檔上重驗 `parse-export.mjs` 的元件欄位猜測。
+- 這份匯出的形狀有 113 個頁面形狀（1 個根＋23 個母版＋89 個後代）；沒有出現試點沒見過的新形狀型別，只有 `frame`、`text`、`rect`（4 個疊放矩形）。`thumbnails/frame/…` 有 27 筆記錄，`objects/` 有 31 組縮圖，都不進 dump。
+- **dump 的 uuid 洩漏（已修）。** 第一次對這份匯出檔產生 dump 發現 2 個 uuid：`shadow` 項目的 `id`（`C/Card/Metric` 與 `C/Select/Open` 的 Popup；Penpot 在建立陰影時產生的隨機 id）。`penpot-dump.mjs` 現在在 `shadow` 陣列的項目上丟掉 `id`（`penpot-dump.test.mjs` 有測試，換掉陰影 id 的重新匯出位元組相同）；修後 dump 含 uuid 0 個。
+- **dump 穩定性。** 同一份匯出檔連續產生 3 次，位元組相同。**沒有量測**：同內容兩次匯出的 zip 是否產生同一份 dump，仍只有這一次匯出；選用的待辦是使用者不改任何東西再匯出一次，用 `penpot-dump.mjs --check` 對照提交的 dump（預期一致；若不一致，差異行會指出還有哪個欄位不穩定）。
+
+**守門測試的修改。** `penpot-dump.test.mjs` 原本拒絕任何被追蹤的 `.penpot` 與以 zip 魔術位元組開頭的檔。現改為純函式 `exportViolations`（`penpot-test-helpers.mjs`），唯一放行 `docs/mockup/luca-style-library.penpot`；其他 `.penpot`、放行檔名換目錄或大小寫、偽裝成別的副檔名的 zip 都仍違規（`.fig` 的既有例外不變），並新增單測證明。
+
+**開放問題「路徑與檔名」的決定。** `docs/mockup/luca-style-library.penpot` 與 `docs/mockup/luca-style-library.dump.json`（沿用 `penpot-dump.mjs` 的預設輸出名，不另加 `--out`）。
+
+**未驗證。** 元件表示；兩次匯出的決定性；`C/Card/Metric` 單邊描邊寬的 Penpot 表示（ISSUE-026 留給本票之後決定，這張票沒有處理，維持接受差異）。

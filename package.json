@@ -19,6 +19,7 @@
     "test": "playwright test",
     "test:visual": "node scripts/visual-docker.mjs test",
     "update:visual": "node scripts/visual-docker.mjs update",
+    "check:penpot": "node scripts/design/check-penpot.mjs && node scripts/design/penpot-dump.mjs docs/mockup/luca-style-library.penpot --check",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test:consumer": "node scripts/verify-consumer.mjs",

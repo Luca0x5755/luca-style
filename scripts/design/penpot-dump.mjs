@@ -27,17 +27,19 @@ function sortKeys(v) {
 }
 
 // 遞迴移除易變欄位；媒體 id 換成媒體名稱（fillImage 等以 id 參照媒體）。
-function clean(v, mediaNames) {
-  if (Array.isArray(v)) return v.map((x) => clean(x, mediaNames));
+function clean(v, mediaNames, parentKey) {
+  if (Array.isArray(v)) return v.map((x) => clean(x, mediaNames, parentKey));
   if (v && typeof v === 'object') {
     const out = {};
     for (const [k, x] of Object.entries(v)) {
       if (VOLATILE.has(k)) continue;
+      // 陰影項目的 id 是每次建立時產生的隨機 uuid（ISSUE-027 的真實匯出才出現），與設計內容無關。
+      if (k === 'id' && parentKey === 'shadow') continue;
       if (k === 'id' && typeof x === 'string' && mediaNames.has(x)) {
         out.mediaName = mediaNames.get(x);
         continue;
       }
-      out[k] = clean(x, mediaNames);
+      out[k] = clean(x, mediaNames, k);
     }
     return out;
   }
@@ -54,6 +56,15 @@ function byText(a, b) {
   const x = JSON.stringify(a);
   const y = JSON.stringify(b);
   return x < y ? -1 : x > y ? 1 : 0;
+}
+
+// 依 $metadata.tokenSetOrder 排 token set，沒列在順序裡的接在後面並排序；check-penpot.mjs 對 penpot-tokens.json 也用同一規則。
+export function orderedSets(tokens) {
+  const setNames = Object.keys(tokens).filter((k) => !k.startsWith('$'));
+  const tokenMeta = tokens.$metadata ?? {};
+  const order = Array.isArray(tokenMeta.tokenSetOrder) ? tokenMeta.tokenSetOrder.filter((n) => setNames.includes(n)) : [];
+  const rest = setNames.filter((n) => !order.includes(n)).sort();
+  return { order, sets: [...order, ...rest].map((name) => ({ name, tokens: tokens[name] })) };
 }
 
 function dumpFile(entries, entry) {
@@ -96,10 +107,7 @@ function dumpFile(entries, entry) {
 
   const tokens = entries.has(`${base}/tokens.json`) ? json(entries, `${base}/tokens.json`) : {};
   const tokenMeta = tokens.$metadata ?? {};
-  const setNames = Object.keys(tokens).filter((k) => !k.startsWith('$'));
-  const order = Array.isArray(tokenMeta.tokenSetOrder) ? tokenMeta.tokenSetOrder.filter((n) => setNames.includes(n)) : [];
-  const rest = setNames.filter((n) => !order.includes(n)).sort();
-  const sets = [...order, ...rest].map((name) => ({ name, tokens: tokens[name] }));
+  const { order, sets } = orderedSets(tokens);
   const themes = (tokens.$themes ?? [])
     .map((t) => ({ group: t.group, name: t.name, description: t.description, isSource: t.isSource, selectedTokenSets: t.selectedTokenSets }))
     .sort((a, b) => `${a.group}\u0000${a.name}`.localeCompare(`${b.group}\u0000${b.name}`, 'en'));

@@ -47,3 +47,22 @@ export function zip(entries, { deflate = false, dosTime = 0, dosDate = 0 } = {})
   return Buffer.concat([...locals, cd, end]);
 }
 
+
+// 唯一允許被追蹤的 Penpot 匯出檔（ISSUE-027）；其餘一律不准進 repo。
+export const LIBRARY_EXPORT = 'docs/mockup/luca-style-library.penpot';
+
+// 守門：回傳違規描述清單。files 為相對 repo 根的路徑（正斜線），headOf(path) 回傳前 4 位元組（檔案不存在時回傳 null）。
+export function exportViolations(files, headOf) {
+  const bad = [];
+  for (const f of files) {
+    if (f === LIBRARY_EXPORT) continue;
+    if (f.toLowerCase().endsWith('.penpot')) {
+      bad.push(`被追蹤或待追蹤的匯出檔 ${f}`);
+      continue;
+    }
+    if (f.endsWith('.fig')) continue; // OpenPencil 的 .fig 本身是 zip，由 ISSUE-029 退役；這裡只擋 Penpot 匯出檔偽裝成其他副檔名
+    const head = headOf(f);
+    if (head && head.length >= 4 && head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03 && head[3] === 0x04) bad.push(`${f} 以 zip 魔術位元組開頭`);
+  }
+  return bad;
+}

@@ -21,3 +21,5 @@ ISSUE-027
 
 - `docs/mockup/themes/variables.json` 與 `bindings.json` 現在是 ISSUE-027 檢查的比對基準；刪除前確認有沒有被取代。
 - 刪 `.fig` 之前先確認 Penpot 檔與 dump 已提交。
+- ISSUE-027 已提交 `docs/mockup/luca-style-library.penpot` 與 `docs/mockup/luca-style-library.dump.json`。`scripts/design/check-penpot.mjs` 讀 `docs/mockup/themes/bindings.json`、`variables.json`、`penpot-tokens.json` 當比對基準，三份檔案不能隨 `.fig` 一起刪；`penpot-dump.test.mjs` 的守門（`exportViolations`）只放行上述 `.penpot`，並且對 `.fig` 設有例外，`.fig` 刪掉後可一併移除該例外。
+- `scripts/design/*.test.js` 依賴 openpencil，不在 `npm test` 內；`tests/penpot-library.spec.ts` 只跑 `*.test.mjs`。

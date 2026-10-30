@@ -8,7 +8,7 @@ import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { zip } from './penpot-test-helpers.mjs';
+import { zip, exportViolations, LIBRARY_EXPORT } from './penpot-test-helpers.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = resolve(here, 'penpot-dump.mjs');
@@ -262,20 +262,15 @@ test('exits 1 when a token binding points at a token that no set defines', () =>
 
 // ---- 守門：真實匯出檔不進 repo ----
 
-test('the repo tracks no real export: no zip magic bytes, no .penpot, fixtures are JSON only', () => {
+test('the repo tracks no real export except the one library file: no zip magic bytes, fixtures are JSON only', () => {
   const root = resolve(here, '../..');
   const ls = spawnSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], { cwd: root, encoding: 'buffer' });
   assert.equal(ls.status, 0);
   const files = ls.stdout.toString('utf8').split('\0').filter(Boolean);
   assert.ok(files.length > 0);
-  for (const f of files) {
-    assert.ok(!f.endsWith('.penpot'), `被追蹤或待追蹤的匯出檔 ${f}`);
-    const p = join(root, f);
-    if (!existsSync(p)) continue; // 已 git rm、尚未提交
-    if (f.endsWith('.fig')) continue; // OpenPencil 的 .fig 本身是 zip，由 ISSUE-029 退役；這裡只擋 Penpot 匯出檔偽裝成其他副檔名
-    const head = readFileSync(p).subarray(0, 4);
-    assert.notDeepEqual([...head], [0x50, 0x4b, 0x03, 0x04], `${f} 以 zip 魔術位元組開頭`);
-  }
+  const headOf = (f) => (existsSync(join(root, f)) ? readFileSync(join(root, f)).subarray(0, 4) : null); // 已 git rm、尚未提交者為 null
+  assert.deepEqual(exportViolations(files, headOf), []);
+  assert.ok(files.includes(LIBRARY_EXPORT), `${LIBRARY_EXPORT} 應被追蹤`);
   const fixtures = files.filter((f) => f.startsWith('scripts/design/fixtures/'));
   assert.ok(fixtures.length >= 2);
   for (const f of fixtures) assert.ok(f.endsWith('.json'), `fixtures 內有非 JSON：${f}`);
@@ -328,4 +323,38 @@ test('two pages with the same name dump identically whatever the entry order', (
   const b = dump(zip(Object.fromEntries(Object.entries(merged).reverse()))).text;
   assert.equal((a.match(/"name": "Page 1"/g) ?? []).length, 2);
   assert.equal(b, a);
+});
+
+// ---- ISSUE-027：真實匯出的陰影項目帶隨機 id，不能進 dump ----
+
+test('shadow entries keep their values but lose their id', () => {
+  const f = fixture();
+  const key = keyNamed(f, 'C / Button');
+  f[key].shadow = [{ id: 'cccccccc-1111-4111-8111-000000000001', style: 'drop-shadow', hidden: false, offsetX: 0, offsetY: 4, blur: 16, spread: 0, color: { color: '#000000', opacity: 0.0314 } }];
+  const { text, status, stderr } = dump(zip(f));
+  assert.equal(status, 0, stderr);
+  assert.equal(text.match(UUID), null);
+  assert.match(text, /"blur": 16/);
+  // 換掉陰影 id 的重新匯出，位元組不變。
+  f[key].shadow[0].id = 'dddddddd-2222-4222-8222-000000000002';
+  assert.equal(dump(zip(f)).text, text);
+});
+
+// ---- ISSUE-027：守門只放行元件庫設計檔這一個路徑 ----
+
+test('the export guard allows exactly one path and rejects every other .penpot or zip look-alike', () => {
+  const PK = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+  const text = Buffer.from('{"a"');
+  const run = (files, heads = {}) => exportViolations(files, (f) => heads[f] ?? text);
+  assert.deepEqual(run([LIBRARY_EXPORT], { [LIBRARY_EXPORT]: PK }), []);
+  assert.equal(LIBRARY_EXPORT, 'docs/mockup/luca-style-library.penpot');
+  for (const f of ['docs/mockup/other.penpot', 'luca-style-library.penpot', 'docs/luca-style-library.penpot', 'docs/mockup/Luca-Style-Library.PENPOT', 'docs/mockup/luca-style-library.penpot/x.penpot']) {
+    assert.equal(run([f], { [f]: PK }).length, 1, f);
+  }
+  // 副檔名變形：放行路徑加後綴、或偽裝成別的副檔名，但內容是 zip。
+  for (const f of ['docs/mockup/luca-style-library.penpot.bak', 'docs/mockup/luca-style-library.zip']) {
+    assert.equal(run([f], { [f]: PK }).length, 1, f);
+  }
+  assert.deepEqual(run(['docs/a.fig'], { 'docs/a.fig': PK }), []); // .fig 是既有例外
+  assert.deepEqual(run(['docs/missing.json'], { 'docs/missing.json': null }), []);
 });
