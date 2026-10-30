@@ -685,7 +685,7 @@ node scripts/design/apply-bindings.js --check   # exit 0
 
 **`.fig` 只存預設模式的三項，在 Penpot 是否隨 theme 切換。**
 
-- hug 版面尺寸：會。`C/Nav/Mobile` 自動高度隨 `fs-section` 變，Desktop 53、Tablet 51、Mobile 48；`C/State/Loading` 內距綁 `card-padding` 後高度 Vibrant 181、Professional 173（內距 24 對 20）。限制：只驗證字級與內距這兩種綁定引起的 hug；沒驗證 `gap-section` 與其他尺寸綁定。
+- hug 版面尺寸：會。`C/Nav/Mobile` 自動高度隨 `fs-section` 變，Desktop 53、Tablet 51、Mobile 48；`C/State/Loading` 內距綁 `card-padding` 後高度 Vibrant 181、Professional 173（內距 24 對 20）。限制：只驗證字級與內距這兩種綁定引起的 hug；沒驗證 `gap-section` 與其他尺寸綁定。（這兩筆額外綁定 `card-padding`、`fs-section` 已於 ISSUE-026 移除，兩個試點板依 `.fig` 重建，見〈Penpot：重建第二批母版 7 個並對齊試點 2 個〉。）
 - 陰影開關：值會隨 theme 變，但「關」只能用零偏移、零模糊、透明度 0 的陰影表示，形狀上仍留著一筆 `hidden: false` 的陰影，不是真的沒有。探測用的 `shadow` token（Vibrant 兩組 0/4/12 模糊、透明度 0.2 與 0.4；Professional 兩組全零透明）綁在一塊探測板上，四組合讀回的 `shadows` 都跟著變。探測 token 與探測板已移除，母版沒有綁陰影。`elevation-enabled` 是布林，`penpot-tokens.json` 不輸出，所以正式做法要新增一個 shadow token（要改建置輸出與測試）。
 - 載入圖片不透明度：會，且可以每個 Suite x Mode 恰好顯示一張。Penpot 的不透明度 token 綁在形狀上（不是填色的第幾層），所以做法是四個疊在一起的矩形各綁一個 token，不是一個形狀四個填色。12 組讀回的不透明度為 Vibrant/Light 1,0,0,0、Vibrant/Dark 0,1,0,0、Professional/Light 0,0,1,0、Professional/Dark 0,0,0,1（順序 tide-light、tide-dark、square-light、square-dark），與 `variables.json` 一致。`export_shape` 目視抽查一次（Professional / Dark / Mobile 只看到深灰替身圖）；沒有逐組目視。
 
@@ -731,6 +731,50 @@ node scripts/design/apply-bindings.js --check   # exit 0
 - 幾何只檢查板的尺寸，沒有逐節點比對位置、flex 排版結果與 `.fig` 的像素；文字寬度因字型度量與 `.fig` 不同。
 - 母版是 board 而非 component，也沒有匯出再解析；匯出檔結構留給 ISSUE-027。
 - 這批的 `execute_code` 不能一次綁太久（單次超過 120 秒逾時），所以分批綁定、每次綁定間等 400 ms；外掛分頁偶爾被瀏覽器暫停，等待數分鐘後恢復。
+
+## Penpot：重建第二批母版 7 個並對齊試點 2 個（ISSUE-026，PR-FILE-18、26）
+
+2026-10-30，同一個暫存檔「嗨嗨」，以 MCP `execute_code` 建置與驗證；建置與驗證用的一次性腳本不進 repo。方法沿用〈重建第一批母版 13 個〉：母版是 board（不是 component）、名稱以 `name.replace(/s*/s*/g, "/")` 正規化後比對、icon 為帶填色的小板、字型用不帶屬性的 `applyToken` 綁成 `fontFamily`。
+
+**建置。** 新建 `C/State/Empty`、`C/State/Error`、`C/Card/Metric`、`C/Table`、`C/Nav/Desktop`、`C/Select`、`C/Select/Open`；試點的 `C/State/Loading`、`C/Nav/Mobile` 刪除後依 `.fig` 重建（載入圖的四個替身圖片填色從舊板取出再貼回）。幾何、flex（方向、間距、內距、對齊、各軸 fix／hug／fill）、字級、字重、文字內容取自 `luca-style-library.fig`（以 `openpencil eval` 讀）。文字行高設成 `.fig` 的行高／字級（例如 28／16 = 1.75），所以 hug 高度與 `.fig` 一致（第一批 13 個板沿用預設行高 1.2，沒有改）。`C/Select/Open` 的 `Focus ring` 用 `layoutChild.absolute`；`Retry button`（`.fig` 為 INSTANCE）是 board。`C/Card/Metric` 先給一筆紅色 1/1/1 的陰影再 `applyToken(token, [shadow])` 綁 `metric-shadow`（做法同 ISSUE-024）；`C/Select/Open` 的 Popup 是 `.fig` 的固定陰影（0／8／24／0、`#24312A`、alpha 0.12），不綁 token。圓角與內距一次 `applyToken(token, [四個屬性])` 即可。試點兩個額外綁定（Loading 的 `card-padding`、Nav/Mobile Logo 的 `fs-section`）已拿掉，改用 `.fig` 固定值（內距 32、字級 18）。
+
+**驗證**（`execute_code` 程式化，同日；預期值取自 `bindings.json`、`variables.json`、`penpot-tokens.json`）：
+- 名稱：頁面 1 頁，頂層恰為 23 個 board；正規化後每個名稱恰出現 1 次，與 `bindings.json` 的 `frame` 欄一致；另以 `openpencil eval` 讀 `.fig` 得 23 個 COMPONENT 母版，與 `bindings.json` 的名單集合相等、無重複。三者一對一相符（PR-FILE-26）。
+- 結構與綁定（靜態，含第一批 13 個，共 23 個）：後代節點數等於 `nodeCount`（`C/State/Loading` 預期 `nodeCount` + 4，見下）；型別 frame／component／INSTANCE→board、text→text、icon→board；每個節點 `shape.tokens` 的鍵集合與 token 名完全等於 `bindings.json` 換算結果，沒有多餘綁定（`bindings.json` 沒列的節點 `tokens` 為空）。檢查項 670 筆通過，0 筆失敗（筆數是檢查項，不是獨立斷言數）。沒有 `strokeWidth` 綁定的描邊節點確認只有單筆描邊且寬度大於 0。
+- 解析值：Vibrant／Professional × Light／Dark × Desktop／Tablet／Mobile 共 12 組逐組切換；每次讀值前斷言「恰有一個 Suite x Mode theme 與一個 Device theme 啟用且為目標組合」（12 組全數通過；切換用 `toggleActive`，在同群組啟用另一個 theme 會自動關掉原本的）。每組對 23 個板只讀 `bindings.json` 有綁的節點與屬性：fill、stroke、strokeWidth、fontFamily 各 1，cornerRadius 4（四角）、padding 4（四邊）、載入矩形的 `opacity` 各 1，Metric 的陰影 8 項（筆數、offsetX、offsetY、blur、spread、色、alpha、hidden）。再加固定值斷言（Select/Open Popup 陰影 7 項、其餘節點無陰影、Loading 內距 32、Nav/Mobile Logo 字級 18、`metric-border-left` token 的 `resolvedValue`）。每組 479 筆，12 組共 5748 筆，差異 0。顏色不分大小寫，數值容差 1e-6，`opacity` token 值 `100%` 讀回 1（`variables.json` 100 除以 100）。字型直接讀回顯示名：`font-zh`＝`Noto Sans TC`、`font-en`＝`Inter`、`font-data`＝`IBM Plex Mono`，與 `variables.json` 字串相等（`IBM Plex Mono` 是本批首次用到，沒有出問題）。`variables.json` 中被綁定的 token 值 12 組內不隨 Device 變，所以預期值以 Suite x Mode 4 組索引。陰影：Vibrant 為 `0／4／16／0`、`#000000`、alpha 0.0314（8／255），Professional 為零值陰影，與 `elevation-enabled`（Vibrant 開、Professional 關）一致。結束時 theme 的狀態見下「暫存檔現況」。
+- 筆數對照：`bindings.json` 的綁定項依權重加總是每組 354 筆（23 個母版，Metric 陰影以 6 項算）；讀回把陰影多算 `count` 與 `hidden` 兩項成 356，程式的計數在陰影分支少記 1 筆（記帳誤差，不影響通過與否），所以綁定部分記為 355。固定值斷言 124 筆：非陰影節點的「無陰影」110（全部 112 個節點扣 Metric 根與 Popup）、Popup 陰影 8、Loading 內距 4、Logo 字級 1、`metric-border-left` token 1。355 + 124 = 479。
+
+**無法照字面綁定或與 `.fig` 不同的地方（表示法差異）：**
+- `C/State/Loading`：`.fig` 的 path `0` 是一個 frame 帶 4 層填色（`fill[i].opacity`），Penpot 的不透明度 token 綁在形狀上，所以該板含 4 個疊在一起的矩形各綁一個 `opacity` token，節點數是 8（`nodeCount` 4 加 4）。圖片是試點的 24x24 替身（不是 `packages/react/loading/*.png`，上傳真實圖片在試點時失敗），12 組讀回的不透明度與 `variables.json` 一致（每組恰一張為 1）。
+- `C/Card/Metric` 的 `strokeWidth.left`→`metric-border-left`：該 token 型別是 `number`（Vibrant 1、Professional 3）。實測 `applyToken(token, [strokeWidth])` 呼叫成功但 `tokens` 讀回空物件，`[borderWidth]` 回錯誤（`should be a set of strings`），不帶屬性則被綁成 `rotation`（不可用）。Penpot 也沒有單邊描邊寬。所以沒有綁，描邊取 `.fig` 的固定值 1，Penpot 上是四邊外框，Professional 的「左邊 3」沒有對應。若要在 Penpot 表示，要改 `penpot-tokens.json` 的輸出（例如輸出為 `borderWidth` 型別），而 Penpot 仍無單邊寬度，這項留給 ISSUE-027 之後決定，本票未處理。
+- 單邊描邊：`.fig` 中 `C/Table` 的 3 個列、`C/Nav/Desktop`、`C/Nav/Mobile` 是只有底線（bottom 1），`C/Card/Metric` 是只有左邊（left 1）；Penpot 一律是四邊 1px 外框。外觀與 `.fig` 不同，值（顏色）仍是綁定的。
+- Popup 的固定陰影在 `bindings.json` 沒綁，所以不綁；Metric 的陰影「關」是一筆 `hidden: false` 的零值陰影（PR-FILE-33 已接受）。
+
+**hug 與版面行為（Penpot 如何隨 theme／Device 變）：**
+- sizing：9 個板（本批 7 加兩個試點）的根都是寬 fixed、高 hug；`C/Table` 的 3 個列、`C/Select/Open` 的 `Field`、`Popup` 為寬 fill、高 hug；`Retry button` 寬 fill、高 48 固定；文字為 fill 寬加 auto-height，或 auto-width。建置時設成與 `.fig` 相同，62 個節點的尺寸與位置在預設組合（Vibrant／Light／Desktop）與 `.fig` 比對：62 個節點（9 個板）中 61 個尺寸與位置相同（容差 0.01），差 1 個：`C/State/Error` 的 `Button label` 文字寬 Penpot 64、`.fig` 65（字型度量），位置 96／95.5。板的 `width`、各軸 sizing、hug 高度全部相同（`C/Table` 234、`C/Card/Metric` 198 等）。
+- 隨 theme／Device 的結果（讀 `width`×`height`，下表是版面穩定後的讀值；同一次切換後立刻讀到的是前一組的版面，見下「延遲」）：
+
+| 組合 | C/Table | C/Card/Metric | 其餘 7 個 hug 板 |
+| --- | --- | --- | --- |
+| Vibrant / Light / Desktop | 640x234 | 320x198 | 不變 |
+| Vibrant / Dark / Tablet | 640x234 | 320x198 | 不變 |
+| Professional / Light / Mobile | 640x226 | 320x190 | 不變 |
+| Professional / Dark / Desktop | 640x226 | 320x190 | 不變 |
+| Professional / Dark / Mobile | 640x226 | 320x190 | 不變 |
+
+其餘 7 個為 `C/Nav/Desktop` 960x59、`C/Nav/Mobile` 350x59、`C/State/Loading` 320x216、`C/State/Empty` 320x176、`C/State/Error` 320x240、`C/Select` 320x88、`C/Select/Open` 320x266，在這 5 組都不變，且與 `.fig` 相同。結論：`C/Table` 與 `C/Card/Metric` 的 hug 高度隨 Suite 變（`card-padding` Vibrant 24、Professional 20，高度差 8，與預測相符），Light／Dark 與 Device 不變（5 組內）；`.fig` 只存預設模式的 640x234、320x198，正是 Vibrant 的值，Professional 在 Penpot 會變矮。`C/Nav/*`、`C/State/*`、`C/Select*` 沒有綁尺寸 token，12 組預期相同，實測 5 組相同。Device 軸：這 9 個板沒有綁任何 Device token，所以 Device 只能證明切換不影響值與尺寸，對值的檢查沒有鑑別力；試點時 `C/Nav/Mobile` 的 `fs-section` 綁定會隨 Device 變高（Desktop 53、Tablet 51、Mobile 48），拿掉後不再變。
+- 延遲：切換 theme 後，token 綁定的屬性值（填色、圓角、`flex.topPadding` 等）立刻讀得到新值，但 hug 版面（board 高度與子節點位置）要等到外掛分頁被瀏覽器喚醒、重新排版後才更新；切換後立刻讀到的是前一組的版面（12 組切換後第一次讀，Table 都是前一組的 226 或 234）。所以尺寸只採信「分頁恢復後、兩次讀值一致」的值；曾在切換 theme 後試著微調 `rowGap` 想強迫重排，沒有立即奏效。建置時也有同樣現象（新建 board 的文字寬度為 1、位置為 0，之後才收斂）。
+
+**限制與未驗證：**
+- 第一批 13 個板的文字行高沿用預設 1.2，沒有對 `.fig` 的行高調整，它們的 hug 高度與 `.fig` 的對照沒有做（ISSUE-025 只驗板尺寸）。
+- 檔名：`penpot.currentFile.name` 只能讀不能寫（讀回仍是「嗨嗨」）。「重新命名為 `luca-style-library`」是使用者在 Penpot 介面的動作，沒有完成；ISSUE-027 匯出前需要先改名。
+- hug 尺寸只在 5 個組合上讀到穩定值（12 組中的 Vibrant／Light／Desktop、Vibrant／Dark／Tablet、Professional／Light／Mobile、Professional／Dark／Desktop、Professional／Dark／Mobile），其餘 7 組的值（綁定與解析值已逐組驗證）沒有穩定的尺寸讀值。外掛分頁常被暫停，每組都要等待分頁恢復。
+- 與 `.fig` 的幾何比對只在預設組合做，比對尺寸與位置，不比像素；文字寬度因字型度量可能不同（本批實測 62 個節點中的差異見上）。
+- 目視：`export_shape` 目視抽查 `C/Select/Open`（Professional / Dark / Mobile，Popup 陰影、選中與 hover 選項、Focus ring 都在）與 `C/State/Loading`（只看到深灰替身圖）各一張；沒有逐板、逐組目視，也沒有取整頁。
+- 母版是 board 而非 component，也沒有匯出再解析；匯出檔結構留給 ISSUE-027。
+- 單次 `execute_code` 超過 120 秒會逾時；在分頁被節流時，`setTimeout` 等待會變得很長，所以綁定改成不等待（與 ISSUE-025 每次綁定間等 400 ms 的做法不同；連續 `applyToken` 約 3 秒完成 Table 全部綁定），再以另一次呼叫讀回驗證。
+
+**暫存檔現況：** 頁面上 23 個板（無其他頂層節點）。token 沒有改動（8 個 set，Suite x Mode 各 29 個）。目前啟用的 theme：Professional / Dark 與 Mobile（讀回確認）。
 
 ## Penpot 試點：離線解析匯出檔（ISSUE-020，PR-FILE-23）
 
