@@ -9,6 +9,7 @@
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
 - 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54` 與 `PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）。
+- 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
