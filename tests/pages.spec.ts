@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { routeTable } from './route-table';
 
 // 以 `build:pages` 產生、由模擬 GitHub Pages 的伺服器（port 4176）提供的樣張。
@@ -65,6 +67,35 @@ test('unknown urls answer 404 and show the not-found page', async ({ page }) => 
     expect(response?.status(), path).toBe(404);
     await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
     await expect(page.getByRole('link', { name: '返回設計系統入口', exact: true })).toHaveAttribute('href', `${base}/`);
+  }
+});
+
+test('the state overview url answers 404 and shows the not-found page', async ({ page }) => {
+  for (const path of ['/dev/state-overview', '/dev/state-overview/']) {
+    const response = await page.goto(`${base}${path}`);
+    expect(response?.status(), path).toBe(404);
+    await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
+    for (const name of ['Loading', 'Empty', 'Error', 'Success']) await expect(page.getByRole('region', { name, exact: true })).toHaveCount(0);
+  }
+});
+
+test('neither build output contains the state overview page', () => {
+  const markers = ['state-overview', '狀態總覽'];
+  // 先確認標記真的在頁面原始碼裡，頁面改名時這條測試才不會空轉。
+  const overviewSource = readFileSync(new URL('../apps/showcase/src/state-overview.tsx', import.meta.url), 'utf8');
+  for (const marker of markers) expect(overviewSource, marker).toContain(marker);
+  for (const dir of [distDir, pagesDir]) {
+    expect(existsSync(new URL('dev/state-overview/index.html', dir))).toBe(false);
+    const files = readdirSync(dir, { recursive: true, withFileTypes: true }).filter(entry => entry.isFile());
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const path = join(file.parentPath, file.name);
+      const content = readFileSync(path);
+      for (const marker of markers) {
+        expect(relative(fileURLToPath(dir), path).includes(marker), `${path} 的路徑含 ${marker}`).toBe(false);
+        expect(content.includes(marker), `${path} 的內容含 ${marker}`).toBe(false);
+      }
+    }
   }
 });
 

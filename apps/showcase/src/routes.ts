@@ -22,3 +22,8 @@ const knownRoutes = new Set<string>(routeTable);
 export function isKnownRoute(route: string): boolean {
   return knownRoutes.has(route);
 }
+
+// 狀態總覽頁不屬於樣張網站，不列入路由表；正式建置一律回 false，開啟時顯示找不到頁面（§5.2）。
+export function isStateOverviewRoute(route: string): boolean {
+  return import.meta.env.DEV && route === '/dev/state-overview';
+}

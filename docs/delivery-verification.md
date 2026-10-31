@@ -2,7 +2,7 @@
 
 ## 驗證範圍與重現
 
-執行環境為 Node.js 22.12 以上、npm 11（CI 用 Node.js 22）、npm workspaces、Playwright Chromium。驗證時 4173（showcase）及 4174（repo 外 consumer）要保留給驗證使用，不同程序不共用服務。
+執行環境為 Node.js 22.12 以上、npm 11（CI 用 Node.js 22）、npm workspaces、Playwright Chromium。驗證時 4173（showcase）、4174（repo 外 consumer）及 4178（狀態總覽頁的開發伺服器）要保留給驗證使用，不同程序不共用服務。
 
 ```sh
 npm ci

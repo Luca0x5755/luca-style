@@ -25,6 +25,17 @@ test('product state samples retain navigation and column context and retry resto
  await expect(page.getByRole('form',{name:'建立計畫'})).toBeVisible();
 });
 
+test('switching the sample state away and back keeps a created plan',async({page})=>{
+ await page.goto('/templates/product');
+ const form=page.getByRole('form',{name:'建立計畫'});
+ await form.getByLabel('計畫名稱').fill('切換後還在');
+ await form.getByRole('button',{name:'建立計畫',exact:true}).click();
+ await page.getByLabel('樣張狀態').selectOption('loading');
+ await expect(page.getByRole('cell',{name:'切換後還在 個人計畫',exact:true})).toHaveCount(0);
+ await page.getByLabel('樣張狀態').selectOption('success');
+ await expect(page.getByRole('cell',{name:'切換後還在 個人計畫',exact:true})).toBeVisible();
+});
+
 test('product remains readable and operable in every suite mode and width',async({page})=>{
  await page.goto('/templates/product');
  for(const suite of ['vibrant','professional']){

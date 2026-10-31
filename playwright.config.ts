@@ -16,11 +16,13 @@ export default defineConfig({
     { name: 'visual', testMatch: /visual\.spec/, use: { baseURL: 'http://127.0.0.1:4173', launchOptions: { args: ['--disable-lcd-text', '--font-render-hinting=none', '--disable-font-subpixel-positioning', '--disable-gpu'] } } },
   ] : [
     // 預設專案：base 為 `/`，使用 4173 預覽。
-    { name: 'default', testIgnore: /(subpath|pages|visual)\.spec/, use: { baseURL: 'http://127.0.0.1:4173' } },
+    { name: 'default', testIgnore: /(subpath|pages|visual|state-overview)\.spec/, use: { baseURL: 'http://127.0.0.1:4173' } },
     // 子路徑專案：以 `/luca-style/` base 建置，使用獨立的 4175 預覽。
     { name: 'subpath', testMatch: /subpath\.spec/, use: { baseURL: 'http://127.0.0.1:4175' } },
     // Pages 專案：build:pages 的靜態輸出，由模擬 GitHub Pages 的伺服器在 4176 提供。
     { name: 'pages', testMatch: /pages\.spec/, use: { baseURL: 'http://127.0.0.1:4176' } },
+    // 開發專案：狀態總覽頁只在開發環境開放，所以改連 4178 的 vite 開發伺服器。
+    { name: 'dev', testMatch: /state-overview\.spec/, use: { baseURL: 'http://127.0.0.1:4178' } },
   ],
   // 視覺專案只需 4173 預覽，不付 subpath／pages 兩次建置的成本。
   webServer: visualOnly ? [preview] : [
@@ -29,5 +31,6 @@ export default defineConfig({
     { command: 'npm run preview:subpath -w @luca-style/showcase', url: 'http://127.0.0.1:4175/luca-style/', reuseExistingServer: false, timeout: 180_000 },
     // 實際執行 build:pages 再以模擬 Pages 的伺服器提供；就緒判斷用含 base 的網址。
     { command: 'npm run build:pages && node scripts/serve-pages.mjs apps/showcase/dist-pages --base /luca-style/ --port 4176', url: 'http://127.0.0.1:4176/luca-style/', reuseExistingServer: false, timeout: 180_000 },
+    { command: 'npm run dev -w @luca-style/showcase -- --port 4178 --strictPort', url: 'http://127.0.0.1:4178', reuseExistingServer: false },
   ],
 });

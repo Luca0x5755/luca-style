@@ -11,6 +11,14 @@ test('visitor on an unknown path sees the not-found page with the requested path
   await expect(page.getByText('網址 /missing-page 沒有對應的頁面。請回到設計系統入口，其他頁面也可從導覽進入。')).toBeVisible();
 });
 
+test('the production build shows the not-found page at the state overview url', async ({ page }) => {
+  for (const path of ['/dev/state-overview', '/dev/state-overview/']) {
+    await page.goto(path);
+    await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
+    for (const name of ['Loading', 'Empty', 'Error', 'Success']) await expect(page.getByRole('region', { name, exact: true })).toHaveCount(0);
+  }
+});
+
 test('listed routes and the entry do not show the not-found page', async ({ page }) => {
   for (const route of ['/', '/foundations', '/components', '/templates/product', '/templates/intro']) {
     await page.goto(route);
