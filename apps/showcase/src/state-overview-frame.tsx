@@ -36,8 +36,10 @@ const productStates:ProductState[]=['loading','empty','error','success'];
 function FrameScreen(){
  const screen=overviewScreens.find(item=>item.route===params.get('screen'));
  const state=productStates.find(item=>item===params.get('state'));
- if(!screen||!state) throw new Error('格內網址缺少可呈現的畫面或狀態');
- return screen.render(state);
+ // 一個方向時網址不帶 direction；兩個方向要指名，參數打錯才不會默默呈現第一個、審錯版面。
+ const direction=screen?.directions.length===1?screen.directions[0]:screen?.directions.find(item=>item.name===params.get('direction'));
+ if(!direction||!state) throw new Error('格內網址缺少可呈現的畫面或狀態');
+ return direction.render(state);
 }
 // 一格的內容。target="document" 只影響這個 iframe 自己的文件，所以切換範圍就是這一格，<html> 也才和 /templates/product 相同。
 // persist={false} 不讀寫偏好；首屏腳本仍會先寫入已存的模式，所以外殼在收到 ready 前都隱藏 iframe。

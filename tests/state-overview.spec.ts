@@ -383,3 +383,200 @@ test('a cell whose document never arrives times out into the failure message and
   await page.clock.fastForward(60_000);
   await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
 });
+
+// 兩個版面方向（PR-REVIEW-07）：假方向只存在這裡，用 page.route 改寫模組，所以不會留在 /templates/product，也進不了正式建置。
+// 附加的文字在 Vite 轉換之後才接上：要以換行開頭（結尾是沒有換行的 sourceMappingURL），也只能寫純 JS。方向甲就是真正的 Product。
+const secondRender = 'state=>`方向乙的 ${state}`';
+const withTwoDirections = (page: Page, render = secondRender) => page.route('**/src/state-overview-screens.tsx*', async route => {
+  const response = await route.fetch();
+  const body = `${await response.text()}\noverviewScreens[0].directions=[{...overviewScreens[0].directions[0],name:'方向甲'},{name:'方向乙',render:${render}}];`;
+  await route.fulfill({ response, body });
+});
+const compared = ['方向甲 · Success', '方向乙 · Success'];
+const cellRow = (page: Page) => page.locator('.state-overview-cells');
+const frameParams = async (frame: Locator) => new URL((await frame.getAttribute('src'))!, 'http://localhost').searchParams;
+
+async function expectCellsInOneRow(page: Page, names: readonly string[]) {
+  const boxes = await Promise.all(names.map(async name => (await cell(page, name).boundingBox())!));
+  for (let i = 0; i < boxes.length - 1; i++) {
+    expect(boxes[i + 1].y).toBe(boxes[i].y);
+    expect(boxes[i].x + boxes[i].width).toBeLessThanOrEqual(boxes[i + 1].x);
+  }
+}
+
+test('a screen with two directions first compares only their Success side by side', async ({ page }) => {
+  await withTwoDirections(page);
+  await page.goto(overview);
+  await expect(screen(page, compared[0]).getByRole('region', { name: '摘要資訊' })).toBeVisible();
+  await expect(screen(page, compared[1]).getByText('方向乙的 success')).toBeVisible();
+  await expect(cellRow(page).locator('.state-overview-cell')).toHaveCount(2);
+  await expect(page.locator('iframe')).toHaveCount(2);
+  for (const state of states) await expect(cell(page, state)).toHaveCount(0);
+  const directions = [];
+  for (const name of compared) {
+    const params = await frameParams(cell(page, name).locator('iframe'));
+    expect(params.get('state'), name).toBe('success');
+    directions.push(params.get('direction'));
+  }
+  expect(directions).toEqual(['方向甲', '方向乙']);
+  await expectCellsInOneRow(page, compared);
+});
+
+const choose = (page: Page, name: string) => page.getByRole('button', { name: `選定 ${name}`, exact: true }).click();
+const directionChecks = {
+  方向甲: {
+    Loading: (frame: FrameLocator) => expect(frame.getByRole('status').first()).toContainText('產品資料載入中'),
+    Empty: (frame: FrameLocator) => expect(frame.getByRole('status').first()).toContainText('目前尚無產品資料'),
+    Error: (frame: FrameLocator) => expect(frame.getByRole('alert')).toContainText('產品資料載入失敗'),
+    Success: (frame: FrameLocator) => expect(frame.getByRole('region', { name: '摘要資訊' })).toBeVisible(),
+  },
+  方向乙: {
+    Loading: (frame: FrameLocator) => expect(frame.getByText('方向乙的 loading', { exact: true })).toBeVisible(),
+    Empty: (frame: FrameLocator) => expect(frame.getByText('方向乙的 empty', { exact: true })).toBeVisible(),
+    Error: (frame: FrameLocator) => expect(frame.getByText('方向乙的 error', { exact: true })).toBeVisible(),
+    Success: (frame: FrameLocator) => expect(frame.getByText('方向乙的 success', { exact: true })).toBeVisible(),
+  },
+} as const;
+type DirectionName = keyof typeof directionChecks;
+
+async function expectFourStatesOf(page: Page, name: DirectionName) {
+  await expect(page.locator('iframe')).toHaveCount(4);
+  for (const state of states) {
+    await directionChecks[name][state](screen(page, state));
+    const params = await frameParams(cell(page, state).locator('iframe'));
+    expect(params.get('direction'), state).toBe(name);
+    expect(params.get('state'), state).toBe(state.toLowerCase());
+    if (name === '方向甲') await expect(screen(page, state).getByText(/方向乙的/)).toHaveCount(0);
+    else await expect(screen(page, state).locator('.product-page')).toHaveCount(0);
+  }
+  await expect(page.locator('h1')).toHaveText(`狀態總覽頁 · /templates/product · ${name}`);
+  for (const label of compared) await expect(cell(page, label)).toHaveCount(0);
+}
+
+for (const name of ['方向甲', '方向乙'] as const) {
+  test(`choosing ${name} shows that direction's four states side by side`, async ({ page }) => {
+    await withTwoDirections(page);
+    await page.goto(overview);
+    await expect(page.locator('iframe')).toHaveCount(2);
+    await choose(page, name);
+    await expectFourStatesOf(page, name);
+    await expectCellsInOneRow(page, states);
+  });
+}
+
+for (const layout of ['scroll', 'fit'] as const) {
+  test(`two compared cells and the chosen four cells both work in the ${layout} layout`, async ({ page }) => {
+    await withTwoDirections(page);
+    await page.goto(`${overview}?layout=${layout}`);
+    const overflow = () => cellRow(page).evaluate(node => node.scrollWidth - node.clientWidth);
+    const frameWidth = async (name: string) => (await cell(page, name).locator('iframe').boundingBox())!.width;
+    await directionChecks.方向乙.Success(screen(page, compared[1]));
+    for (const { value, pixels } of widthChoices) {
+      await page.getByLabel('寬度').selectOption(value);
+      await directionChecks.方向甲.Success(screen(page, compared[0]));
+      for (const name of compared) {
+        // 手機兩格放得下，比例就是 1；scroll 永遠是實際寬度。
+        if (layout === 'scroll' || value === 'mobile') await expect.poll(() => frameWidth(name), name).toBeCloseTo(pixels, 0);
+      }
+      if (layout === 'fit') {
+        expect(await overflow()).toBeLessThanOrEqual(0);
+        if (value === 'desktop') {
+          // 比例還用四格算的話，兩格很小也不溢出，所以要看兩格是否填滿容器。
+          const rowWidth = await cellRow(page).evaluate(node => node.clientWidth);
+          await expect.poll(async () => {
+            const [first, last] = await Promise.all(compared.map(async name => (await cell(page, name).boundingBox())!));
+            return Math.abs(last.x + last.width - first.x - rowWidth);
+          }).toBeLessThanOrEqual(2);
+        }
+      } else if (value === 'desktop') expect(await overflow()).toBeGreaterThan(0);
+      await expectCellsInOneRow(page, compared);
+    }
+    await choose(page, '方向甲');
+    // 選定時寬度沒變，比例也要跟著格數重算，所以先驗一次再切換寬度。
+    for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
+    await expect.poll(async () => (await overflow()) <= 0).toBe(layout === 'fit');
+    for (const { value, pixels } of widthChoices) {
+      await page.getByLabel('寬度').selectOption(value);
+      for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
+      await expect.poll(async () => (await overflow()) <= 0).toBe(layout === 'fit');
+      if (layout === 'fit') {
+        expect(await frameWidth('Success')).toBeLessThan(pixels);
+        const last = (await cell(page, 'Success').boundingBox())!;
+        expect(last.x + last.width).toBeLessThanOrEqual(1280);
+      } else expect(await frameWidth('Success')).toBeCloseTo(pixels, 0);
+      await expectCellsInOneRow(page, states);
+    }
+  });
+}
+
+test('the controls change both compared cells and keep the chosen direction afterwards', async ({ page }) => {
+  await withTwoDirections(page);
+  await page.goto(overview);
+  const expectAll = async (names: readonly string[], attribute: string, value: string) => {
+    for (const name of names) await expect(screen(page, name).locator('html'), name).toHaveAttribute(attribute, value);
+  };
+  await page.getByLabel('風格套系').selectOption('professional');
+  await expectAll(compared, 'data-suite', 'professional');
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await expectAll(compared, 'data-mode', 'dark');
+  await page.getByLabel('寬度').selectOption('mobile');
+  for (const name of compared) await expect.poll(() => screen(page, name).locator('html').evaluate(() => window.innerWidth), name).toBe(390);
+  expect(await storedMode(page)).toBeNull();
+
+  await choose(page, '方向乙');
+  await expectFourStatesOf(page, '方向乙');
+  await expectAllCellsThemed(page, 'professional', 'dark');
+  await page.getByLabel('明暗模式').selectOption('light');
+  await expectAllCellsThemed(page, 'professional', 'light');
+  await page.getByLabel('風格套系').selectOption('vibrant');
+  await expectAllCellsThemed(page, 'vibrant', 'light');
+  await page.getByLabel('寬度').selectOption('desktop');
+  for (const state of states) await expect.poll(() => screen(page, state).locator('html').evaluate(() => window.innerWidth), state).toBe(1280);
+  await expectFourStatesOf(page, '方向乙');
+  expect(await storedMode(page)).toBeNull();
+});
+
+test('a direction that cannot render explains the failure in its cell and the other keeps working', async ({ page }) => {
+  await withTwoDirections(page, '()=>{throw new Error("故意失敗")}');
+  await page.goto(overview);
+  await expect(cell(page, compared[1]).getByText(failureCopy)).toBeVisible();
+  await expect(cell(page, compared[1]).locator('iframe')).toBeHidden();
+  await directionChecks.方向甲.Success(screen(page, compared[0]));
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await expect(screen(page, compared[0]).locator('html')).toHaveAttribute('data-mode', 'dark');
+  await page.getByLabel('風格套系').selectOption('professional');
+  await expect(screen(page, compared[0]).locator('html')).toHaveAttribute('data-suite', 'professional');
+  await page.getByLabel('寬度').selectOption('mobile');
+  await expect.poll(() => screen(page, compared[0]).locator('html').evaluate(() => window.innerWidth)).toBe(390);
+});
+
+test('a frame url picks the named direction of a two-direction screen', async ({ page }) => {
+  await withTwoDirections(page);
+  await page.goto(`${overview}/frame?screen=/templates/product&state=empty&direction=方向乙`);
+  await expect(page.getByText('方向乙的 empty', { exact: true })).toBeVisible();
+  await expect(page.locator('.product-page')).toHaveCount(0);
+});
+
+for (const [label, query] of [['an unknown', '&direction=方向丙'], ['no', '']]) {
+  test(`a frame url naming ${label} direction of a two-direction screen renders no screen`, async ({ page }) => {
+    await withTwoDirections(page);
+    const reported = page.waitForEvent('console', message => message.text().includes('格內網址缺少可呈現的畫面或狀態'));
+    await page.goto(`${overview}/frame?screen=/templates/product&state=success${query}`);
+    await reported;
+    await expect(page.locator('.product-page')).toHaveCount(0);
+    await expect(page.getByText(/方向乙的/)).toHaveCount(0);
+  });
+}
+
+test('a screen with one direction opens on its four states with nothing about directions', async ({ page }) => {
+  await page.goto(overview);
+  await expect(cellRow(page).locator('.state-overview-cell')).toHaveCount(4);
+  await expect(page.locator('iframe')).toHaveCount(4);
+  await expect(page.getByRole('button', { name: /選定/ })).toHaveCount(0);
+  await expect(page.locator('h1')).toHaveText('狀態總覽頁 · /templates/product');
+  await expect(page.locator('main.state-overview > *')).toHaveCount(3);
+  for (const state of states) {
+    const params = await frameParams(cell(page, state).locator('iframe'));
+    expect([...params.keys()].sort(), state).toEqual(['mode', 'screen', 'state', 'suite']);
+  }
+});

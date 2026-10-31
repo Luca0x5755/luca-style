@@ -1,5 +1,5 @@
-import {useEffect,useLayoutEffect,useRef,useState,type RefObject} from 'react';
-import {ContentState,type ColorMode,type StyleSuite} from '@luca-style/react';
+import {useEffect,useLayoutEffect,useRef,useState,type ReactNode,type RefObject} from 'react';
+import {Button,ContentState,type ColorMode,type StyleSuite} from '@luca-style/react';
 import type {ProductState} from './product';
 import {overviewScreens,type OverviewScreen} from './state-overview-screens';
 import type {FrameReport} from './state-overview-frame';
@@ -29,25 +29,25 @@ function CellFrame({src,label,width,scale}:{src:string;label:string;width:number
   <iframe ref={frame} src={src} title={label} style={{width,height:ready?report.height:0,transform:`scale(${scale})`,visibility:ready?'visible':'hidden'}}/>
  </div>;
 }
-function Cell({screen,state,label,theme,width,scale}:{screen:OverviewScreen;state:ProductState;label:string;theme:Theme;width:number;scale:number}){
- const src=withBase(`${stateOverviewFrameRoute}?${new URLSearchParams({screen:screen.route,state,...theme})}`);
+function Cell({screen,direction,state,label,theme,width,scale,children}:{screen:OverviewScreen;direction:string|null;state:ProductState;label:string;theme:Theme;width:number;scale:number;children?:ReactNode}){
+ const src=withBase(`${stateOverviewFrameRoute}?${new URLSearchParams({screen:screen.route,state,...theme,...(direction&&{direction})})}`);
  // 換網址時用 key 重新掛載 iframe，而不是改 src：改 src 會多一筆瀏覽歷史，也才會回到載入提示。
- return <section className="state-overview-cell" aria-label={label}><h2>{label}</h2><CellFrame key={src} src={src} label={label} width={width} scale={scale}/></section>;
+ return <section className="state-overview-cell" aria-label={label}><h2>{label}</h2>{children}<CellFrame key={src} src={src} label={label} width={width} scale={scale}/></section>;
 }
-// 四格並排方式由專案負責人決定（ISSUE-003）：scroll 是原尺寸橫向捲動，fit 是縮小並排看全貌。
+// 格子並排方式由專案負責人決定（ISSUE-003）：scroll 是原尺寸橫向捲動，fit 是縮小並排看全貌。
 // scroll 是暫定預設，尚未決定；選定後刪掉另一個分支、這個參數和 useFitScale。
 const layout=new URLSearchParams(window.location.search).get('layout')==='fit'?'fit':'scroll';
-// fit 時算出四格剛好放進容器的比例；scroll 固定為 1。
-function useFitScale(row:RefObject<HTMLDivElement|null>,width:number){
+// fit 時算出目前的格子剛好放進容器的比例；scroll 固定為 1。
+function useFitScale(row:RefObject<HTMLDivElement|null>,width:number,count:number){
  const [scale,setScale]=useState(1);
  useLayoutEffect(()=>{
   if(layout!=='fit'||!row.current) return;
   const node=row.current;
-  const measure=()=>{const gap=parseFloat(getComputedStyle(node).columnGap)||0;setScale(Math.min(1,(node.clientWidth-gap*(cells.length-1))/(cells.length*width)));};
+  const measure=()=>{const gap=parseFloat(getComputedStyle(node).columnGap)||0;setScale(Math.min(1,(node.clientWidth-gap*(count-1))/(count*width)));};
   const observer=new ResizeObserver(measure);
   measure();observer.observe(node);
   return ()=>observer.disconnect();
- },[row,width]);
+ },[row,width,count]);
  return scale;
 }
 // 狀態總覽頁（§5.3.7）：只在開發環境由 main.tsx 載入，不屬於樣張網站。
@@ -58,14 +58,20 @@ export function StateOverview(){
  const [widthChoice,setWidthChoice]=useState<WidthChoice>('desktop');
  const row=useRef<HTMLDivElement>(null);
  const width=widths[widthChoice];
- const scale=useFitScale(row,width);
+ const [chosen,setChosen]=useState<string|null>(null);
  const screen=overviewScreens.at(0);
+ // 兩個方向先只比 Success，一次看 8 格太難比（ISSUE-001）；選定後才看該方向的四種狀態。
+ const comparing=screen?.directions.length===2&&chosen===null;
+ const scale=useFitScale(row,width,comparing?2:cells.length);
  if(!screen) return <main className="state-overview"><h1>狀態總覽頁</h1><ContentState state="empty" title="此頁沒有可審的畫面" description="尚未納入任何畫面。"/></main>;
- return <main className="state-overview"><h1>狀態總覽頁 · {screen.route}</h1>
+ const shared={screen,theme:{suite,mode},width,scale};
+ return <main className="state-overview"><h1>狀態總覽頁 · {screen.route}{chosen!==null&&` · ${chosen}`}</h1>
   <section className="theme-controls" aria-label="切換控制">
    <label>風格套系<select value={suite} onChange={e=>setSuite(e.target.value as StyleSuite)}><option value="vibrant">精緻活力</option><option value="professional">精緻專業</option></select></label>
    <label>明暗模式<select value={mode} onChange={e=>setMode(e.target.value as ColorMode)}><option value="light">日間</option><option value="dark">暗黑</option></select></label>
    <label>寬度<select value={widthChoice} onChange={e=>setWidthChoice(e.target.value as WidthChoice)}><option value="desktop">桌機 1280</option><option value="mobile">手機 390</option></select></label>
   </section>
-  <div ref={row} className="state-overview-cells">{cells.map(({state,label})=><Cell key={state} screen={screen} state={state} label={label} theme={{suite,mode}} width={width} scale={scale}/>)}</div></main>;
+  <div ref={row} className="state-overview-cells">{comparing
+   ?screen.directions.map(({name})=><Cell {...shared} key={name} direction={name} state="success" label={`${name} · Success`}><div><Button variant="secondary" onClick={()=>setChosen(name)}>選定 {name}</Button></div></Cell>)
+   :cells.map(({state,label})=><Cell {...shared} key={state} direction={chosen} state={state} label={label}/>)}</div></main>;
 }
