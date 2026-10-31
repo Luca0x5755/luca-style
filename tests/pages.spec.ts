@@ -71,7 +71,7 @@ test('unknown urls answer 404 and show the not-found page', async ({ page }) => 
 });
 
 test('the state overview url answers 404 and shows the not-found page', async ({ page }) => {
-  for (const path of ['/dev/state-overview', '/dev/state-overview/']) {
+  for (const path of ['/dev/state-overview', '/dev/state-overview/', '/dev/state-overview/frame?screen=/templates/product&state=success']) {
     const response = await page.goto(`${base}${path}`);
     expect(response?.status(), path).toBe(404);
     await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
@@ -86,6 +86,7 @@ test('neither build output contains the state overview page', () => {
   for (const marker of markers) expect(overviewSource, marker).toContain(marker);
   for (const dir of [distDir, pagesDir]) {
     expect(existsSync(new URL('dev/state-overview/index.html', dir))).toBe(false);
+    expect(existsSync(new URL('dev/state-overview/frame/index.html', dir))).toBe(false);
     const files = readdirSync(dir, { recursive: true, withFileTypes: true }).filter(entry => entry.isFile());
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) {

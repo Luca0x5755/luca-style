@@ -1,6 +1,10 @@
 /* 只由 state-overview.tsx 載入，才不會留在正式建置的樣式裡。 */
+/* fit 的比例取決於容器寬度，頁面捲軸一出現一消失會讓比例來回變動，所以固定保留捲軸位置。 */
+html:has(.state-overview) { scrollbar-gutter:stable; }
 .state-overview { display:grid; gap:var(--gap-section); padding:var(--space-4); }
 .state-overview h1 { margin:0; font:700 var(--type-title-size)/var(--type-title-line-height) var(--font-body); }
-.state-overview-cells { display:grid; grid-template-columns:repeat(4,minmax(360px,1fr)); gap:var(--space-4); overflow-x:auto; align-items:start; }
-.state-overview-cell { display:grid; gap:var(--space-2); min-width:0; overflow-x:auto; }
+.state-overview-cells { display:flex; gap:var(--space-4); overflow-x:auto; align-items:flex-start; }
+.state-overview-cell { display:grid; gap:var(--space-2); flex:none; }
 .state-overview-cell > h2 { margin:0; }
+.state-overview-frame { position:relative; overflow:hidden; }
+.state-overview-frame iframe { position:absolute; top:0; left:0; border:0; transform-origin:top left; }

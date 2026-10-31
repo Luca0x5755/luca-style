@@ -12,7 +12,7 @@ test('visitor on an unknown path sees the not-found page with the requested path
 });
 
 test('the production build shows the not-found page at the state overview url', async ({ page }) => {
-  for (const path of ['/dev/state-overview', '/dev/state-overview/']) {
+  for (const path of ['/dev/state-overview', '/dev/state-overview/', '/dev/state-overview/frame?screen=/templates/product&state=success']) {
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1, name: '找不到這個頁面' })).toBeVisible();
     for (const name of ['Loading', 'Empty', 'Error', 'Success']) await expect(page.getByRole('region', { name, exact: true })).toHaveCount(0);

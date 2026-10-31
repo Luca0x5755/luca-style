@@ -25,5 +25,12 @@ export function isKnownRoute(route: string): boolean {
 
 // 狀態總覽頁不屬於樣張網站，不列入路由表；正式建置一律回 false，開啟時顯示找不到頁面（§5.2）。
 export function isStateOverviewRoute(route: string): boolean {
-  return import.meta.env.DEV && route === '/dev/state-overview';
+  return import.meta.env.DEV && (route === '/dev/state-overview' || isStateOverviewFrameRoute(route));
+}
+
+// 狀態總覽頁每一格 iframe 指向的網址。
+export const stateOverviewFrameRoute = '/dev/state-overview/frame';
+
+export function isStateOverviewFrameRoute(route: string): boolean {
+  return import.meta.env.DEV && route === stateOverviewFrameRoute;
 }

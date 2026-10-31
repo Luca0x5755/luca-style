@@ -3,7 +3,7 @@ import {NotFound} from './not-found';
 import {ProductTemplate} from './product-template';
 import {Components} from './components';
 import {Foundations, type PreviewLevels} from './foundations';
-import {isKnownRoute, isStateOverviewRoute, stripBase, withBase} from './routes';
+import {isKnownRoute, isStateOverviewFrameRoute, isStateOverviewRoute, stripBase, withBase} from './routes';
 import '@luca-style/react/fonts.css';
 import { createRoot } from 'react-dom/client';
 import { lazy, Suspense, useState } from 'react';
@@ -47,8 +47,14 @@ function Content({suite,setSuite,override,setOverride,levels,setLevels}: {suite:
 const root = createRoot(document.getElementById('root')!);
 // import.meta.env.DEV 要直接寫在這裡：正式建置才會移除這個區塊與狀態總覽頁的 chunk。
 if (import.meta.env.DEV && isStateOverviewRoute(stripBase(window.location.pathname))) {
-  const StateOverview = lazy(() => import('./state-overview').then(module => ({default:module.StateOverview})));
-  root.render(<ThemeProvider target="document"><Suspense fallback={null}><StateOverview/></Suspense></ThemeProvider>);
+  if (isStateOverviewFrameRoute(stripBase(window.location.pathname))) {
+    // 格內自己決定主題，不包外層 provider，免得已存的偏好蓋掉網址參數。
+    const StateOverviewFrame = lazy(() => import('./state-overview-frame').then(module => ({default:module.StateOverviewFrame})));
+    root.render(<Suspense fallback={null}><StateOverviewFrame/></Suspense>);
+  } else {
+    const StateOverview = lazy(() => import('./state-overview').then(module => ({default:module.StateOverview})));
+    root.render(<ThemeProvider target="document"><Suspense fallback={null}><StateOverview/></Suspense></ThemeProvider>);
+  }
 } else {
   root.render(<App />);
 }
