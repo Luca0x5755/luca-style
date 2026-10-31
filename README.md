@@ -74,7 +74,7 @@ npm run lint
 npm test
 ```
 
-瀏覽器測試使用獨立的 4173、4175、4176 port，不重用既有伺服器；先關閉這些埠的其他服務。來源串接測試會暫時修改強調色、重建並驗證瀏覽器，最後復原來源及輸出；執行測試時請勿同時編輯 token。
+瀏覽器測試使用獨立的 4173、4175、4176、4178 port，不重用既有伺服器；先關閉這些埠的其他服務。來源串接測試會暫時修改強調色、重建並驗證瀏覽器，最後復原來源及輸出；執行測試時請勿同時編輯 token。
 
 - `npm run test:consumer`：獨立 consumer 驗證（先 build，需要網路、Chromium 與獨立 4174 port）。
 - `npm run build:pages`：以 `/luca-style/` 為 base 建置 GitHub Pages 靜態輸出到 `apps/showcase/dist-pages`。push 到 `main` 後由 `.github/workflows/pages.yml` 驗證並部署。
