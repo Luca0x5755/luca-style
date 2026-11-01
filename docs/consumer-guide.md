@@ -62,6 +62,8 @@ Vite 可將公開授權輸出當 URL：`import licenseUrl from '@luca-style/reac
 
 ## Penpot 設計稿與程式同步
 
+**試驗期間暫停更新：** 元件庫設計檔在狀態總覽頁的試驗期間暫停更新（[ADR 0009](adr/0009-review-on-state-overview-pages-and-retire-the-design-file-after-a-trial.md)）。試驗期間它可能落後設計變數，不一致時以 `packages/tokens/src` 為準。複製設計檔與匯入設計變數的步驟仍然有效；本節的「人工同步順序」和〈更新元件庫設計檔（維護 luca-style 的人）〉暫停，維護 luca-style 的人在試驗結束前不重新匯出設計檔，第一次改設計變數時依 [PR-REVIEW-11、12](capabilities/design-system.md#狀態總覽頁承諾) 處理。
+
 設計稿是一個以 Penpot 編輯的元件庫設計檔：`docs/mockup/luca-style-library.penpot`（Penpot 匯出檔，含設計變數與 23 個母版；審查用的文字 dump 是同目錄的 `luca-style-library.dump.json`，不能匯回 Penpot）。兩套風格與明暗以 token theme `Suite x Mode` 的四種組合切換（`Vibrant / Light`、`Vibrant / Dark`、`Professional / Light`、`Professional / Dark`），裝置以 theme `Device` 切換。畫面命名與狀態見[前端 §5.3、§5.5](05_frontend_spec.md)。自架 Penpot 的版本與啟動步驟見[Penpot 自架說明](penpot-self-hosting.md)。
 
 | 設計稿名稱 | 程式公開對應 |

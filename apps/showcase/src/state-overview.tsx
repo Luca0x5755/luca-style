@@ -66,7 +66,7 @@ function Overview(){
  const width=widths[widthChoice];
  const [chosen,setChosen]=useState<string|null>(null);
  const screen=overviewScreens.at(0);
- // 兩個方向先只比 Success，一次看 8 格太難比（ISSUE-001）；選定後才看該方向的四種狀態。
+ // 兩個方向先只比 Success，一次看 8 格太難比（docs/decision-log.md 2026-11-01）；選定後才看該方向的四種狀態。
  const comparing=screen?.directions.length===2&&chosen===null;
  const scale=useFitScale(row,width,comparing?2:cells.length);
  if(!screen) return <main className="state-overview"><h1>狀態總覽頁</h1><ContentState state="empty" title="此頁沒有可審的畫面" description="尚未納入任何畫面。"/></main>;
