@@ -1,9 +1,10 @@
 import { test, expect, type BrowserContext, type FrameLocator, type Locator, type Page, type Request } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { cellQuery, columnCount, openCell, overviewPath as overview, palette } from './state-overview-cell';
 import { cssRgb, neutralValues } from './tokens-helpers';
+import { overviewStates } from './visual-matrix';
 
 // 狀態總覽頁只在開發環境開放，這支測試跑在 `dev` 專案（port 4178 的 vite 開發伺服器）。
-const overview = '/dev/state-overview';
 const states = ['Loading', 'Empty', 'Error', 'Success'] as const;
 const cell = (page: Page, name: string) => page.getByRole('region', { name, exact: true });
 // 每格的畫面在自己的 iframe 裡。
@@ -108,11 +109,6 @@ test('the product screen keeps neither the sample menu nor the state it presents
   expect(product).not.toMatch(/useState(?:<[^>]*>)?\(\s*(?:state\b|['"](?:success|loading|empty|error)['"])/);
 });
 
-// 色值來源是 §5.4 的色票表。
-const palette = {
-  vibrant: { light: '#147F82', dark: '#64C2BC' },
-  professional: { light: '#625C83', dark: '#ABA4D7' },
-} as const;
 const modeKey = 'luca-style-mode';
 
 async function expectAllCellsThemed(page: Page, suite: keyof typeof palette, mode: 'light' | 'dark') {
@@ -182,7 +178,6 @@ test('switching on the overview stores nothing when no preference exists', async
   await expect(page.locator('html')).toHaveAttribute('data-suite', 'vibrant');
 });
 
-const columnCount = (element: Locator) => element.evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length);
 const widthChoices = [{ value: 'desktop', pixels: 1280 }, { value: 'mobile', pixels: 390 }] as const;
 
 test('switching the width lays every cell out at that width like the real page', async ({ page }) => {
@@ -779,4 +774,58 @@ test('opening a link from a dark cell stores nothing when no preference exists',
   await expect(tab.locator('iframe')).toBeVisible();
   await expect(tab.frameLocator('iframe').locator('html')).toHaveAttribute('data-mode', 'dark');
   expect(await storedMode(tab)).toBeNull();
+});
+
+// 截圖與 axe 都開頂層的格內文件（state-overview-cell.ts）：以下確認那份文件就是專案負責人在單格檢視看到的，也確認開格的檢查擋得下壞畫面。
+const measureRendering = (html: Locator) => html.evaluate(node => {
+  const columns = (selector: string) => {
+    const element = node.querySelector(selector);
+    return element ? getComputedStyle(element).gridTemplateColumns.split(' ').length : null;
+  };
+  return { innerWidth: window.innerWidth, rootHeight: document.getElementById('root')!.getBoundingClientRect().height, layout: columns('.product-layout'), metrics: columns('.product-metrics') };
+});
+
+for (const { value, pixels } of widthChoices) {
+  test(`the top-level cell document renders like the single-cell view at ${pixels}px`, async ({ page }) => {
+    for (const state of overviewStates) {
+      const combination = { state, suite: 'vibrant', mode: 'light', width: pixels } as const;
+      await openCell(page, combination);
+      const topLevel = await measureRendering(page.locator('html'));
+      const topLevelText = await productText(page.locator('main'));
+      expect(topLevel.innerWidth, state).toBe(pixels);
+      // 視窗維持寬，才證明單格檢視的斷點看的是 iframe 寬度，不是視窗。
+      await page.setViewportSize({ width: 1400, height: 1000 });
+      await page.goto(`${overview}?${new URLSearchParams({ cell: cellQuery(combination), width: value })}`);
+      const frame = page.frameLocator('iframe');
+      await expect(frame.locator('.product-page'), state).toBeVisible();
+      // 上面的數值是字體載入後量的；iframe 這邊可能還在備用字型，換行不同就會高度不同，所以要等到一致。
+      await expect.poll(() => measureRendering(frame.locator('html')), state).toEqual(topLevel);
+      expect(await productText(frame.locator('main')), state).toBe(topLevelText);
+    }
+  });
+}
+
+test('the checks before a screenshot fail when a cell renders the wrong state', async ({ page }) => {
+  const combination = { state: 'loading', suite: 'vibrant', mode: 'light', width: 1280 } as const;
+  await openCell(page, combination);
+  await page.route('**/src/state-overview-screens.tsx*', async route => {
+    const response = await route.fetch();
+    const body = `${await response.text()}\nconst real=overviewScreens[0].directions[0].render;overviewScreens[0].directions[0].render=()=>real('success');`;
+    await route.fulfill({ response, body });
+  });
+  await expect(openCell(page, combination)).rejects.toThrow('狀態內容 loading');
+});
+
+test('the checks before a screenshot fail when a font cannot load', async ({ page }) => {
+  const combination = { state: 'success', suite: 'vibrant', mode: 'light', width: 1280 } as const;
+  await openCell(page, combination);
+  await page.route('**/Inter.ttf*', route => route.abort());
+  await expect(openCell(page, combination)).rejects.toThrow('字體');
+});
+
+test('the checks before a screenshot fail when the component styles are missing', async ({ page }) => {
+  const combination = { state: 'success', suite: 'vibrant', mode: 'light', width: 1280 } as const;
+  await openCell(page, combination);
+  await page.route('**/packages/react/**/*.css*', route => route.fulfill({ contentType: 'text/javascript', body: 'export default "";' }));
+  await expect(openCell(page, combination)).rejects.toThrow('元件樣式');
 });

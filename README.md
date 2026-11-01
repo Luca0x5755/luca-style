@@ -82,7 +82,11 @@ npm test
 
 ### 截圖基準
 
-樣張每一頁（含找不到頁面）× 兩種風格套系 × 日間／暗黑 × 寬度 1280／834／390，共 72 張，存於 `tests/__screenshots__/`（PR-STYLE-42）；只含 Success 狀態，設計基礎頁的密度與外形切換維持預設，不在基準內。基準只在 Playwright 官方 Linux Docker 映像（版本與 `@playwright/test` 一致）產生與比對，因為 Windows 與 Linux 字型渲染不同；本機 `npm test` 不含截圖比對。需要 Docker 與 4173 port；首次會下載映像，並在容器內安裝依賴（放在命名 volume `luca-style-visual-node-modules`，不動本機 `node_modules`）。`npm run screenshots` 產生的是 README 用圖，不做比對，與此基準無關。
+樣張每一頁（含找不到頁面）× 兩種風格套系 × 日間／暗黑 × 寬度 1280／834／390，共 72 張，存於 `tests/__screenshots__/`（PR-STYLE-42）；只含 Success 狀態，設計基礎頁的密度與外形切換維持預設，不在基準內。基準只在 Playwright 官方 Linux Docker 映像（版本與 `@playwright/test` 一致）產生與比對，因為 Windows 與 Linux 字型渲染不同；本機 `npm test` 不含截圖比對。
+
+狀態總覽頁納入的畫面另有 48 張（`/templates/product` 的 4 狀態 × 2 套系 × 2 明暗 × 3 寬度，PR-REVIEW-08），檔名以 `state-overview-` 開頭。總覽頁只在開發環境開放，所以這些截圖連容器內 4178 的開發伺服器，其餘連容器內 4173 的預覽；相同組合的 axe 在 `npm test` 內執行（PR-REVIEW-09）。
+
+需要 Docker；4173、4178 都在容器內，不佔用本機的 port。首次會下載映像，並在容器內安裝依賴（放在命名 volume `luca-style-visual-node-modules` 與 `luca-style-visual-showcase-node-modules`，不動本機的 `node_modules`）。`npm run screenshots` 產生的是 README 用圖，不做比對，與此基準無關。
 
 ```sh
 npm run test:visual    # 在 Docker 內與基準比對，不符即失敗

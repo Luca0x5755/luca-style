@@ -28,9 +28,11 @@ if ((mode !== 'test' && mode !== 'update') || unknown.length) {
 
 // 容器內 node_modules 放在命名 volume：Windows 安裝的原生套件不能在 Linux 使用，也不污染本機目錄。
 const volume = 'luca-style-visual-node-modules';
+// npm ci 會清空每個 workspace 的 node_modules，開發伺服器也會把 vite 快取寫進 showcase 的 node_modules；有內容的只有這一個，所以另外隔開。
+const showcaseVolume = 'luca-style-visual-showcase-node-modules';
 const playwrightArgs = mode === 'test' ? '--update-snapshots=none' : flags.includes('--all') ? '--update-snapshots=all' : '--update-snapshots=changed';
 const inner = `npm ci --no-audit --no-fund && npm run build && npx playwright test --project=visual ${playwrightArgs}`;
-const args = ['run', '--rm', '--ipc=host', '-e', 'PW_VISUAL=1', '-v', `${root}:/work`, '-v', `${volume}:/work/node_modules`, '-w', '/work', image, 'sh', '-c', inner];
+const args = ['run', '--rm', '--ipc=host', '-e', 'PW_VISUAL=1', '-v', `${root}:/work`, '-v', `${volume}:/work/node_modules`, '-v', `${showcaseVolume}:/work/apps/showcase/node_modules`, '-w', '/work', image, 'sh', '-c', inner];
 if (flags.includes('--dry-run')) {
   console.log(JSON.stringify(args));
   process.exit(0);
