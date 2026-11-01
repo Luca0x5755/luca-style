@@ -1,12 +1,12 @@
 import {Editorial} from './editorial';
 import {NotFound} from './not-found';
-import {Product} from './product';
+import {ProductTemplate} from './product-template';
 import {Components} from './components';
 import {Foundations, type PreviewLevels} from './foundations';
-import {isKnownRoute, stripBase, withBase} from './routes';
+import {isKnownRoute, isStateOverviewFrameRoute, isStateOverviewRoute, stripBase, withBase} from './routes';
 import '@luca-style/react/fonts.css';
 import { createRoot } from 'react-dom/client';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Navigation, ThemeProvider, useTheme, type StyleSuite, type ColorMode } from '@luca-style/react';
 import '@luca-style/tokens/css';
 import '@luca-style/react/css';
@@ -39,9 +39,22 @@ function Content({suite,setSuite,override,setOverride,levels,setLevels}: {suite:
     <label className="override-control"><span>專案強調色</span><span><input type="checkbox" checked={override} onChange={e=>setOverride(e.target.checked)}/>檢視專案強調色覆寫</span></label>
     </section><div className="status-preview" aria-label="操作狀態色對照"><span style={{color:'var(--success)'}}>成功 · 已儲存</span><span style={{color:'var(--warning)'}}>警告 · 請確認</span><span style={{color:'var(--error)'}}>錯誤 · 請重試</span></div><main>
       <p className="eyebrow">{notFound ? route : intro ? '/templates/intro' : product ? '/templates/product' : components ? '/components' : foundations ? '/foundations' : '/'} / {suiteName} / {resolvedMode === 'dark' ? '暗黑' : '日間'}</p>
-      {notFound ? <NotFound path={route}/> : product ? <Product/> : components ? <Components/> : foundations ? <Foundations suite={suite} levels={levels} setLevels={setLevels}/> : <Editorial intro={intro} suite={suite}/>}
+      {notFound ? <NotFound path={route}/> : product ? <ProductTemplate/> : components ? <Components/> : foundations ? <Foundations suite={suite} levels={levels} setLevels={setLevels}/> : <Editorial intro={intro} suite={suite}/>}
     </main>
     <footer>Luca Style / {suiteName} · 字級提案 A</footer>
   </div>;
 }
-createRoot(document.getElementById('root')!).render(<App />);
+const root = createRoot(document.getElementById('root')!);
+// import.meta.env.DEV 要直接寫在這裡：正式建置才會移除這個區塊與狀態總覽頁的 chunk。
+if (import.meta.env.DEV && isStateOverviewRoute(stripBase(window.location.pathname))) {
+  if (isStateOverviewFrameRoute(stripBase(window.location.pathname))) {
+    // 格內自己決定主題，不包外層 provider，免得已存的偏好蓋掉網址參數。
+    const StateOverviewFrame = lazy(() => import('./state-overview-frame').then(module => ({default:module.StateOverviewFrame})));
+    root.render(<Suspense fallback={null}><StateOverviewFrame/></Suspense>);
+  } else {
+    const StateOverview = lazy(() => import('./state-overview').then(module => ({default:module.StateOverview})));
+    root.render(<ThemeProvider target="document"><Suspense fallback={null}><StateOverview/></Suspense></ThemeProvider>);
+  }
+} else {
+  root.render(<App />);
+}

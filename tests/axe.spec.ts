@@ -1,23 +1,6 @@
-import { test, expect, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { test, expect } from '@playwright/test';
+import { scan, type Finding } from './axe-scan';
 import { routeTable } from './route-table';
-
-// 掃描目前頁面，依 PR-STYLE-41 分級：serious、critical 擋下，其餘只列報告。
-type Finding = { id: string; impact: string; help: string; targets: string[] };
-const blockingImpacts = new Set(['serious', 'critical']);
-
-async function scan(page: Page) {
-  const results = await new AxeBuilder({ page }).analyze();
-  // 只留可讀的欄位，失敗訊息才看得懂是哪條規則、哪個節點。
-  const findings: Finding[] = results.violations.map(v => ({
-    id: v.id, impact: v.impact ?? 'unknown', help: v.help, targets: v.nodes.map(n => n.target.join(' ')),
-  }));
-  return {
-    violations: results.violations,
-    blocking: findings.filter(f => blockingImpacts.has(f.impact)),
-    reported: findings.filter(f => !blockingImpacts.has(f.impact)),
-  };
-}
 
 // 頁面清單取自路由表，再加一條不在表內的路徑代表「找不到頁面」（前端規格 §5.2、§5.3.6）。
 const notFoundPath = '/axe-unlisted-path';

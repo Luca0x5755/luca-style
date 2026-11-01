@@ -122,3 +122,27 @@ test('design-system capability carries every PR-STYLE promise exactly once, and 
   expect(promise(29)[0]).toContain('PR-STYLE-48');
   expect(promise(29)[0]).not.toContain('畫面與 0.1.0 相同');
 });
+
+// 規格議題刪除後，真相層是 PR-REVIEW 的唯一依據：12 條承諾各恰好一行，交付索引也列出這組編號。
+test('design-system capability carries every PR-REVIEW promise exactly once, and the delivery index names them', () => {
+  const capability = read('docs/capabilities/design-system.md').replace(/\r\n/g, '\n');
+  const ids = [...capability.matchAll(/^PR-REVIEW-(\d+) — /gm)].map(match => match[1]);
+  expect(ids).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']);
+  expect(section('交付索引', capability)).toContain('`PR-REVIEW-xx`');
+});
+
+// PR-REVIEW-10：註記要在讀者會讀的地方，提示詞則要在複製出去的圍欄內。這項守門在試驗結束時隨 PR-REVIEW-10 一起移除。
+const noteLine = (text: string) => text.split('\n').find(line => line.includes('暫停更新') && line.includes('ADR 0009'));
+const fenceOf = (text: string) => text.match(/^```text\n([\s\S]*?)^```/m)?.[1] ?? '';
+
+test('the consumer guide notes the design file pause in its Penpot section', () => {
+  const guide = read('docs/consumer-guide.md').replace(/\r\n/g, '\n');
+  expect(noteLine(section('Penpot 設計稿與程式同步', guide))).toBeDefined();
+});
+
+for (const title of ['可直接複製的提示詞', '已套用舊版的專案：升級提示詞']) {
+  test(`the adoption prompt under "${title}" carries the design file pause inside its fence`, () => {
+    const prompt = read('docs/adoption-prompt.md').replace(/\r\n/g, '\n');
+    expect(noteLine(fenceOf(section(title, prompt)))).toBeDefined();
+  });
+}

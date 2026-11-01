@@ -8,7 +8,8 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54` 與 `PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）與 `PR-REVIEW-xx`（狀態總覽頁）。
+- 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
 ## 需求承諾
@@ -148,6 +149,60 @@ PR-FILE-29 — `docs/` 下有 Penpot 自架說明，列出所用 Penpot 版本�
 PR-FILE-30 — `docs/consumer-guide.md` 與 `docs/adoption-prompt.md` 的設計稿起點指向 Penpot 版元件庫設計檔。
 PR-FILE-32 — 腳本由元件庫設計檔的 `.penpot` 產生正規化文字 dump（排序固定、不含時間戳與隨機 id 等易變欄位）並提交進 repo；同一份匯出檔連續產生兩次的 dump 位元組相同；dump 與 `.penpot` 不一致時檢查回報非零結束碼並列出差異。
 PR-FILE-33 — `elevation-enabled` 在 Penpot 以 shadow token 表示：開為原陰影值，關為零偏移、零模糊、透明度 0 的陰影；建置輸出的 token JSON 含此 token，離線測試比對其值與 DTCG 來源。
+
+### 狀態總覽頁承諾
+
+開工前審稿用的狀態總覽頁，規格見[前端 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)，目前納入 `/templates/product`。ADR 0009 維持 `Proposed`：總覽頁做好不代表試驗有結果，要等後台範本試驗有結果才改狀態。
+
+PR-REVIEW-01 — 狀態總覽頁在開發環境可以開啟；正式建置與 Pages 輸出不含此頁，開啟其網址會顯示找不到頁面。
+PR-REVIEW-02 — 同一畫面的 Loading、Empty、Error、Success 四種狀態並排呈現在同一頁。
+PR-REVIEW-03 — 切換風格套系或明暗模式時，四種狀態一起改變，其他頁面的主題設定不受影響。
+PR-REVIEW-04 — 切換桌機或手機寬度時，版面按該寬度的斷點呈現。
+PR-REVIEW-05 — 頁面元件不自己保存要呈現的狀態，由 props 或網址參數傳入。
+PR-REVIEW-06 — 畫面使用 `@luca-style/react` 公開元件與假資料，不需要後端就能呈現四種狀態。
+PR-REVIEW-07 — 全新畫面的總覽頁可以並排呈現兩個版面方向。
+PR-REVIEW-08 — 納入總覽頁的畫面，每種「狀態 × 風格套系 × 明暗模式 × 寬度（1280、834、390）」組合都有截圖基準；畫面與基準不符時測試失敗。
+PR-REVIEW-09 — 上述每種組合都跑 axe，沒有 serious 或 critical 等級的違規。
+PR-REVIEW-10 — `docs/consumer-guide.md` 與 `docs/adoption-prompt.md` 註明元件庫設計檔在試驗期間暫停更新。
+
+證據：
+
+- PR-REVIEW-01：`tests/state-overview.spec.ts`（開發環境可以開啟）、`tests/pages.spec.ts`、`tests/not-found.spec.ts`（正式建置與 Pages 輸出不含此頁）。
+- PR-REVIEW-02～07：`tests/state-overview.spec.ts`（`dev` 專案，在 `npm test` 內）。
+- PR-REVIEW-08：`tests/state-overview-visual.spec.ts`，只在官方 Linux Docker 映像內以 `npm run test:visual` 執行，不在 `npm test` 內。
+- PR-REVIEW-09：`tests/state-overview-axe.spec.ts`（`dev` 專案，在 `npm test` 內）。
+- PR-REVIEW-10：`tests/readme.spec.ts`。
+
+**尚未觸發：第一次改設計變數時才做（PR-REVIEW-11、12）**
+
+Penpot 比對目前仍在 `npm test` 內，以下兩條還沒有動作，現在也不先放寬。承諾行裡的「移出」就是下面第一項的刪除。
+
+PR-REVIEW-11 — 第一次改設計變數後，`npm test` 不再因 `.penpot` 與設計變數不一致而失敗；只移出 `tests/penpot-library.spec.ts` 的第一個測試和 `scripts/design/check-penpot.test.mjs` 的 `the committed library export passes every check`，其他腳本測試留在 `npm test`。
+PR-REVIEW-12 — 放寬後，`npm run check:penpot` 仍可手動執行並列出差異。`docs/capabilities/design-system.md`（含 PR-FILE-27）、`docs/delivery-verification.md`、`docs/consumer-guide.md` 的敘述都與此一致。
+
+第一次改設計變數的那個變更要做的事（ADR 0009）：
+
+- 從 `npm test` 刪除兩個測試：`tests/penpot-library.spec.ts` 的 `the committed Penpot library export matches bindings.json and variables.json, and the committed dump matches the export`，和 `scripts/design/check-penpot.test.mjs` 的 `the committed library export passes every check`。不能改放到別的檔案：`tests/` 下的檔案仍會跑在預設專案，`scripts/design/*.test.mjs` 仍會經下一項留下的測試執行。手動替代是 `npm run check:penpot`。
+- 不刪整支 `tests/penpot-library.spec.ts`：`the Penpot export scripts pass their own node tests` 和其他腳本測試留在 `npm test`。
+- 這個變更不更新 `.penpot` 與 dump，因為設計檔在試驗期間暫停更新。
+- `npm run check:penpot` 留作手動指令，有差異時仍回報非零結束碼並列出差異。它以 `&&` 串接，`check-penpot.mjs` 失敗後不會跑 dump 比對；dump 要另外執行 `node scripts/design/penpot-dump.mjs docs/mockup/luca-style-library.penpot --check`。
+- 同一變更更新這些敘述：`docs/capabilities/design-system.md` 的「實作補充」改值流程（目前要在 Penpot 內重新匯出，並說 `tests/penpot-library.spec.ts` 在 `npm test` 內執行該檢查）和本小節的「尚未觸發」標題與「目前仍在 `npm test` 內」那句、`docs/consumer-guide.md` 的「人工同步順序」、`docs/delivery-verification.md` 說 `tests/penpot-library.spec.ts` 以兩個獨立測試執行兩條指令的那句。
+- 同一變更更新過時的註解：`scripts/design/check-penpot.test.mjs` 開頭的「最後一組測試對已提交的真實匯出檔跑一次」和「已提交的真實匯出檔」分隔線、`tests/penpot-library.spec.ts` 開頭說離線檢查納入 `npm test`、兩條命令各成一個測試的註解。
+- PR 要說明這項放寬，並跑過完整的 `npm test`。
+
+那之後各承諾的狀態（ID 與原文凍結，不改字）：
+
+- PR-FILE-16：對已提交的設計檔暫停適用，它的值會落後程式。
+- PR-FILE-18：變數的值會過時，新增變數時內容也不完整；其餘照舊。
+- PR-FILE-19、PR-FILE-25：仍成立，`penpot-tokens.json` 由 `npm run generate` 產生。
+- PR-FILE-26：仍成立，但已提交的檔案只剩手動檢查。
+- PR-FILE-27：腳本仍在；`npm test` 只跑它的夾具測試，已提交的檔案只剩手動檢查。
+- PR-FILE-32：已提交的 dump 與 `.penpot` 的比對只剩上面的手動指令。
+
+試驗結束時（ADR 0009）：
+
+- 失敗：從該 PR 的 git 歷史還原這兩個測試，設計檔的母版凍結，把落後的更新補上一次。
+- 通過：刪除 Penpot 測試與腳本、`check:penpot` 和相關的 `PR-FILE-xx`，完整清單見 ADR 0009。
 
 ### 交付邊界
 
