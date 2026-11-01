@@ -72,6 +72,13 @@ Blocked by: ISSUE-002
 2. `docs/consumer-guide.md:47` 說首屏腳本不要與 `persist={false}` 併用，但每份開發環境的 HTML 都會注入它（`apps/showcase/vite.config.ts:8`）。最後狀態正確，因為 `packages/react/src/theme.tsx:67` 會覆寫屬性；React 掛載前格內會呈現已存的模式，所以 `ready` 之前 iframe 保持隱藏。
 3. `ThemeProvider` 沒有 `mode` prop，只能在子元件的 layout effect 呼叫 `useTheme().setMode`，並在繪製前重新渲染。不改公開元件，記為不順手之處，供 Storybook 判斷參考。
 
+### 負責人的決定（2026-11-01）
+
+專案負責人核可代理的兩項建議，以下兩點取代本節之後的待決內容：
+
+1. **桌機並排方式用 `fit`（縮小並排），並在每格加一個「開原尺寸」的連結。** 縮小看全貌，要讀字時開該格的實際大小。刪掉 `scroll` 分支和 `?layout=` 參數。
+2. **不改走 Storybook。** 外殼超過頁面本身，但不算明顯。
+
 ### 待負責人決定
 
 這張票的 Done when 第四條還沒完成，所以票檔留著。切換、Loading、Empty、Error 都已提交，下面兩件事要專案負責人看過後決定。
