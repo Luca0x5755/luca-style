@@ -11,8 +11,11 @@ const widths={desktop:1280,mobile:390} as const;
 type WidthChoice=keyof typeof widths;
 type Theme={suite:StyleSuite;mode:ColorMode};
 const frameTimeout=20_000;
+// query 只經過解析再序列化，路徑又是常數，所以單格檢視的 cell 無論是什麼值都只會到格內網址。
+const frameSrc=(query:string)=>withBase(`${stateOverviewFrameRoute}?${new URLSearchParams(query)}`);
 
-function CellFrame({src,label,width,scale}:{src:string;label:string;width:number;scale:number}){
+// 帶 actualSizeHref 的是總覽頁裡的一格；單格檢視只有這一格，不帶連結，也沒有「其他格」可說。
+function CellFrame({src,label,width,scale,actualSizeHref}:{src:string;label:string;width:number;scale:number;actualSizeHref?:string}){
  const frame=useRef<HTMLIFrameElement>(null);
  const [report,setReport]=useState<FrameReport|{status:'loading'}>({status:'loading'});
  useEffect(()=>{
@@ -23,25 +26,29 @@ function CellFrame({src,label,width,scale}:{src:string;label:string;width:number
   return ()=>{window.removeEventListener('message',receive);clearTimeout(timer);};
  },[]);
  const ready=report.status==='ready';
- return <div className="state-overview-frame" style={{width:width*scale,height:ready?report.height*scale:undefined}}>
-  {report.status==='loading'&&<ContentState state="loading" title="此格載入中"/>}
-  {report.status==='failed'&&<ContentState state="error" title="此格無法呈現" description="其他格與切換控制照常可用。"/>}
-  <iframe ref={frame} src={src} title={label} style={{width,height:ready?report.height:0,transform:`scale(${scale})`,visibility:ready?'visible':'hidden'}}/>
- </div>;
+ return <>
+  {/* 呈現完成才有連結，否則只會開到同一份還沒好或壞掉的文件。放在框外才不會被裁切或跟著縮放。開新分頁，因為外殼的選擇都只在 state，同頁跳走回來會消失。 */}
+  {ready&&actualSizeHref&&<a href={actualSizeHref} target="_blank" rel="noopener" aria-label={`開原尺寸 · ${label}`}>開原尺寸</a>}
+  <div className="state-overview-frame" style={{width:width*scale,height:ready?report.height*scale:undefined}}>
+   {report.status==='loading'&&<ContentState state="loading" title="此格載入中"/>}
+   {report.status==='failed'&&<ContentState state="error" title="此格無法呈現" description={actualSizeHref&&'其他格與切換控制照常可用。'}/>}
+   <iframe ref={frame} src={src} title={label} style={{width,height:ready?report.height:0,transform:`scale(${scale})`,visibility:ready?'visible':'hidden'}}/>
+  </div>
+ </>;
 }
-function Cell({screen,direction,state,label,theme,width,scale,children}:{screen:OverviewScreen;direction:string|null;state:ProductState;label:string;theme:Theme;width:number;scale:number;children?:ReactNode}){
- const src=withBase(`${stateOverviewFrameRoute}?${new URLSearchParams({screen:screen.route,state,...theme,...(direction&&{direction})})}`);
+function Cell({screen,direction,state,label,theme,widthChoice,scale,children}:{screen:OverviewScreen;direction:string|null;state:ProductState;label:string;theme:Theme;widthChoice:WidthChoice;scale:number;children?:ReactNode}){
+ const query=String(new URLSearchParams({screen:screen.route,state,...theme,...(direction&&{direction})}));
+ const src=frameSrc(query);
+ // 相對網址，路徑與 base 都沿用目前的頁面。
+ const actualSizeHref=`?${new URLSearchParams({cell:query,width:widthChoice})}`;
  // 換網址時用 key 重新掛載 iframe，而不是改 src：改 src 會多一筆瀏覽歷史，也才會回到載入提示。
- return <section className="state-overview-cell" aria-label={label}><h2>{label}</h2>{children}<CellFrame key={src} src={src} label={label} width={width} scale={scale}/></section>;
+ return <section className="state-overview-cell" aria-label={label}><h2>{label}</h2>{children}<CellFrame key={src} src={src} label={label} width={widths[widthChoice]} scale={scale} actualSizeHref={actualSizeHref}/></section>;
 }
-// 格子並排方式由專案負責人決定（ISSUE-003）：scroll 是原尺寸橫向捲動，fit 是縮小並排看全貌。
-// scroll 是暫定預設，尚未決定；選定後刪掉另一個分支、這個參數和 useFitScale。
-const layout=new URLSearchParams(window.location.search).get('layout')==='fit'?'fit':'scroll';
-// fit 時算出目前的格子剛好放進容器的比例；scroll 固定為 1。
+// 算出目前的格子剛好放進容器的比例（docs/decision-log.md 2026-11-01）；放得下時維持 1。
 function useFitScale(row:RefObject<HTMLDivElement|null>,width:number,count:number){
  const [scale,setScale]=useState(1);
  useLayoutEffect(()=>{
-  if(layout!=='fit'||!row.current) return;
+  if(!row.current) return;
   const node=row.current;
   const measure=()=>{const gap=parseFloat(getComputedStyle(node).columnGap)||0;setScale(Math.min(1,(node.clientWidth-gap*(count-1))/(count*width)));};
   const observer=new ResizeObserver(measure);
@@ -50,9 +57,8 @@ function useFitScale(row:RefObject<HTMLDivElement|null>,width:number,count:numbe
  },[row,width,count]);
  return scale;
 }
-// 狀態總覽頁（§5.3.7）：只在開發環境由 main.tsx 載入，不屬於樣張網站。
 // 切換只改各格的網址，外殼不用 setMode，所以不會寫入其他頁面共用的明暗偏好。
-export function StateOverview(){
+function Overview(){
  const [suite,setSuite]=useState<StyleSuite>('vibrant');
  const [mode,setMode]=useState<ColorMode>('light');
  const [widthChoice,setWidthChoice]=useState<WidthChoice>('desktop');
@@ -64,7 +70,7 @@ export function StateOverview(){
  const comparing=screen?.directions.length===2&&chosen===null;
  const scale=useFitScale(row,width,comparing?2:cells.length);
  if(!screen) return <main className="state-overview"><h1>狀態總覽頁</h1><ContentState state="empty" title="此頁沒有可審的畫面" description="尚未納入任何畫面。"/></main>;
- const shared={screen,theme:{suite,mode},width,scale};
+ const shared={screen,theme:{suite,mode},widthChoice,scale};
  return <main className="state-overview"><h1>狀態總覽頁 · {screen.route}{chosen!==null&&` · ${chosen}`}</h1>
   <section className="theme-controls" aria-label="切換控制">
    <label>風格套系<select value={suite} onChange={e=>setSuite(e.target.value as StyleSuite)}><option value="vibrant">精緻活力</option><option value="professional">精緻專業</option></select></label>
@@ -74,4 +80,12 @@ export function StateOverview(){
   <div ref={row} className="state-overview-cells">{comparing
    ?screen.directions.map(({name})=><Cell {...shared} key={name} direction={name} state="success" label={`${name} · Success`}><div><Button variant="secondary" onClick={()=>setChosen(name)}>選定 {name}</Button></div></Cell>)
    :cells.map(({state,label})=><Cell {...shared} key={state} direction={chosen} state={state} label={label}/>)}</div></main>;
+}
+// 狀態總覽頁（§5.3.7）：只在開發環境由 main.tsx 載入，不屬於樣張網站。
+// 網址帶 cell 時是單格檢視：斷點看的是 iframe，所以手機格仍要包在 390 寬的 iframe 裡，直接開格內網址會跟著視窗變成另一個版面。
+export function StateOverview(){
+ const params=new URLSearchParams(window.location.search);
+ const query=params.get('cell');
+ if(query===null) return <Overview/>;
+ return <main className="state-overview"><CellFrame src={frameSrc(query)} label="原尺寸" width={widths[params.get('width')==='mobile'?'mobile':'desktop']} scale={1}/></main>;
 }

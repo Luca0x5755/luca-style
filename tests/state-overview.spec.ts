@@ -1,4 +1,4 @@
-import { test, expect, type FrameLocator, type Locator, type Page, type Request } from '@playwright/test';
+import { test, expect, type BrowserContext, type FrameLocator, type Locator, type Page, type Request } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { cssRgb, neutralValues } from './tokens-helpers';
 
@@ -228,47 +228,52 @@ async function expectNoCellCropped(page: Page) {
   }
 }
 
-for (const layout of ['scroll', 'fit'] as const) {
-  test(`no cell is cropped after each width switch in the ${layout} layout`, async ({ page }) => {
-    await page.goto(`${overview}?layout=${layout}`);
-    await expectNoCellCropped(page);
-    for (const value of ['mobile', 'desktop']) {
-      await page.getByLabel('寬度').selectOption(value);
-      await expectNoCellCropped(page);
-    }
-  });
-
-  test(`the ${layout} layout keeps the four cells in one row without overlap at both widths`, async ({ page }) => {
-    await page.goto(`${overview}?layout=${layout}`);
-    for (const { value, pixels } of widthChoices) {
-      await page.getByLabel('寬度').selectOption(value);
-      for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
-      const boxes = await Promise.all(states.map(async state => (await cell(page, state).boundingBox())!));
-      for (let i = 0; i < boxes.length - 1; i++) {
-        expect(boxes[i + 1].y).toBe(boxes[i].y);
-        expect(boxes[i].x + boxes[i].width).toBeLessThanOrEqual(boxes[i + 1].x);
-      }
-      const row = page.locator('.state-overview-cells');
-      const frame = (await cell(page, 'Success').locator('iframe').boundingBox())!;
-      const overflow = await row.evaluate(node => node.scrollWidth - node.clientWidth);
-      if (layout === 'scroll') {
-        expect(frame.width).toBeCloseTo(pixels, 0);
-        expect(overflow).toBeGreaterThan(0);
-      } else {
-        expect(frame.width).toBeLessThan(pixels);
-        expect(overflow).toBeLessThanOrEqual(0);
-        expect(boxes[3].x + boxes[3].width).toBeLessThanOrEqual(1280);
-      }
-    }
-  });
+// 比例太小時同樣不溢出，所以要看格子是否填滿容器。
+async function expectRowFilled(page: Page, names: readonly string[]) {
+  const rowWidth = await cellRow(page).evaluate(node => node.clientWidth);
+  await expect.poll(async () => {
+    const [first, last] = await Promise.all([names[0], names[names.length - 1]].map(async name => (await cell(page, name).boundingBox())!));
+    return Math.abs(last.x + last.width - first.x - rowWidth);
+  }).toBeLessThanOrEqual(2);
 }
 
-test('the overview without a layout parameter uses the provisional scroll layout', async ({ page }) => {
+test('no cell is cropped after each width switch', async ({ page }) => {
   await page.goto(overview);
-  await expect(screen(page, 'Success').locator('.product-page')).toBeVisible();
-  expect((await cell(page, 'Success').locator('iframe').boundingBox())!.width).toBeCloseTo(1280, 0);
-  expect(await page.locator('.state-overview-cells').evaluate(node => node.scrollWidth - node.clientWidth)).toBeGreaterThan(0);
+  await expectNoCellCropped(page);
+  for (const value of ['mobile', 'desktop']) {
+    await page.getByLabel('寬度').selectOption(value);
+    await expectNoCellCropped(page);
+  }
 });
+
+test('the four cells stay in one row without overlap and fill it at both widths', async ({ page }) => {
+  await page.goto(overview);
+  for (const { value, pixels } of widthChoices) {
+    await page.getByLabel('寬度').selectOption(value);
+    for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
+    await expectCellsInOneRow(page, states);
+    const frame = (await cell(page, 'Success').locator('iframe').boundingBox())!;
+    const overflow = await cellRow(page).evaluate(node => node.scrollWidth - node.clientWidth);
+    expect(frame.width).toBeLessThan(pixels);
+    expect(overflow).toBeLessThanOrEqual(0);
+    const last = (await cell(page, 'Success').boundingBox())!;
+    expect(last.x + last.width).toBeLessThanOrEqual(1280);
+    await expectRowFilled(page, states);
+  }
+});
+
+// 並排只有縮小一種（docs/decision-log.md 2026-11-01），舊的 layout 參數不再有作用。
+for (const url of [overview, `${overview}?layout=scroll`]) {
+  test(`${url} shrinks the four cells to fit the window`, async ({ page }) => {
+    await page.goto(url);
+    await expect(screen(page, 'Success').locator('.product-page')).toBeVisible();
+    expect((await cell(page, 'Success').locator('iframe').boundingBox())!.width).toBeLessThan(1280);
+    expect(await cellRow(page).evaluate(node => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(0);
+    const last = (await cell(page, 'Success').boundingBox())!;
+    expect(last.x + last.width).toBeLessThanOrEqual(1280);
+    await expectRowFilled(page, states);
+  });
+}
 
 test('a frame url with an unknown state renders no screen', async ({ page }) => {
   const reported = page.waitForEvent('console', message => message.text().includes('格內網址缺少可呈現的畫面或狀態'));
@@ -288,6 +293,11 @@ const gate = () => {
 const isFrameDocument = (state: string) => (url: URL) => url.pathname.endsWith('/dev/state-overview/frame') && url.searchParams.get('state') === state;
 const fromFrame = (request: Request, state: string) => request.frame().url().includes(`state=${state}`);
 const frameModule = '**/src/state-overview-frame.tsx*';
+// 要在載入提示或失敗文案出現之後才呼叫，否則那格的連結本來就還沒出現，檢查會太早通過。
+async function expectOnlyOthersLinked(page: Page, without: string) {
+  await expect(cell(page, without).getByRole('link')).toHaveCount(0);
+  for (const state of states.filter(other => other !== without)) await expect(actualSizeLink(page, state)).toBeVisible();
+}
 const others = (state: string) => states.filter(other => other.toLowerCase() !== state);
 
 test('a cell still loading shows a hint until the frame reports ready, not until its document loads', async ({ page }) => {
@@ -305,6 +315,7 @@ test('a cell still loading shows a hint until the frame reports ready, not until
     await expect(held.getByText(loadingHint)).toBeVisible();
     await expect(held.locator('iframe')).toBeHidden();
     for (const state of others('empty')) await expect(screen(page, state).locator('.product-page')).toBeVisible();
+    await expectOnlyOthersLinked(page, 'Empty');
     for (const label of ['風格套系', '明暗模式', '寬度']) await expect(page.getByLabel(label)).toBeEnabled();
   };
   await expectStillLoading();
@@ -319,6 +330,7 @@ test('a cell still loading shows a hint until the frame reports ready, not until
   moduleGate.open();
   await expect(screen(page, 'Empty').locator('.product-page')).toBeVisible();
   await expect(held.getByText(loadingHint)).toHaveCount(0);
+  await expect(actualSizeLink(page, 'Empty')).toBeVisible();
 });
 
 test('a cell shows the hint again while it remounts after a theme switch', async ({ page }) => {
@@ -336,6 +348,24 @@ test('a cell shows the hint again while it remounts after a theme switch', async
   moduleGate.open();
   await expect(screen(page, 'Success').locator('html')).toHaveAttribute('data-mode', 'dark');
   await expect(cell(page, 'Success').getByText(loadingHint)).toHaveCount(0);
+});
+
+test('a cell that reports ready after timing out shows its screen and gains its link', async ({ page }) => {
+  await page.clock.install();
+  const moduleGate = gate();
+  await page.route(frameModule, async route => {
+    if (fromFrame(route.request(), 'empty')) await moduleGate.opened;
+    await route.fallback();
+  });
+  await page.goto(overview);
+  await expect(cell(page, 'Empty').getByText(loadingHint)).toBeVisible();
+  await page.clock.fastForward(60_000);
+  await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
+  await expectOnlyOthersLinked(page, 'Empty');
+  moduleGate.open();
+  await expect(screen(page, 'Empty').locator('.product-page')).toBeVisible();
+  await expect(cell(page, 'Empty').getByText(failureCopy)).toHaveCount(0);
+  await expect(actualSizeLink(page, 'Empty')).toBeVisible();
 });
 
 test('with no screen included the page says there is nothing to review', async ({ page }) => {
@@ -367,6 +397,7 @@ test('a cell whose screen throws explains the failure and the rest keep working'
   await page.goto(overview);
   await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
   await expect(cell(page, 'Empty').locator('iframe')).toBeHidden();
+  await expectOnlyOthersLinked(page, 'Empty');
   await expectOtherCellsKeepWorking(page, 'empty');
   await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
 });
@@ -379,6 +410,7 @@ test('a cell whose document never arrives times out into the failure message and
   await expect(cell(page, 'Empty').getByText(loadingHint)).toBeVisible();
   await page.clock.fastForward(60_000);
   await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
+  await expectOnlyOthersLinked(page, 'Empty');
   await expectOtherCellsKeepWorking(page, 'empty');
   await page.clock.fastForward(60_000);
   await expect(cell(page, 'Empty').getByText(failureCopy)).toBeVisible();
@@ -387,7 +419,7 @@ test('a cell whose document never arrives times out into the failure message and
 // 兩個版面方向（PR-REVIEW-07）：假方向只存在這裡，用 page.route 改寫模組，所以不會留在 /templates/product，也進不了正式建置。
 // 附加的文字在 Vite 轉換之後才接上：要以換行開頭（結尾是沒有換行的 sourceMappingURL），也只能寫純 JS。方向甲就是真正的 Product。
 const secondRender = 'state=>`方向乙的 ${state}`';
-const withTwoDirections = (page: Page, render = secondRender) => page.route('**/src/state-overview-screens.tsx*', async route => {
+const withTwoDirections = (target: Page | BrowserContext, render = secondRender) => target.route('**/src/state-overview-screens.tsx*', async route => {
   const response = await route.fetch();
   const body = `${await response.text()}\noverviewScreens[0].directions=[{...overviewScreens[0].directions[0],name:'方向甲'},{name:'方向乙',render:${render}}];`;
   await route.fulfill({ response, body });
@@ -464,50 +496,38 @@ for (const name of ['方向甲', '方向乙'] as const) {
   });
 }
 
-for (const layout of ['scroll', 'fit'] as const) {
-  test(`two compared cells and the chosen four cells both work in the ${layout} layout`, async ({ page }) => {
-    await withTwoDirections(page);
-    await page.goto(`${overview}?layout=${layout}`);
-    const overflow = () => cellRow(page).evaluate(node => node.scrollWidth - node.clientWidth);
-    const frameWidth = async (name: string) => (await cell(page, name).locator('iframe').boundingBox())!.width;
-    await directionChecks.方向乙.Success(screen(page, compared[1]));
-    for (const { value, pixels } of widthChoices) {
-      await page.getByLabel('寬度').selectOption(value);
-      await directionChecks.方向甲.Success(screen(page, compared[0]));
-      for (const name of compared) {
-        // 手機兩格放得下，比例就是 1；scroll 永遠是實際寬度。
-        if (layout === 'scroll' || value === 'mobile') await expect.poll(() => frameWidth(name), name).toBeCloseTo(pixels, 0);
-      }
-      if (layout === 'fit') {
-        expect(await overflow()).toBeLessThanOrEqual(0);
-        if (value === 'desktop') {
-          // 比例還用四格算的話，兩格很小也不溢出，所以要看兩格是否填滿容器。
-          const rowWidth = await cellRow(page).evaluate(node => node.clientWidth);
-          await expect.poll(async () => {
-            const [first, last] = await Promise.all(compared.map(async name => (await cell(page, name).boundingBox())!));
-            return Math.abs(last.x + last.width - first.x - rowWidth);
-          }).toBeLessThanOrEqual(2);
-        }
-      } else if (value === 'desktop') expect(await overflow()).toBeGreaterThan(0);
-      await expectCellsInOneRow(page, compared);
-    }
-    await choose(page, '方向甲');
-    // 選定時寬度沒變，比例也要跟著格數重算，所以先驗一次再切換寬度。
+test('two compared cells and the chosen four cells both fit in the row', async ({ page }) => {
+  await withTwoDirections(page);
+  await page.goto(overview);
+  const overflow = () => cellRow(page).evaluate(node => node.scrollWidth - node.clientWidth);
+  const frameWidth = async (name: string) => (await cell(page, name).locator('iframe').boundingBox())!.width;
+  await directionChecks.方向乙.Success(screen(page, compared[1]));
+  for (const { value, pixels } of widthChoices) {
+    await page.getByLabel('寬度').selectOption(value);
+    await directionChecks.方向甲.Success(screen(page, compared[0]));
+    // 手機兩格放得下，比例就是 1。
+    if (value === 'mobile') for (const name of compared) await expect.poll(() => frameWidth(name), name).toBeCloseTo(pixels, 0);
+    expect(await overflow()).toBeLessThanOrEqual(0);
+    // 比例還用四格算的話，兩格很小也不溢出。
+    if (value === 'desktop') await expectRowFilled(page, compared);
+    await expectCellsInOneRow(page, compared);
+  }
+  await choose(page, '方向甲');
+  // 選定時寬度沒變，比例也要跟著格數重算，所以先驗一次再切換寬度。
+  for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
+  await expect.poll(async () => (await overflow()) <= 0).toBe(true);
+  await expectRowFilled(page, states);
+  for (const { value, pixels } of widthChoices) {
+    await page.getByLabel('寬度').selectOption(value);
     for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
-    await expect.poll(async () => (await overflow()) <= 0).toBe(layout === 'fit');
-    for (const { value, pixels } of widthChoices) {
-      await page.getByLabel('寬度').selectOption(value);
-      for (const state of states) await expect(screen(page, state).locator('.product-page')).toBeVisible();
-      await expect.poll(async () => (await overflow()) <= 0).toBe(layout === 'fit');
-      if (layout === 'fit') {
-        expect(await frameWidth('Success')).toBeLessThan(pixels);
-        const last = (await cell(page, 'Success').boundingBox())!;
-        expect(last.x + last.width).toBeLessThanOrEqual(1280);
-      } else expect(await frameWidth('Success')).toBeCloseTo(pixels, 0);
-      await expectCellsInOneRow(page, states);
-    }
-  });
-}
+    await expect.poll(async () => (await overflow()) <= 0).toBe(true);
+    await expectRowFilled(page, states);
+    expect(await frameWidth('Success')).toBeLessThan(pixels);
+    const last = (await cell(page, 'Success').boundingBox())!;
+    expect(last.x + last.width).toBeLessThanOrEqual(1280);
+    await expectCellsInOneRow(page, states);
+  }
+});
 
 test('the controls change both compared cells and keep the chosen direction afterwards', async ({ page }) => {
   await withTwoDirections(page);
@@ -579,4 +599,184 @@ test('a screen with one direction opens on its four states with nothing about di
     const params = await frameParams(cell(page, state).locator('iframe'));
     expect([...params.keys()].sort(), state).toEqual(['mode', 'screen', 'state', 'suite']);
   }
+});
+
+// 「開原尺寸」連結開新分頁：page.route 與 page.setViewportSize 都帶不到新分頁，要用 context 層級的設定。
+const actualSizeLink = (page: Page, name: string) => cell(page, name).getByRole('link', { name: `開原尺寸 · ${name}`, exact: true });
+
+async function openActualSize(page: Page, name: string) {
+  // rel="noopener" 下 popup 不一定觸發，所以從 context 接新分頁。
+  const opened = page.context().waitForEvent('page');
+  await actualSizeLink(page, name).click();
+  return opened;
+}
+
+// 計算樣式看不到 CSS transform，所以要比 iframe 的框，再和格內視窗對照，才證明沒有縮放。
+async function expectActualWidth(tab: Page, pixels: number) {
+  const frame = tab.locator('iframe');
+  await expect(frame).toHaveCount(1);
+  await expect(frame).toBeVisible();
+  const inner = await tab.frameLocator('iframe').locator('html').evaluate(() => window.innerWidth);
+  const box = (await frame.boundingBox())!;
+  expect(inner).toBe(pixels);
+  expect(box.width).toBeCloseTo(pixels, 0);
+}
+
+test('each ready cell links to that same cell at its actual desktop size', async ({ page }) => {
+  await page.goto(overview);
+  for (const state of states) {
+    const expected = await productText(screen(page, state));
+    const tab = await openActualSize(page, state);
+    await expectActualWidth(tab, 1280);
+    const root = tab.frameLocator('iframe').locator('html');
+    await expect(root, state).toHaveAttribute('data-suite', 'vibrant');
+    await expect(root, state).toHaveAttribute('data-mode', 'light');
+    expect(await productText(tab.frameLocator('iframe')), state).toBe(expected);
+    await tab.close();
+  }
+});
+
+test('each cell has one link named after it', async ({ page }) => {
+  await page.goto(overview);
+  for (const state of states) {
+    await expect(actualSizeLink(page, state)).toHaveText('開原尺寸');
+    await expect(cell(page, state).getByRole('link')).toHaveCount(1);
+  }
+});
+
+test('a mobile link keeps the mobile layout in a desktop window', async ({ page }) => {
+  await page.goto(overview);
+  await page.getByLabel('寬度').selectOption('mobile');
+  for (const state of states) {
+    const tab = await openActualSize(page, state);
+    await expectActualWidth(tab, 390);
+    expect(await tab.evaluate(() => window.innerWidth), state).toBe(1280);
+    expect(await columnCount(tab.frameLocator('iframe').locator('.product-layout')), state).toBe(1);
+    if (state === 'Success') expect(await columnCount(tab.frameLocator('iframe').locator('.product-metrics'))).toBe(1);
+    await tab.close();
+  }
+});
+
+test.describe('in a window narrower than the desktop width', () => {
+  test.use({ viewport: { width: 800, height: 800 } });
+
+  test('a desktop link keeps the desktop layout and the tab scrolls sideways', async ({ page }) => {
+    await page.goto(overview);
+    const tab = await openActualSize(page, 'Success');
+    await expectActualWidth(tab, 1280);
+    expect(await columnCount(tab.frameLocator('iframe').locator('.product-layout'))).toBe(2);
+    expect(await tab.evaluate(() => { window.scrollTo(99_999, 0); return { window: window.innerWidth, scrolled: window.scrollX > 0 }; })).toEqual({ window: 800, scrolled: true });
+  });
+});
+
+test('a link follows the chosen theme and width without reloading its cell', async ({ page }) => {
+  await page.goto(overview);
+  await page.getByLabel('風格套系').selectOption('professional');
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await expectAllCellsThemed(page, 'professional', 'dark');
+  await screen(page, 'Empty').locator('html').evaluate(root => { root.dataset.kept = 'yes'; });
+  for (const { value, pixels } of widthChoices) {
+    await page.getByLabel('寬度').selectOption(value);
+    const tab = await openActualSize(page, 'Empty');
+    await expectActualWidth(tab, pixels);
+    const root = tab.frameLocator('iframe').locator('html');
+    await expect(root).toHaveAttribute('data-suite', 'professional');
+    await expect(root).toHaveAttribute('data-mode', 'dark');
+    await expect(root).toHaveCSS('--accent', palette.professional.dark);
+    await tab.close();
+  }
+  await expect(screen(page, 'Empty').locator('html')).toHaveAttribute('data-kept', 'yes');
+});
+
+test('links open their own direction while comparing and after choosing', async ({ page, context }) => {
+  await withTwoDirections(context);
+  await page.goto(overview);
+  for (const name of compared) await expect(cell(page, name).getByRole('link')).toHaveCount(1);
+  const second = await openActualSize(page, compared[1]);
+  await directionChecks.方向乙.Success(second.frameLocator('iframe'));
+  await expect(second.frameLocator('iframe').locator('.product-page')).toHaveCount(0);
+  await second.close();
+  const first = await openActualSize(page, compared[0]);
+  await directionChecks.方向甲.Success(first.frameLocator('iframe'));
+  await expect(first.frameLocator('iframe').getByText(/方向乙的/)).toHaveCount(0);
+  await first.close();
+  await choose(page, '方向乙');
+  for (const state of states) {
+    const tab = await openActualSize(page, state);
+    await directionChecks.方向乙[state](tab.frameLocator('iframe'));
+    await tab.close();
+  }
+});
+
+test('the single-cell view shows that cell alone and raises no errors', async ({ page, context }) => {
+  const problems: string[] = [];
+  context.on('weberror', error => problems.push(`weberror ${error.error().message}`));
+  context.on('console', message => { if (message.type() === 'error') problems.push(`console ${message.text()}`); });
+  await page.goto(overview);
+  const tab = await openActualSize(page, 'Success');
+  await expect(tab.frameLocator('iframe').locator('.product-page')).toBeVisible();
+  await tab.waitForLoadState('networkidle');
+  for (const label of ['風格套系', '明暗模式', '寬度']) await expect(tab.getByLabel(label)).toHaveCount(0);
+  await expect(tab.getByRole('link')).toHaveCount(0);
+  await expect(tab.locator('.state-overview-cells')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+// cell 是 query 不是網址；encodeURIComponent 讓 # 和 & 留在 cell 裡，才真的驗到這個參數。
+for (const value of ['https://example.com/', '//example.com', 'javascript:alert(1)', '../../templates/product', '#x', 'screen=https://example.com&state=empty', 'screen=/templates/product&state=unknown', '']) {
+  test(`the single-cell view keeps cell value "${value}" on the frame route and explains the failure`, async ({ page }) => {
+    const origin = new URL(test.info().project.use.baseURL!).origin;
+    const foreign: string[] = [];
+    page.on('request', request => { if (!request.url().startsWith('data:') && new URL(request.url()).origin !== origin) foreign.push(request.url()); });
+    const url = `${overview}?cell=${encodeURIComponent(value)}`;
+    await page.goto(url);
+    await expect(page.getByText(failureCopy)).toBeVisible();
+    // 只有這一格，所以不說「其他格」；空字串也不能退回整個總覽頁。
+    await expect(page.getByText('其他格')).toHaveCount(0);
+    await expect(page.locator('.state-overview-cells')).toHaveCount(0);
+    const src = new URL((await page.locator('iframe').getAttribute('src'))!, origin);
+    expect({ origin: src.origin, pathname: src.pathname }).toEqual({ origin, pathname: '/dev/state-overview/frame' });
+    expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(url);
+    await expect(page.locator('iframe')).toBeHidden();
+    await expect(page.frameLocator('iframe').locator('.product-page')).toHaveCount(0);
+    expect(foreign).toEqual([]);
+  });
+}
+
+test('the single-cell view treats an unknown width as desktop', async ({ page }) => {
+  await page.goto(`${overview}?cell=${encodeURIComponent('screen=/templates/product&state=empty&suite=vibrant&mode=light')}&width=abc`);
+  await expectActualWidth(page, 1280);
+});
+
+test('the single-cell view shows the loading hint until its frame reports ready', async ({ page, context }) => {
+  await page.goto(overview);
+  await expect(actualSizeLink(page, 'Success')).toBeVisible();
+  const moduleGate = gate();
+  await context.route(frameModule, async route => { await moduleGate.opened; await route.fallback(); });
+  const tab = await openActualSize(page, 'Success');
+  await expect(tab.getByText(loadingHint)).toBeVisible();
+  await expect(tab.locator('iframe')).toBeHidden();
+  moduleGate.open();
+  await expect(tab.frameLocator('iframe').locator('.product-page')).toBeVisible();
+  await expect(tab.getByText(loadingHint)).toHaveCount(0);
+});
+
+test('opening a link from a light cell keeps a stored dark preference', async ({ page }) => {
+  await page.goto('/templates/product');
+  await page.evaluate(key => localStorage.setItem(key, 'dark'), modeKey);
+  await page.goto(overview);
+  const tab = await openActualSize(page, 'Success');
+  await expect(tab.locator('iframe')).toBeVisible();
+  await expect(tab.frameLocator('iframe').locator('html')).toHaveAttribute('data-mode', 'light');
+  expect(await storedMode(tab)).toBe('dark');
+});
+
+test('opening a link from a dark cell stores nothing when no preference exists', async ({ page }) => {
+  await page.goto(overview);
+  await page.getByLabel('明暗模式').selectOption('dark');
+  await expectAllCellsThemed(page, 'vibrant', 'dark');
+  const tab = await openActualSize(page, 'Success');
+  await expect(tab.locator('iframe')).toBeVisible();
+  await expect(tab.frameLocator('iframe').locator('html')).toHaveAttribute('data-mode', 'dark');
+  expect(await storedMode(tab)).toBeNull();
 });

@@ -3,6 +3,7 @@
 html:has(.state-overview) { scrollbar-gutter:stable; }
 .state-overview { display:grid; gap:var(--gap-section); padding:var(--space-4); }
 .state-overview h1 { margin:0; font:700 var(--type-title-size)/var(--type-title-line-height) var(--font-body); }
+/* overflow-x 讓容器不被格子撐大，比例才算得出來；沒有這行，比例會依賴自己撐出來的寬度。 */
 .state-overview-cells { display:flex; gap:var(--space-4); overflow-x:auto; align-items:flex-start; }
 .state-overview-cell { display:grid; gap:var(--space-2); flex:none; }
 .state-overview-cell > h2 { margin:0; }
