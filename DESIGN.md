@@ -1,6 +1,86 @@
+---
+version: alpha
+name: Luca Style
+description: 由 packages/tokens 的 DTCG 原始檔產生，只含 vibrant 套系日間模式的代表值
+colors:
+  accent-hover: "#007072"
+  accent-pressed: "#006062"
+  focus-ring: "#147F82"
+  bg: "#F7F8FA"
+  surface: "#FFFFFF"
+  surface-subtle: "#F1F3F5"
+  text: "#2C2E31"
+  muted: "#696B6F"
+  border: "#E0E2E6"
+  control-border: "#85878B"
+  accent-ink: "#FFFFFF"
+  metric-background: "#E3F2F0"
+  success: "#237354"
+  warning: "#886018"
+  error: "#B24445"
+  accent: "#147F82"
+  accent-secondary: "#DF826D"
+  accent-soft: "#E3F2F0"
+  primary: "#147F82"
+typography:
+  hero:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "3.5rem"
+    fontWeight: 700
+    lineHeight: 1.2
+  title:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "2rem"
+    fontWeight: 700
+    lineHeight: 1.3
+  section:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.4
+  card:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 600
+    lineHeight: 1.5
+  body:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.75
+  control:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1rem"
+    fontWeight: 500
+    lineHeight: 1.5
+  secondary:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: ".875rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  helper:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: ".75rem"
+    fontWeight: 500
+    lineHeight: 1.5
+rounded:
+  card: "1.25rem"
+  control: "1rem"
+spacing:
+  space-1: "0.25rem"
+  space-2: "0.5rem"
+  space-3: "0.75rem"
+  space-4: "1rem"
+  space-6: "1.5rem"
+  space-8: "2rem"
+  space-12: "3rem"
+  space-16: "4rem"
+---
 # Luca Style 設計系統（給代理讀）
 
 這份文件寫給要在專案裡使用 Luca Style 的代理。先看「決策規則」決定怎麼選，再看「主題軸」與「API」照著寫。術語依 [GLOSSARY.md](https://github.com/Luca0x5755/luca-style/blob/main/GLOSSARY.md)。
+
+檔案開頭的 front matter 由設計變數的原始檔產生，符合 Google 的 DESIGN.md 規格（alpha），但只是 `vibrant` 套系日間模式的代表值；其他套系與暗黑模式的值只看[設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md)，不要從 front matter 推斷。
 
 ## 套件
 
