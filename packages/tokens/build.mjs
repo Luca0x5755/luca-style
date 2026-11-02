@@ -399,12 +399,22 @@ const colorRoles = [...new Set(themes.flatMap(({ allTokens }) => published(allTo
 const tailwindColors = Object.fromEntries(colorRoles.map(name => [name, `color-mix(in srgb, var(--${name}) calc(<alpha-value> * 100%), transparent)`]));
 const tailwindPreset = `// 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改。\nmodule.exports = ${JSON.stringify({ theme: { extend: { colors: tailwindColors } } }, null, 2)};\n`;
 const tailwindPresetTypes = 'declare const preset: { theme: { extend: { colors: Record<string, string> } } };\nexport = preset;\n';
+// 第八步：Tailwind v4 的 CSS 設定檔（PR-ADOPT-04）。用 @theme inline，utility 直接寫 var(--角色)，
+// 才會跟著執行期的套系、明暗與專案強調色改變；/40 這類透明度由 Tailwind 自己包 color-mix。
+const tailwindTheme = [
+  '/* 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改。Tailwind v4 的 CSS 設定檔。 */',
+  '@theme inline {',
+  declarations(colorRoles.map(name => [`color-${name}`, `var(--${name})`])),
+  '}',
+  '',
+].join('\n');
 
 await mkdir(out, { recursive: true });
 await Promise.all([
   writeFile(join(out, 'css.d.ts'), 'export {};\n'),
   writeFile(join(out, 'tailwind-preset.cjs'), tailwindPreset),
   writeFile(join(out, 'tailwind-preset.d.cts'), tailwindPresetTypes),
+  writeFile(join(out, 'tailwind-theme.css'), tailwindTheme),
   writeFile(join(out, 'typography.json'), JSON.stringify(typography, null, 2) + '\n'),
   writeFile(join(out, 'tokens.json'), JSON.stringify(data, null, 2) + '\n'),
   writeFile(join(out, 'tokens.css'), css.join('\n') + '\n'),

@@ -125,7 +125,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => workspace?.dispose());
 
 test('generator writes the published outputs only into --out', async () => {
-  expect((await readdir(workspace.out)).sort()).toEqual(['css.d.ts', 'tailwind-preset.cjs', 'tailwind-preset.d.cts', 'tokens.css', 'tokens.json', 'typography.json']);
+  expect((await readdir(workspace.out)).sort()).toEqual(['css.d.ts', 'tailwind-preset.cjs', 'tailwind-preset.d.cts', 'tailwind-theme.css', 'tokens.css', 'tokens.json', 'typography.json']);
   expect((await readdir(workspace.root)).sort()).toEqual(['out', 'src']);
 });
 

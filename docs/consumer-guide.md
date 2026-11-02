@@ -190,6 +190,45 @@ Luca 的滑過、按下、停用、錯誤、勾選樣式改用 `:where()`，特�
 - 傳 `bg-x` 的按鈕，滑過不再變成 `--accent-hover`；傳 `bg-x` 的 `Checkbox`，勾選後不再填主色。要保留狀態外觀，請另外寫 `hover:`、`data-[checked]:` 前綴。
 - `border-x` 會蓋掉 `aria-invalid` 的錯誤邊框，`opacity-100` 會蓋掉停用的半透明。錯誤訊息文字和停用行為不受影響。
 
+## 與 Tailwind v4 並用
+
+`@luca-style/tokens/tailwind.css` 是 Tailwind v4 的 CSS 設定檔，涵蓋所有色彩角色，專案不用自己寫色彩對應。`border-success/40` 這類透明度寫法也能用，顏色會跟著風格套系、明暗模式和專案強調色改變。
+
+```sh
+npm install -D tailwindcss@4 @tailwindcss/vite
+npm install tailwind-merge@3
+```
+
+`tailwind-merge` 要用 3.x，2.6 只支援 Tailwind v3。乾淨專案驗證的版本是 `tailwindcss` 4.3.3 與 `tailwind-merge` 3.7.0。
+
+`vite.config.js` 加上 Tailwind 的 Vite 外掛：
+
+```js
+import tailwindcss from '@tailwindcss/vite';
+
+export default {
+  plugins: [tailwindcss()],
+};
+```
+
+CSS 入口要照這個寫法，不要再從 JavaScript 匯入 Luca 的 CSS：
+
+```css
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import '@luca-style/tokens/tailwind.css';
+@import '@luca-style/tokens/css';
+@import '@luca-style/react/fonts.css';
+@import '@luca-style/react/css';
+@import 'tailwindcss/utilities.css';
+```
+
+不要寫成一行 `@import 'tailwindcss';`。那樣 utility 會在 `utilities` 圖層裡，不分層的 Luca CSS 一律贏過它，傳給元件的 class 就失效。也不要把 Luca CSS 放進圖層（例如 `layer(components)`）：那樣 utility 一律贏過 Luca，連 `:focus-visible` 的焦點框也會被 `outline-none` 拿掉。照上面寫，preflight 在圖層裡、蓋不掉 Luca；utility 不分層、排在 Luca 之後，規則和 Tailwind v3 相同。
+
+業務資料色和專案衍生色屬於專案，寫在 CSS 入口之後的 `@theme` 區塊。頁面字體同樣由專案設定，請在 `body` 寫 `font-family: var(--font-body)`。
+
+傳給元件的 class 和狀態前綴的規則與 v3 相同。v4 的 `outline-none` 只設 `outline-style: none`，v3 的 `outline-none` 在 v4 改叫 `outline-hidden`；兩個都是不帶狀態的 class，都不會拿掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴。
+
 ## 獨立消費端驗證
 
 ```sh

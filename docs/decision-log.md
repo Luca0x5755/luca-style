@@ -86,3 +86,4 @@
 2026-11-02 — automated_trading 的升級是 P1 最後的真實驗收，放在 npm 發佈之後：改裝 npm 版，取用 spike `0b424b5` 的升級工作但不帶 shadcn，在該 repo 開自己的分支與 PR，不動後端與交易程式，並檢查危險按鈕滑過是否變色。合併後才刪 spike worktree 與分支。
 2026-11-02 — Next SSR 沒過就先修好才發佈；React 18 只有不用改程式碼就通過才放寬 peer，否則維持只支援 React 19 並寫進文件，因為多支援一個舊版本，之後每次改動都要多驗一次。
 2026-11-02 — npm 首次發佈用 0.3.0，兩個套件版本一致，以 changesets 管理版本說明，由 CI 發佈並附來源證明。`@luca-style` 組織與權杖由擁有者建立，不經過代理、不進 repo。0.x 期間不相容變更升次版號並附升級說明。發佈前要再次確認，因為版本號不能重複使用。
+2026-11-02 — Tailwind v4 不在 `@import` 時把 Luca CSS 放進圖層：乾淨專案實測時，`utilities` 圖層一律贏過放進 `components` 的 Luca，4 個元件的 `outline-none` 與 `outline-hidden` 都拿掉了焦點框，違反 `PR-ADOPT-05` 的例外與 `PR-STYLE-46`。改為 `theme` 與 `preflight` 放進圖層、Luca CSS 不分層、`tailwindcss/utilities.css` 不分層並排在 Luca 之後，與 v3 同一套規則；不放寬承諾。
