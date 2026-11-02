@@ -3,7 +3,7 @@
 ## Done when
 
 - changesets 已導入，兩個套件版本一致（`PR-ADOPT-09`）。
-- 第一個 changeset 把版本帶到 0.3.0，並附不相容變更的升級說明，包括高度變化（Button、Select、TextField 單行時等於 `control-height`，不再是 50px）、Select 長值改為換行而非省略號、TextField 的輸入框（`.luca-input`）改為 border-box、Button 在 flex 列中不再收縮、導覽連結的樣式改由 `.luca-navigation-link`、`.luca-brand` 選取，特異度降為 (0,1,0)（原本是 `.luca-navigation a`、`.luca-navigation .luca-brand`，專案依舊選擇器的特異度覆寫的樣式要改寫）。說明另列新增的 `Navigation` 的 `renderLink`、`Button` 的 `render`（`ButtonLinkProps`）、`StatusMessage` 的 `label`（並匯出 `StatusMessageProps`）、`ContentState` 的 `retryLabel` 與 `Checkbox` 的 `hideLabel`；這三個新 prop 不給時輸出不變，`.luca-checkbox` 多了 `position:relative`。
+- 第一個 changeset 把版本帶到 0.3.0，並附不相容變更的升級說明，包括高度變化（Button、Select、TextField 單行時等於 `control-height`，不再是 50px）、Select 長值改為換行而非省略號、TextField 的輸入框（`.luca-input`）改為 border-box、Button 在 flex 列中不再收縮、導覽連結的樣式改由 `.luca-navigation-link`、`.luca-brand` 選取，特異度降為 (0,1,0)（原本是 `.luca-navigation a`、`.luca-navigation .luca-brand`，專案依舊選擇器的特異度覆寫的樣式要改寫）。說明另列 `@luca-style/react` 的 `react`、`react-dom` peer 從 `^19.0.0` 放寬為 `^18.0.0 || ^19.0.0`（ISSUE-007，18.3.1 實測），以及 `theme`、`controls`、`button`、`data-display` 四個模組開頭新增 `'use client'`（Next 伺服器元件可直接匯入套件入口；`themeInitScript` 改從不帶指令的 `theme-init` 匯出，匯入路徑不變；Vite 8 打包會出現可忽略的 `MODULE_LEVEL_DIRECTIVE` 警告，見 consumer-guide）。說明另列新增的 `Navigation` 的 `renderLink`、`Button` 的 `render`（`ButtonLinkProps`）、`StatusMessage` 的 `label`（並匯出 `StatusMessageProps`）、`ContentState` 的 `retryLabel` 與 `Checkbox` 的 `hideLabel`；這三個新 prop 不給時輸出不變，`.luca-checkbox` 多了 `position:relative`。
 - CI 能對 0.3.0 跑完發佈的試跑，工作流程設定好來源證明，權杖只從 CI 機密讀取（`PR-ADOPT-10`）。
 - 真正發佈的工作只能手動觸發。`evals/results/copy-vs-npm.json` 不存在、`copyBetter` 不是 `false`，或沒有擁有者的確認時，工作都會失敗（`PR-ADOPT-11`）。
 - 有測試用假的結論檔驗證上面三種失敗情況。

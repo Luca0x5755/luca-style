@@ -1,9 +1,10 @@
 // 乾淨專案驗證：打包兩個套件、從打包檔安裝到 repo 外、建置，再用瀏覽器檢查（PR-ADOPT-03、04、05）。
 // 用法：npm run test:clean-projects [-- <專案名>]；要先 npm run build。後續的乾淨專案加進下方的 projects。
+// Next 與 React 18 專案（PR-ADOPT-01、02）不跑 Tailwind 檢查，自己管安裝、建置與伺服器，見 verifyNext、verifyReact18。
 // 每個專案除了檢查要過，還要跑反向控制：故意弄壞安裝結果後，對應的檢查必須變紅，否則整支失敗。
 import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
-import {cp, mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises';
+import {cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {join, relative, resolve, sep} from 'node:path';
@@ -16,10 +17,39 @@ if (!npmCli) throw new Error('Run through npm run test:clean-projects');
 // 不和 repo 既有的 4173–4178 衝突。
 const port = 4180;
 
-function npm(args, cwd) {
-  const result = spawnSync(process.execPath, [npmCli, ...args], {cwd, encoding: 'utf8'});
+// allowFailure 時不丟錯，回傳整個結果，讓呼叫端判斷失敗原因（反向控制、peer 衝突）。
+function npm(args, cwd, {allowFailure = false} = {}) {
+  const result = spawnSync(process.execPath, [npmCli, ...args], {cwd, encoding: 'utf8', env: {...process.env, NEXT_TELEMETRY_DISABLED: '1'}});
+  if (allowFailure) return result;
   if (result.status !== 0) throw new Error(`npm ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`);
   return result.stdout.trim();
+}
+
+// 啟動伺服器並等輸出出現連接埠；回傳的 stop 不論伺服器是否已結束都能呼叫。
+async function startServer(args, cwd, serverPort) {
+  const server = spawn(process.execPath, args, {cwd, stdio: 'pipe', env: {...process.env, NEXT_TELEMETRY_DISABLED: '1'}});
+  let output = '';
+  server.stderr.on('data', chunk => { output += chunk; });
+  const stop = async () => {
+    // 被訊號結束時 exitCode 仍是 null，exit 事件也已發生過，要一起判斷，否則會永遠等不到。
+    if (server.exitCode !== null || server.signalCode !== null) return;
+    const closed = new Promise(done => server.once('exit', done));
+    // next dev 會再開子行程佔住連接埠；Windows 上 kill 只結束父行程，所以連同子行程一起結束。
+    if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], {stdio: 'ignore'});
+    else server.kill();
+    await closed;
+  };
+  try {
+    await new Promise((done, reject) => {
+      const timer = setTimeout(() => reject(new Error(`伺服器逾時（連接埠 ${serverPort}）\n${output}`)), 60000);
+      server.once('exit', code => { clearTimeout(timer); reject(new Error(`伺服器結束，代碼 ${code}\n${output}`)); });
+      server.stdout.on('data', chunk => { output += chunk; if (chunk.toString().includes(String(serverPort))) { clearTimeout(timer); done(); } });
+    });
+  } catch (error) {
+    await stop();
+    throw error;
+  }
+  return {stop};
 }
 
 // 走訪 DTCG 原始檔，列舉所有色彩角色。刻意不讀 preset，preset 沒跟上時才抓得到。
@@ -416,6 +446,290 @@ async function verifyTailwindV4({project, browser, roles, tokens, build}) {
   ]});
 }
 
+// console 檢查：hydration 與 ref 類訊息一律算失敗，比對白名單之前先擋掉；其餘 error、warning 要符合白名單的錨定樣式。
+const bannedConsole = /hydrat|did not match|server rendered|\brefs?\b|forwardRef|#418|#423|#425/i;
+function consoleProblems(where, messages, allowlist) {
+  return messages.flatMap(({type, text}) => bannedConsole.test(text)
+    ? [`hydration 或 ref ${where}：${type} ${text.slice(0, 400)}`]
+    : allowlist.some(({pattern}) => pattern.test(text)) ? [] : [`console 未列入白名單 ${where}：${type} ${text.slice(0, 400)}`]);
+}
+
+// 開頁面並收集 console 的 error、warning 與頁面錯誤。
+async function collectConsole(page) {
+  const messages = [];
+  page.on('console', message => { if (['error', 'warning'].includes(message.type())) messages.push({type: message.type(), text: message.text()}); });
+  page.on('pageerror', error => messages.push({type: 'pageerror', text: error.message}));
+  return messages;
+}
+
+// 只改一處；文字不存在時直接失敗，免得反向控制改不到東西卻誤判成功。
+function replaceOnce(text, from, to) {
+  assert.ok(text.includes(from), `找不到要替換的文字：${from}`);
+  return text.replace(from, to);
+}
+
+// PR-ADOPT-01：Next App Router 乾淨專案。layout 是伺服器元件，照文件呼叫 themeInitScript。
+// next start 檢查建置產物的首屏與 hydration；next dev 的 React 開發版會多報 hydration 細節，所以 console 檢查兩邊都跑。
+const nextPorts = {start: 4191, dev: 4192};
+// next dev 的白名單：每條是錨定的正規式與可接受的原因。hydration 與 ref 類訊息不得列入（bannedConsole 先擋）。
+const nextDevAllowlist = [];
+const flashScenarios = [
+  {name: '存了 dark', stored: 'dark', colorScheme: 'light', mode: 'dark'},
+  {name: '未存偏好、系統 dark', colorScheme: 'dark', mode: 'dark'},
+  {name: '未存偏好、系統 light', colorScheme: 'light', mode: 'light'},
+];
+
+async function withNextServer(project, kind, use) {
+  const serverPort = nextPorts[kind];
+  // dev 的快取會沿用上一輪編譯的 layout，改檔後的反向控制可能看不到變化，所以每次先清掉。
+  if (kind === 'dev') await rm(join(project, '.next/dev'), {recursive: true, force: true});
+  const server = await startServer([join(project, 'node_modules/next/dist/bin/next'), kind, '-p', String(serverPort), '-H', '127.0.0.1'], project, serverPort);
+  try {
+    return await use(`http://127.0.0.1:${serverPort}`);
+  } finally {
+    await server.stop();
+  }
+}
+
+// 首屏腳本與 Luca CSS 都要在伺服器原始 HTML 的 <head> 裡，CSS 以會阻擋渲染的 stylesheet 載入；第一幀之前兩者才都已就位。
+async function blockingHeadProblems(base) {
+  const fetchText = async url => {
+    const response = await fetch(url, {signal: AbortSignal.timeout(30000)});
+    if (!response.ok) throw new Error(`${url} 回應 ${response.status}`);
+    return response.text();
+  };
+  const html = await fetchText(`${base}/`);
+  const head = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1];
+  if (!head) return ['阻擋渲染：伺服器 HTML 找不到 <head>'];
+  const problems = [];
+  if (![...head.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].some(match => match[1].includes('luca-style-mode') && !/\b(async|defer|src)\b|type="module"/.test(match[0].slice(0, match[0].indexOf('>'))))) problems.push('阻擋渲染：<head> 裡沒有同步執行的首屏腳本');
+  // media 只接受沒寫或 all；disabled、preload 都不算阻擋渲染。
+  const blocking = [...head.matchAll(/<link\b[^>]*>/gi)].map(match => match[0])
+    .filter(tag => /\brel="stylesheet"/.test(tag) && !/\bdisabled\b/.test(tag) && (!/\bmedia=/.test(tag) || /\bmedia="all"/.test(tag)));
+  const css = (await Promise.all(blocking.map(tag => fetchText(new URL(tag.match(/\bhref="([^"]+)"/)[1].replace(/&amp;/g, '&'), base))))).join('\n');
+  if (!css.includes('.luca-button')) problems.push('阻擋渲染：<head> 會阻擋渲染的 stylesheet 沒有 Luca 元件 CSS');
+  if (!/\[data-luca-theme\]\[data-suite="?professional"?\]\[data-mode="?dark"?\]/.test(css)) problems.push('阻擋渲染：<head> 會阻擋渲染的 stylesheet 沒有 Luca 設計變數 CSS');
+  return problems;
+}
+
+// 換頁不整頁重載：window 標記留著、沒有 document 請求，aria-current 移到新頁（PR-STYLE-57、58）。
+async function navigationProblems(page) {
+  const problems = [];
+  const documents = [];
+  page.on('request', request => { if (request.resourceType() === 'document') documents.push(request.url()); });
+  await page.evaluate(() => { window.lucaMarker = true; });
+  const steps = [
+    {name: '導覽連結', click: () => page.getByRole('navigation').getByRole('link', {name: '其他頁', exact: true}).click(), heading: '其他頁'},
+    {name: 'Button 連結', click: () => page.getByRole('link', {name: '切換頁面'}).click(), heading: '首頁'},
+  ];
+  for (const step of steps) {
+    await step.click();
+    try {
+      await page.getByRole('heading', {name: step.heading, exact: true}).waitFor({timeout: 30000});
+    } catch {
+      problems.push(`導覽 ${step.name}：沒有到達「${step.heading}」`);
+      break;
+    }
+    if (!await page.evaluate(() => window.lucaMarker)) problems.push(`導覽 ${step.name}：整頁重載（window 標記消失）`);
+    if (documents.length > 0) problems.push(`導覽 ${step.name}：發出 document 請求 ${documents.splice(0).join('、')}`);
+    const current = await page.getByRole('navigation').locator('[aria-current="page"]').allTextContents();
+    if (current.join('、') !== step.heading) problems.push(`導覽 ${step.name}：aria-current 在「${current.join('、')}」，期望「${step.heading}」`);
+  }
+  return problems;
+}
+
+// 三種明暗情境各開一次首頁。flash 時檢查首屏屬性與首幀底色；第一個情境再點導覽，console 收集到最後。
+async function nextPageProblems(browser, base, tokens, {flash, allowlist}) {
+  const problems = [];
+  for (const scenario of flashScenarios) {
+    const context = await browser.newContext({colorScheme: scenario.colorScheme, reducedMotion: 'reduce'});
+    context.setDefaultTimeout(60000);
+    try {
+      // 文件建立時就記錄 <html> 每次的套系與明暗；第一個 requestAnimationFrame 在第一次繪製前執行，讀到的就是第一幀。
+      await context.addInitScript(({stored}) => {
+        if (stored) try { localStorage.setItem('luca-style-mode', stored); } catch { /* 儲存不可用時就是未存偏好 */ }
+        const html = () => document.documentElement;
+        window.lucaRecords = [];
+        new MutationObserver(() => window.lucaRecords.push([html().getAttribute('data-suite'), html().getAttribute('data-mode')])).observe(document, {attributes: true, subtree: true, attributeFilter: ['data-suite', 'data-mode']});
+        requestAnimationFrame(() => { window.lucaFirstFrame = {suite: html().getAttribute('data-suite'), mode: html().getAttribute('data-mode'), background: getComputedStyle(html()).backgroundColor}; });
+      }, {stored: scenario.stored});
+      const page = await context.newPage();
+      const messages = await collectConsole(page);
+      await page.goto(`${base}/`);
+      await page.getByRole('heading', {name: '首頁', exact: true}).waitFor();
+      await page.waitForLoadState('networkidle');
+      if (scenario === flashScenarios[0]) problems.push(...await navigationProblems(page));
+      await page.waitForLoadState('networkidle');
+      if (flash) {
+        const {records, firstFrame} = await page.evaluate(() => ({records: window.lucaRecords, firstFrame: window.lucaFirstFrame}));
+        if (records.length === 0) problems.push(`首屏屬性 ${scenario.name}：<html> 沒有寫入主題屬性`);
+        for (const record of new Set(records.map(record => record.join('/')))) if (record !== `professional/${scenario.mode}`) problems.push(`首屏屬性 ${scenario.name}：出現 ${record}，期望 professional/${scenario.mode}`);
+        const background = roleValue(tokens.professional[scenario.mode], 'bg');
+        if (!firstFrame) problems.push(`首幀底色 ${scenario.name}：第一個 requestAnimationFrame 沒有執行`);
+        else if (firstFrame.suite !== 'professional' || firstFrame.mode !== scenario.mode || !parseColors(firstFrame.background).some(color => sameColor(color, hexToColor(background, 1)))) problems.push(`首幀底色 ${scenario.name}：第一幀是 ${firstFrame.suite}/${firstFrame.mode}、${firstFrame.background}，期望 professional/${scenario.mode}、${background}`);
+      }
+      problems.push(...consoleProblems(scenario.name, messages, allowlist));
+    } finally {
+      await context.close();
+    }
+  }
+  return problems;
+}
+
+// 依伺服器種類跑檢查：start 加上 <head> 結構與首屏，dev 只看 console 與導覽。
+const nextChecks = {
+  start: (browser, base, tokens) => nextPageProblems(browser, base, tokens, {flash: true, allowlist: []}).then(async problems => [...await blockingHeadProblems(base), ...problems]),
+  dev: (browser, base, tokens) => nextPageProblems(browser, base, tokens, {flash: false, allowlist: nextDevAllowlist}),
+};
+
+async function verifyNext({project, browser, tarballs}) {
+  npm(['install', '--no-audit', '--no-fund', ...tarballs.map(tarball => relative(project, tarball))], project);
+  const tokens = createRequire(join(project, 'package.json'))('@luca-style/tokens/data');
+  failOnProblems('Next 建置', nextBuild(project));
+  console.log('PASS Next 建置：伺服器元件的 layout 從套件入口匯入 themeInitScript');
+  for (const kind of ['start', 'dev']) {
+    failOnProblems(`next ${kind}`, await withNextServer(project, kind, base => nextChecks[kind](browser, base, tokens)));
+    console.log(`PASS next ${kind}：${kind === 'start' ? '<head> 有首屏腳本與阻擋渲染的 Luca CSS；三種明暗情境的首屏屬性與首幀底色正確；' : ''}導覽不重載、aria-current 正確；console 沒有 hydration、ref 或白名單外的訊息`);
+  }
+
+  const layout = 'app/layout.tsx', shell = 'app/shell.tsx';
+  const headScript = "<head><script dangerouslySetInnerHTML={{__html: themeInitScript({suite: 'professional'})}}/></head>";
+  const cssImports = "import '@luca-style/tokens/css';\nimport '@luca-style/react/fonts.css';\nimport '@luca-style/react/css';\n";
+  const controls = [
+    {name: '首屏腳本沒傳 suite', file: layout, edit: text => replaceOnce(text, "themeInitScript({suite: 'professional'})", 'themeInitScript()'), servers: ['start'], mention: '首屏屬性'},
+    {name: '首屏腳本移到 <body> 結尾', file: layout, edit: text => replaceOnce(replaceOnce(text, headScript, '<head/>'), '<body><Providers>{children}</Providers></body>', "<body><Providers>{children}</Providers><script dangerouslySetInnerHTML={{__html: themeInitScript({suite: 'professional'})}}/></body>"), servers: ['start'], mention: '阻擋渲染'},
+    // 常見的延遲載入寫法：media="print" 的 stylesheet，載入完成後才切成 all。
+    {name: 'Luca CSS 延遲載入', file: layout, prepare: async () => {
+      const base = join(project, 'node_modules/@luca-style');
+      await mkdir(join(project, 'public'), {recursive: true});
+      await writeFile(join(project, 'public/luca.css'), `${await readFile(join(base, 'tokens/dist/tokens.css'), 'utf8')}\n${await readFile(join(base, 'react/dist/styles.css'), 'utf8')}`);
+    }, edit: text => replaceOnce(replaceOnce(text, cssImports, ''), headScript, `<head><script dangerouslySetInnerHTML={{__html: themeInitScript({suite: 'professional'})}}/><link rel="stylesheet" href="/luca.css" media="print"/><script dangerouslySetInnerHTML={{__html: "addEventListener('load', function () { document.querySelector('link[href=\\"/luca.css\\"]').media = 'all'; });"}}/></head>`), servers: ['start'], mention: ['阻擋渲染', '首幀底色']},
+    {name: '<html> 拿掉 suppressHydrationWarning', file: layout, edit: text => replaceOnce(text, '<html lang="zh-Hant" suppressHydrationWarning>', '<html lang="zh-Hant">'), servers: ['dev'], mention: 'hydration 或 ref'},
+    {name: '保留 suppressHydrationWarning，client 元件輸出不一致（Date.now）', file: shell, edit: text => replaceOnce(text, '<main>', '<main><p>{Date.now()}</p>'), servers: ['start', 'dev'], mention: 'hydration 或 ref'},
+    {name: 'renderLink 改回一般 <a>', file: shell, edit: text => replaceOnce(text, 'renderLink={props => <Link {...props}/>}', 'renderLink={props => <a {...props}/>}'), servers: ['start'], mention: '導覽 導覽連結'},
+    {name: "dist 的 theme.js 沒有 'use client'", file: 'node_modules/@luca-style/react/dist/theme.js', edit: text => replaceOnce(text, "'use client';", ''), servers: [], mention: 'next build 失敗'},
+  ];
+  for (const control of controls) {
+    const file = join(project, control.file);
+    const original = await readFile(file, 'utf8');
+    if (control.prepare) await control.prepare();
+    try {
+      // fixture 在 Windows 簽出時可能是 CRLF，先統一成 LF 再找要改的文字。
+      await writeFile(file, control.edit(original.replace(/\r\n/g, '\n')));
+      const results = {build: nextBuild(project)};
+      // 要看伺服器的控制，建置就紅了代表控制改錯地方，不能算數。
+      assert.ok(control.servers.length === 0 || results.build.length === 0, `反向控制「${control.name}」讓建置失敗，檢查沒有跑到：${results.build.join('；')}`);
+      if (results.build.length === 0) for (const kind of control.servers) results[kind] = await withNextServer(project, kind, base => nextChecks[kind](browser, base, tokens));
+      const mentions = [control.mention].flat();
+      // 每個指定的伺服器（或只看建置）都要變紅，而且原因要提到 mention。
+      for (const [where, problems] of Object.entries(results).filter(([where]) => control.servers.length === 0 ? where === 'build' : where !== 'build')) {
+        assert.ok(mentions.every(mention => problems.some(problem => problem.includes(mention))), `反向控制「${control.name}」沒有讓 ${where} 變紅（問題：${[...results.build, ...problems].slice(0, 3).join('；') || '無'}）`);
+        console.log(`PASS 反向控制：${control.name} → ${where} 變紅（${problems.length} 項），例如 ${problems.filter(problem => mentions.some(mention => problem.includes(mention))).slice(0, 3).join('；')}`);
+      }
+    } finally {
+      await writeFile(file, original);
+      // 延遲載入的控制會寫 public/luca.css，不留給後面的控制。
+      await rm(join(project, 'public'), {recursive: true, force: true});
+    }
+  }
+}
+
+// PR-ADOPT-02：React 18 + Vite 乾淨專案。操作在 dev server 上跑，React 開發版的警告（例如 ref）才會出現。
+const react18Port = 4193;
+// React 18 dev server 的白名單：每條是錨定的正規式與可接受的原因。hydration 與 ref 類訊息不得列入（bannedConsole 先擋）。
+const react18Allowlist = [];
+
+async function react18Problems(browser, base) {
+  const context = await browser.newContext({colorScheme: 'light', reducedMotion: 'reduce'});
+  context.setDefaultTimeout(30000);
+  try {
+    const page = await context.newPage();
+    const messages = await collectConsole(page);
+    await page.goto(`${base}/`);
+    await page.getByRole('heading', {name: '首頁', exact: true}).waitFor();
+    const problems = [];
+    // 每一步操作後，狀態列要出現對應的文字；等不到就記成問題，繼續下一步。
+    const expectStatus = async (name, text) => {
+      try { await page.getByRole('status').filter({hasText: text}).waitFor({timeout: 5000}); } catch { problems.push(`操作 ${name}：狀態列沒有出現「${text}」`); }
+    };
+    await page.getByRole('button', {name: '點擊', exact: true}).click();
+    await expectStatus('Button', '點擊 1 次');
+    await page.getByLabel('水果').click();
+    await page.getByRole('listbox').getByRole('option', {name: '梨子', exact: true}).click();
+    await expectStatus('Select', '水果 pear');
+    await page.getByRole('checkbox', {name: '同意條款'}).click();
+    await expectStatus('Checkbox', '已同意');
+    const hidden = page.getByRole('checkbox', {name: '隱藏標籤的勾選'});
+    await hidden.click();
+    if (await hidden.getAttribute('aria-checked') !== 'true') problems.push('操作 隱藏標籤的 Checkbox：點擊後沒有勾選');
+    await page.getByRole('textbox', {name: '名稱'}).fill('測試');
+    await expectStatus('TextField', '名稱 測試');
+    await page.getByRole('button', {name: '重試'}).click();
+    await expectStatus('ContentState', '重試 1 次');
+    const theme = page.locator('[data-luca-theme]');
+    await page.getByRole('button', {name: '切換明暗'}).click();
+    if (await theme.getAttribute('data-mode') !== 'dark') problems.push(`操作 useTheme：切換後 data-mode 是 ${await theme.getAttribute('data-mode')}，期望 dark`);
+    problems.push(...await navigationProblems(page));
+    return [...problems, ...consoleProblems('React 18', messages, react18Allowlist)];
+  } finally {
+    await context.close();
+  }
+}
+
+async function verifyReact18({project, browser, tarballs}) {
+  // peer 範圍決定走哪條路，peer 與驗證結果才不會不同步。
+  const peer = JSON.parse(await readFile(join(root, 'packages/react/package.json'), 'utf8')).peerDependencies.react;
+  const widened = /\^18\b/.test(peer);
+  const install = ['install', '--no-audit', '--no-fund', ...tarballs.map(tarball => relative(project, tarball))];
+  const plain = npm(install, project, {allowFailure: true});
+  if (widened) {
+    assert.equal(plain.status, 0, `peer 是 ${peer}，一般 npm install 卻失敗：\n${plain.stdout}\n${plain.stderr}`);
+    console.log(`PASS React 18 安裝：peer ${peer} 接受 18，一般 npm install 成功`);
+  } else {
+    assert.ok(plain.status !== 0 && /ERESOLVE/.test(`${plain.stdout}${plain.stderr}`), `peer 是 ${peer}，一般 npm install 應以 ERESOLVE 失敗（代碼 ${plain.status}）`);
+    console.log(`PASS React 18 安裝：peer 是 ${peer}，一般 npm install 以 ERESOLVE 失敗；改用 --legacy-peer-deps 跑完其餘檢查`);
+    npm([...install, '--legacy-peer-deps'], project);
+  }
+  const build = npm(['run', 'build'], project, {allowFailure: true});
+  const problems = build.status === 0 ? [] : [`建置失敗：${`${build.stdout}\n${build.stderr}`.split('\n').filter(line => /error/i.test(line)).slice(0, 5).join('；')}`];
+  const devServer = () => startServer([join(project, 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(react18Port), '--strictPort'], project, react18Port);
+  const base = `http://127.0.0.1:${react18Port}`;
+  let server = await devServer();
+  try {
+    problems.push(...await react18Problems(browser, base));
+  } finally {
+    await server.stop();
+  }
+  if (widened) failOnProblems('React 18', problems);
+  else {
+    // 維持 ^19 的前提是 React 18 不改套件就過不了；全部通過時要放寬 peer（PR-ADOPT-02）。
+    assert.ok(problems.length > 0, `React 18 不改套件就全部通過，依 PR-ADOPT-02 應把 peer 放寬到 ^18.0.0 || ^19.0.0（目前 ${peer}）`);
+    console.log(`紀錄 React 18 未通過（${problems.length} 項），作為維持 ${peer} 的原因：\n${problems.join('\n')}`);
+  }
+  if (widened) console.log('PASS React 18：tsc 與 vite build 通過；dev server 上操作全部公開元件，console 沒有 hydration、ref 或白名單外的訊息');
+
+  // 反向控制：連結元件沒有 forwardRef 時，React 18 會警告函式元件拿不到 ref，console 檢查必須以 ref 變紅。
+  const linkPath = join(project, 'src/router-link.tsx');
+  const original = await readFile(linkPath, 'utf8');
+  try {
+    await writeFile(linkPath, "import type {AnchorHTMLAttributes} from 'react';\nexport function RouterLink(props: AnchorHTMLAttributes<HTMLAnchorElement>) { return <a {...props}/>; }\n");
+    server = await devServer();
+    const controlProblems = await react18Problems(browser, base);
+    assert.ok(controlProblems.some(problem => problem.startsWith('hydration 或 ref') && /\brefs?\b/i.test(problem)), `反向控制「連結元件沒有 forwardRef」沒有讓 console 檢查以 ref 變紅（問題：${controlProblems.slice(0, 3).join('；') || '無'}）`);
+    console.log(`PASS 反向控制：連結元件沒有 forwardRef → console 變紅，例如 ${controlProblems.filter(problem => problem.startsWith('hydration 或 ref')).slice(0, 2).join('；')}`);
+  } finally {
+    await writeFile(linkPath, original);
+    await server.stop();
+  }
+}
+
+// next build 失敗時回傳問題而不丟錯，反向控制才能確認紅的原因。
+function nextBuild(project) {
+  const result = npm(['run', 'build'], project, {allowFailure: true});
+  const output = `${result.stdout}\n${result.stderr}`;
+  return result.status === 0 ? [] : [`next build 失敗：${output.split('\n').filter(line => /error/i.test(line)).slice(0, 5).join('；')}`];
+}
+
 // 只換掉 fixture 裡的空陣列，型別留在 fixture 一份。
 const fillRoleProbes = toolList => async (project, roles) => {
   const file = join(project, 'src/role-probes.ts');
@@ -427,6 +741,8 @@ const fillRoleProbes = toolList => async (project, roles) => {
 const projects = {
   'tailwind-v3': {fixture: 'examples/tailwind-v3', prepare: fillRoleProbes(colorTools), verify: verifyTailwindV3},
   'tailwind-v4': {fixture: 'examples/tailwind-v4', prepare: fillRoleProbes(colorToolsV4), verify: verifyTailwindV4},
+  next: {fixture: 'examples/next', run: verifyNext},
+  'react-18': {fixture: 'examples/react-18', run: verifyReact18},
 };
 
 const selected = process.argv[2] ? [process.argv[2]] : Object.keys(projects);
@@ -443,27 +759,24 @@ try {
   for (const name of selected) {
     const {fixture, prepare, verify} = projects[name];
     const project = join(temporary, name);
-    await cp(join(root, fixture), project, {recursive: true, filter: source => !['node_modules', 'dist'].includes(source.split(sep).at(-1))});
-    await prepare(project, roles);
+    await cp(join(root, fixture), project, {recursive: true, filter: source => !['node_modules', 'dist', '.next'].includes(source.split(sep).at(-1))});
+    if (prepare) await prepare(project, roles);
+    if (projects[name].run) {
+      await projects[name].run({project, browser, tarballs});
+      console.log(`PASS ${name}`);
+      continue;
+    }
     npm(['install', '--no-audit', '--no-fund', ...tarballs.map(tarball => relative(project, tarball))], project);
     npm(['run', 'build'], project);
     // 反向控制只改 CSS 與 preset，不需要再跑一次型別檢查。
     const build = () => npm(['exec', '--no', '--', 'vite', 'build'], project);
-    const server = spawn(process.execPath, [join(project, 'node_modules/vite/bin/vite.js'), 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], {cwd: project, stdio: 'pipe'});
-    let serverErrors = '';
-    server.stderr.on('data', chunk => { serverErrors += chunk; });
+    const server = await startServer([join(project, 'node_modules/vite/bin/vite.js'), 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], project, port);
     try {
-      await new Promise((done, reject) => {
-        const timer = setTimeout(() => reject(new Error('預覽伺服器逾時')), 15000);
-        server.once('exit', code => { clearTimeout(timer); reject(new Error(`預覽伺服器結束，代碼 ${code}\n${serverErrors}`)); });
-        server.stdout.on('data', chunk => { if (chunk.toString().includes(String(port))) { clearTimeout(timer); done(); } });
-      });
       const tokens = createRequire(join(project, 'package.json'))('@luca-style/tokens/data');
       await verify({project, browser, roles, tokens, build});
       console.log(`PASS ${name}`);
     } finally {
-      // 被訊號結束時 exitCode 仍是 null，exit 事件也已發生過，要一起判斷，否則會永遠等不到。
-      if (server.exitCode === null && server.signalCode === null) { const closed = new Promise(done => server.once('exit', done)); server.kill(); await closed; }
+      await server.stop();
     }
   }
 } finally {

@@ -21,7 +21,7 @@ npm pack ./packages/react --pack-destination .
 npm install /path/to/luca-style-tokens-0.2.0.tgz /path/to/luca-style-react-0.2.0.tgz react@^19 react-dom@^19
 ```
 
-兩個套件版本須一致；React 為 peer dependency。沒有公開 npm 發布要求。不可引用 `packages/*/src`；`dist` 是產物，不提交手改。
+兩個套件版本須一致；React 為 peer dependency，範圍是 `^18.0.0 || ^19.0.0`（見〈React 18〉）。沒有公開 npm 發布要求。不可引用 `packages/*/src`；`dist` 是產物，不提交手改。
 
 使用 Vite + TypeScript 時可複製 `examples/consumer` 到 repo 外，執行上述安裝、`npm install`、`npm run build`。範例的 `vite/client` 型別支援 CSS 和 `?url` 授權資產。其他 bundler 須提供對等 CSS、JSON、字體及文字資產載入。
 
@@ -228,6 +228,75 @@ CSS 入口要照這個寫法，不要再從 JavaScript 匯入 Luca 的 CSS：
 業務資料色和專案衍生色屬於專案，寫在 CSS 入口之後的 `@theme` 區塊。頁面字體同樣由專案設定，請在 `body` 寫 `font-family: var(--font-body)`。
 
 傳給元件的 class 和狀態前綴的規則與 v3 相同。v4 的 `outline-none` 只設 `outline-style: none`，v3 的 `outline-none` 在 v4 改叫 `outline-hidden`；兩個都是不帶狀態的 class，都不會拿掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴。
+
+## React 18
+
+`@luca-style/react` 的 peer 範圍是 `react`、`react-dom` `^18.0.0 || ^19.0.0`。乾淨專案驗證的版本是 React 18.3.1、`@types/react` 18.3.31：用一般 `npm install` 安裝打包檔，`tsc --noEmit` 與 `vite build` 通過，並在 dev server 上操作全部公開元件（Button、Select、Checkbox、TextField、ContentState、`useTheme`，以及經 `forwardRef` 連結的 `Navigation` `renderLink` 與 `Button` `render`），console 沒有 error 或 warning。
+
+React 18 的 `ref` 不是一般 prop，所以 `renderLink` 與 `Button` 的 `render` 收到的 `ref` 要交給 `forwardRef` 包好的連結元件；直接傳給沒有 `forwardRef` 的函式元件，React 18 會警告「Function components cannot be given refs」。React 19 可以把 `ref` 當一般 prop。18.0 到 18.2 沒有逐版驗證，只驗證 18.3.1。
+
+## Vite 的 `'use client'` 警告
+
+套件的 client 模組開頭有 `'use client'`（見〈與 Next 並用〉）。用 Vite 8 打包時，`@luca-style/react` 與它依賴的 `@base-ui/react` 都會出現這類警告，純客戶端打包本來就用不到這個指令，可以忽略：
+
+```text
+[MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@luca-style/react/dist/theme.js" may not be preserved when bundling.
+```
+
+要靜音時，在 `vite.config.js` 過濾這一種警告：
+
+```js
+export default {
+  build: {
+    rolldownOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && /"use client"/.test(warning.message)) return;
+        warn(warning);
+      },
+    },
+  },
+};
+```
+
+`npm run test:consumer` 會檢查 `vite build` 的輸出，除了這一種、而且只限 `@luca-style/react`、`@base-ui/react`、`@base-ui/utils` 的檔案，其他警告都算失敗。
+
+## 與 Next 並用（App Router）
+
+乾淨專案驗證的版本是 Next 16.4.3、React 19.3.1。`@luca-style/react` 的 `theme`、`controls`、`button`、`data-display` 四個模組開頭都有 `'use client'`，伺服器元件可以直接從套件入口匯入元件。`themeInitScript` 從不帶指令的模組匯出，所以 `layout.tsx` 這種伺服器元件能直接呼叫它。
+
+`app/layout.tsx`（伺服器元件）：
+
+```tsx
+import {themeInitScript} from '@luca-style/react';
+import '@luca-style/tokens/css';
+import '@luca-style/react/fonts.css';
+import '@luca-style/react/css';
+import {Providers} from './providers';
+
+export default function RootLayout({children}: {children: React.ReactNode}) {
+  return <html lang="zh-Hant" suppressHydrationWarning>
+    <head><script dangerouslySetInnerHTML={{__html: themeInitScript({suite: 'professional'})}}/></head>
+    <body><Providers>{children}</Providers></body>
+  </html>;
+}
+```
+
+`app/providers.tsx`（`'use client'`）把 `ThemeProvider` 放在 layout 下，換頁時不會重新掛載：
+
+```tsx
+'use client';
+import {ThemeProvider} from '@luca-style/react';
+
+export function Providers({children}: {children: React.ReactNode}) {
+  return <ThemeProvider suite="professional" target="document">{children}</ThemeProvider>;
+}
+```
+
+- `suite` 要和 `themeInitScript` 傳的相同；沒傳 `themeInitScript` 的 suite 會得到 `vibrant`，professional 專案首屏會先換一次套系。
+- `<html>` 要加 `suppressHydrationWarning`：首屏腳本在 hydration 前寫入 `<html>` 的 `data-luca-theme`、`data-suite`、`data-mode`，少了它，`next dev` 會報「some attributes of the server rendered HTML didn't match」。它只作用在 `<html>` 自己的屬性，元件內伺服器與客戶端輸出不一致時仍會報錯。
+- `Navigation` 的 `renderLink` 是函式，只能在 `'use client'` 檔裡傳：`renderLink={props => <Link {...props}/>}`（`Link` 來自 `next/link`）。`Button` 用 `render={<Link href="…"/>}`。點擊走客戶端導覽，不整頁重載，目前頁面仍帶 `aria-current="page"`。
+- Luca CSS 從 `layout.tsx` 匯入，Next 會把它輸出成 `<head>` 裡阻擋渲染的 stylesheet，所以第一幀就有正確底色。改成延遲載入（例如 `media="print"` 載入後再切換）會讓首屏先閃一下。
+- `Checkbox` 的方框在伺服器輸出時還沒有 `aria-labelledby`，Base UI 在 layout effect 補上。這是既有行為；乾淨專案的 `next start` 與 `next dev` 都沒有 hydration 警告。
 
 ## 獨立消費端驗證
 

@@ -13,6 +13,13 @@ function npm(args,cwd) {
   const result=spawnSync(process.execPath,[npmCli,...args],{cwd,encoding:'utf8'});
   if(result.status!==0) throw new Error(`${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`);
   console.log(result.stdout.trim());
+  return `${result.stdout}\n${result.stderr}`;
+}
+// vite build 只允許 consumer-guide 寫明的一種警告：Luca 與 Base UI 的 client 模組開頭的 'use client'（純客戶端打包用不到，Vite 會略過）。其他打包警告都算失敗。
+const allowedDirective=/^\[MODULE_LEVEL_DIRECTIVE\] The semantics of the module level directive "use client" in "node_modules\/(@luca-style\/react\/dist|@base-ui\/react|@base-ui\/utils)\/[^"]+" may not be preserved when bundling\.$/;
+function unexpectedBuildWarnings(output) {
+  const lines=output.replace(/\x1b\[[0-9;]*m/g,'').split(/\r?\n/).map(line=>line.trim());
+  return lines.filter(line=>/^\[[A-Z_]+\]|^\(!\)|^warn/i.test(line)).filter(line=>!allowedDirective.test(line));
 }
 let server;
 let browser;
@@ -26,7 +33,8 @@ try {
   for(const name of ['tokens','react']) assert.match(await readFile(join(consumer,'node_modules','@luca-style',name,'LICENSE'),'utf8'),/^MIT License/);
   // 給代理讀的文件（ISSUE-013）須隨套件安裝：react 帶 DESIGN.md 與 llms.txt，tokens 帶設計變數規格。
   for(const [name,file] of [['react','DESIGN.md'],['react','llms.txt'],['tokens','design-tokens.md']]) assert.ok((await readFile(join(consumer,'node_modules','@luca-style',name,file),'utf8')).length>0,`${name} 套件缺少 ${file}`);
-  npm(['run','build'],consumer);
+  const warnings=unexpectedBuildWarnings(npm(['run','build'],consumer));
+  assert.deepEqual(warnings,[],`vite build 出現文件沒寫明的警告：\n${warnings.slice(0,5).join('\n')}`);
   server=spawn(process.execPath,[join(consumer,'node_modules/vite/bin/vite.js'),'preview','--host','127.0.0.1','--port','4174','--strictPort'],{cwd:consumer,stdio:'pipe'});
   await new Promise((done,reject)=>{
     const timer=setTimeout(()=>reject(new Error('Consumer preview timed out')),15000);
@@ -72,7 +80,7 @@ try {
     assert.match(await response.text(),/SIL OPEN FONT LICENSE/i);
   }
   assert.equal(await page.evaluate(async()=>{const faces=await Promise.all(['16px Inter','16px "Noto Sans TC"','16px "IBM Plex Mono"','600 16px "IBM Plex Mono"'].map(font=>document.fonts.load(font)));return faces.every(group=>group.length>0 && group.every(face=>face.status==='loaded'));}),true);
-  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license');
+  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build without undocumented warnings, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license');
 } finally {
   if(browser) await browser.close();
   if(server && server.exitCode===null) {const closed=new Promise(done=>server.once('exit',done));server.kill();await closed;}
