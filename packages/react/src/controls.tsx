@@ -1,3 +1,5 @@
+'use client';
+// 用到 React hook 或 Base UI 的模組標成 client 元件，Next App Router 的伺服器元件才能匯入套件入口（PR-ADOPT-01）。
 import {Select as BaseSelect} from '@base-ui/react/select';
 import {Checkbox as BaseCheckbox} from '@base-ui/react/checkbox';
 import {Input as BaseInput} from '@base-ui/react/input';

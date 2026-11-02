@@ -1,3 +1,5 @@
+'use client';
+// 用到 React hook 或 Base UI 的模組標成 client 元件，Next App Router 的伺服器元件才能匯入套件入口（PR-ADOPT-01）。
 import {Button as BaseButton} from '@base-ui/react/button';
 import {useRender} from '@base-ui/react/use-render';
 import type {AnchorHTMLAttributes, ButtonHTMLAttributes, ReactElement, Ref} from 'react';

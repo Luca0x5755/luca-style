@@ -169,11 +169,13 @@ PR-FILE-33 — `elevation-enabled` 在 Penpot 以 shadow token 表示：開為�
 
 ### 接入與發佈承諾
 
-接法見[使用端接入](../consumer-guide.md#與-tailwind-v3-並用)與 [Tailwind v4 的接法](../consumer-guide.md#與-tailwind-v4-並用)，路線見 ADR 0010。`npm run test:clean-projects` 從打包檔安裝到 repo 外的 Tailwind v3 與 v4 乾淨專案，用瀏覽器檢查，每項檢查都附反向控制。
+接法見[使用端接入](../consumer-guide.md#與-tailwind-v3-並用)、[Tailwind v4 的接法](../consumer-guide.md#與-tailwind-v4-並用)、[Next 的接法](../consumer-guide.md#與-next-並用app-router)與 [React 18](../consumer-guide.md#react-18)，路線見 ADR 0010。`npm run test:clean-projects` 從打包檔安裝到 repo 外的 Tailwind v3、v4、Next 與 React 18 乾淨專案，用瀏覽器檢查，每項檢查都附反向控制。
 
 PR-ADOPT-03 — Tailwind v3 乾淨專案不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法。
 PR-ADOPT-04 — Tailwind v4 乾淨專案只匯入 Luca 的 CSS 設定檔、不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法；執行期改專案強調色或切換明暗後，顏色跟著改變。
 PR-ADOPT-05 — Tailwind v3 與 v4 依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。例外：不帶狀態的 class 不會蓋掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴；v4 的 `outline-none` 與 `outline-hidden` 都算不帶狀態的 class。
+PR-ADOPT-01 — Next（App Router）乾淨專案可以建置：伺服器元件的 layout 能從套件入口匯入並呼叫 `themeInitScript`，`Navigation` 的 `renderLink` 與 `Button` 的 `render` 可傳 `next/link`，點擊不整頁重載，目前頁面仍有 `aria-current`。`next start` 的首屏，`<html>` 的套系與明暗從第一筆記錄起就正確，Luca CSS 以 `<head>` 裡阻擋渲染的 stylesheet 載入，第一幀的底色等於該套系與明暗的 `bg`，所以不會閃一下日間模式。`next start` 與 `next dev` 的 console 沒有 hydration 錯誤。
+PR-ADOPT-02 — React 18（18.3.1）乾淨專案不改套件程式碼，一般 `npm install` 即可安裝，公開元件都能建置和操作，所以 peer 是 `^18.0.0 || ^19.0.0`。18.0 到 18.2 沒有逐版驗證。
 
 ### 狀態總覽頁承諾
 

@@ -1,3 +1,5 @@
+'use client';
+// 用到 React hook 或 Base UI 的模組標成 client 元件，Next App Router 的伺服器元件才能匯入套件入口（PR-ADOPT-01）。
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { modeAttribute, modeStorageKey, suiteAttribute, themeAttribute } from './theme-init.js';
 import type { ColorMode, Density, Shape, StyleSuite } from './theme-types.js';
@@ -5,7 +7,6 @@ import { deriveAccent, type AccentInput } from '@luca-style/tokens/accent';
 import tokenData from '@luca-style/tokens/data' with { type: 'json' };
 export type { AccentInput } from '@luca-style/tokens/accent';
 export type { ColorMode, Density, Shape, StyleSuite } from './theme-types.js';
-export { themeInitScript, type ThemeInitOptions } from './theme-init.js';
 export type ThemeTarget = 'self' | 'document';
 // 資訊密度與元件外形的屬性名；只由 ThemeProvider 寫入，首屏腳本不處理（架構 §3.3）。
 const densityAttribute = 'data-density';
