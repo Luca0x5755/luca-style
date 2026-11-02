@@ -80,11 +80,32 @@ function ControlCompatibility() {
   </form>;
 }
 
+// 長文字樣本（PR-STYLE-56）：窄容器裡同時放中文與不可斷的英文字串；只有 samples=long 才渲染，不影響其他測試。
+const longText = '這是一段很長的文字用來確認操作元件會長高Supercalifragilisticexpialidocious_unbroken_string';
+function LongTextSamples() {
+  return <section aria-label="長文字樣本" style={{width:160}}>
+    <Button>{longText}</Button>
+    <Select label="長值選單" defaultValue="long"><option value="long">{longText}</option><option value="short">短選項</option></Select>
+    <TextField label={`長標籤${longText}`}/>
+    <TextField label="長值輸入" defaultValue={longText}/>
+    <TextField label="大字輸入" defaultValue="大字" style={{fontSize:'2rem'}}/>
+    <TextField label="長說明輸入" helper={`長說明${longText}`}/>
+  </section>;
+}
+
+// 工具列常見的 flex 列：標題旁的短按鈕不該被擠到斷字，長按鈕也不該撐破窄列。
+function FlexRowSamples() {
+  return <>
+    <div style={{display:'flex', width:400}}><h2 style={{margin:0, fontSize:20, whiteSpace:'nowrap', overflow:'hidden'}}>A fairly long toolbar title goes here</h2><Button>Save</Button></div>
+    <section aria-label="窄 flex 列樣本" style={{display:'flex', width:160}}><Button>{longText}</Button></section>
+  </>;
+}
+
 function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/></ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
   </>;
 }
 

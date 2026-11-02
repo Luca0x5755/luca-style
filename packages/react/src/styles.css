@@ -1,4 +1,6 @@
-.luca-button { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
+/* 單行時高度由 min-height 決定（PR-STYLE-55），上下內距取最小階，文字換行時才撐高（PR-STYLE-56）；元件自帶 border-box，不依賴使用端的全域重設。
+   長字串可在任意處斷開；為了不讓 flex 列把短標籤擠到斷字，按鈕不收縮，改以 max-width 限制在容器內。 */
+.luca-button { box-sizing:border-box; overflow-wrap:anywhere; flex-shrink:0; max-width:100%; display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-1) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
 /* 滑過、按下用推算出的強調色角色（PR-STYLE-45），不再用 brightness 濾鏡。 */
 .luca-button-primary:not(:disabled):hover { background:var(--accent-hover); }
 .luca-button-primary:not(:disabled):active { background:var(--accent-pressed); }
@@ -10,23 +12,23 @@
 .luca-button-secondary:not(:disabled):hover { color:var(--accent-hover); border-color:var(--accent-hover); }
 .luca-button-secondary:not(:disabled):active { color:var(--accent-pressed); border-color:var(--accent-pressed); }
 .luca-field { display:grid; gap:var(--space-2); min-width:0; }
-.luca-field > label { font:500 1rem/1.5 var(--font-body); }
-.luca-input { width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-3) var(--space-4); font:500 1rem/1.5 var(--font-body); color:var(--text); background:var(--surface); border:1px solid var(--control-border); border-radius:var(--radius-control); }
+.luca-field > label { font:500 1rem/1.5 var(--font-body); overflow-wrap:anywhere; }
+.luca-input { box-sizing:border-box; width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-1) var(--space-4); font:500 1rem/1.5 var(--font-body); color:var(--text); background:var(--surface); border:1px solid var(--control-border); border-radius:var(--radius-control); }
 .luca-input[aria-invalid=true] { border-color:var(--error); }
 .luca-input:disabled { opacity:.6; cursor:not-allowed; }
 /* Select 欄位與選單，對照元件庫母版 C/Select/Open 與前端規格 §5.5.2。 */
 .luca-select-trigger { display:flex; align-items:center; gap:var(--space-3); text-align:left; cursor:pointer; }
-.luca-select-value { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.luca-select-value { flex:1; min-width:0; overflow-wrap:anywhere; }
 .luca-select-icon { display:flex; flex:none; color:var(--muted); }
 .luca-select-positioner { z-index:10; outline:0; }
 /* 選單與欄位同寬（--anchor-width 由 Base UI 提供）；陰影取自母版的 0 8px 24px、文字色 12%。 */
 .luca-select-popup { box-sizing:border-box; display:grid; gap:2px; width:var(--anchor-width); max-height:var(--available-height); overflow-y:auto; padding:var(--space-1); background:var(--surface); color:var(--text); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); box-shadow:0 8px 24px rgba(36,49,42,.12); outline:0; }
-.luca-select-option { display:flex; align-items:center; height:40px; padding:0 var(--space-3); border-radius:var(--radius-control); font:var(--type-control-weight) var(--type-control-size)/var(--type-control-line-height) var(--font-body); cursor:pointer; outline:0; }
+.luca-select-option { box-sizing:border-box; display:flex; align-items:center; min-height:40px; padding:var(--space-1) var(--space-3); overflow-wrap:anywhere; border-radius:var(--radius-control); font:var(--type-control-weight) var(--type-control-size)/var(--type-control-line-height) var(--font-body); cursor:pointer; outline:0; }
 /* 滑過與鍵盤目前項目同為 data-highlighted；選中項以柔和強調表面加粗、不加打勾。 */
 .luca-select-option[data-highlighted] { background:var(--surface-subtle); }
 .luca-select-option[data-selected] { background:var(--accent-soft); font-weight:700; }
 .luca-select-option[data-disabled] { color:var(--muted); cursor:not-allowed; }
-.luca-field-helper, .luca-field-error { font:400 .875rem/1.6 var(--font-body); }
+.luca-field-helper, .luca-field-error { font:400 .875rem/1.6 var(--font-body); overflow-wrap:anywhere; }
 .luca-field-helper { color:var(--muted); }
 .luca-field-error { color:var(--error); }
 .luca-checkbox { display:flex; gap:var(--space-3); align-items:center; min-height:var(--control-height); cursor:pointer; }

@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）與 `PR-REVIEW-xx`（狀態總覽頁）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～56`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）與 `PR-REVIEW-xx`（狀態總覽頁）。
 - 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
@@ -135,6 +135,15 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 - 截圖比對的預設 pixelmatch 門檻偵測不到中性色這類小幅改值，所以 `tests/visual-config.spec.ts` 另外檢查每張截圖基準的左上角等於該明暗模式的 `bg`。改色後用 `npm run update:visual -- --all` 改寫全部基準，只跑 `npm run update:visual` 不會更新低於門檻的差異。
 - `npm run verify:screenshots` 檢查四張 README 截圖的四角等於該組合的 `bg`（PR-STYLE-52）。
 - 載入動畫 GIF 只有一位元透明，中性色改值後已在新底色上檢視：邊緣是硬邊、沒有舊底色的色邊，未重新輸出。
+
+### 元件 API 與高度承諾
+
+PR-STYLE-55 — 文字單行時，Button、Select、TextField 的實際高度等於 `control-height`，涵蓋兩種風格套系、三種資訊密度、兩種元件外形。
+PR-STYLE-56 — 文字換行時，上述元件會長高，內容不被裁切。TextField 的輸入框是單行，長值不換行，在輸入框內橫向捲動；它的長標籤會換行，整個欄位長高，輸入框仍是 `control-height`；專案加大字級時輸入框會長高。
+
+- 兩條承諾由 `tests/control-height.spec.ts` 在瀏覽器裡量實際尺寸（在 `npm test` 內），測試載具沒有全域 `box-sizing` 重設，所以也涵蓋沒有重設的使用端。
+- 依 PR-STYLE-56，Select 的長值不再是單行省略號，改為換行；展開選單的長選項也會長高，單行選項維持 40px。
+- 長字串（含不可斷的英文）在 Button、Select、欄位標籤與說明文字內任意處斷開，不撐寬容器。Button 在 flex 列中不收縮、寬度以容器為上限，所以工具列裡的短標籤不會被擠到斷字。
 
 ### Penpot 元件庫設計檔（ADR 0008）
 
