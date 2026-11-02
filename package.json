@@ -24,6 +24,7 @@
     "lint": "eslint .",
     "test:consumer": "node scripts/verify-consumer.mjs",
     "test:clean-projects": "node scripts/verify-clean-projects.mjs",
+    "eval": "node evals/run.mjs",
     "screenshots": "node scripts/screenshots.mjs",
     "verify:screenshots": "node scripts/verify-screenshots.mjs"
   },

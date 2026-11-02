@@ -1,0 +1,4 @@
+/* 評分工具的反向範例：變數定義與 var() 備用值不算，寫死的 hex 與具名色要算。 */
+:root { --brand: #123456; }
+.card { color: var(--text); background: var(--surface, #fff); border-color: #00ff00; }
+.title { color: red; }
