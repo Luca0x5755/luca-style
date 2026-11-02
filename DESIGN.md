@@ -94,9 +94,9 @@ export const App = () => (
 | `Button` | 按鈕；傳 `render` 時渲染成連結（型別 `ButtonLinkProps`），外觀相同、保留連結語意，不接受 `disabled`、`loading`、`type` | `variant`（`primary`、`secondary`）、`loading`、`render` |
 | `TextField` | 文字欄位 | `label`、`helper`、`error` |
 | `Select` | 自訂下拉選單，選項仍以 `<option>` 描述 | `label`、`value`、`onChange`（收到的 `event.target.value` 是選到的值） |
-| `Checkbox` | 核取方塊 | `label`、`checked`、`onChange` |
-| `StatusMessage` | 操作結果訊息 | `tone`（`success`、`warning`、`error`） |
-| `ContentState` | 載入、空白、錯誤狀態 | `state`、`title`、`description`、`onRetry` |
+| `Checkbox` | 核取方塊；`hideLabel` 只在視覺上隱藏標籤，名稱仍來自 `label`，不必另給 `aria-label` | `label`、`checked`、`onChange`、`hideLabel` |
+| `StatusMessage` | 操作結果訊息；開頭的「成功／警告／錯誤」可用 `label` 替換，不能拿掉（空字串會退回預設） | `tone`（`success`、`warning`、`error`）、`label` |
+| `ContentState` | 載入、空白、錯誤狀態；標題、說明與「重試」都可替換，沒給時用中文預設 | `state`、`title`、`description`、`retryLabel`、`onRetry` |
 | `Navigation` | 主要導覽；傳 `renderLink` 時選單與品牌連結都用專案的連結元件，點擊不整頁重載，目前頁面仍有 `aria-current` | `items`、`currentPath`、`brand`、`brandHref`、`label`、`renderLink`（收到 `NavigationLinkProps`） |
 | `MetricCard` | 指標卡 | `label`、`value`、`detail`、`eyebrow`、`highlight` |
 | `DataTable` | 資料表 | `caption`、`columns`、`rows`、`rowKey` |
@@ -117,8 +117,11 @@ export function Panel() {
       <TextField label="名稱" helper="最多 20 字" />
       <Checkbox label="同意條款" checked={done} onChange={event => setDone(event.target.checked)} />
       <Button loading={saving} onClick={() => setSaving(true)}>送出</Button>
+      <Checkbox label="選取此列" hideLabel />
       <StatusMessage tone="success">已儲存</StatusMessage>
+      <StatusMessage tone="error" label="Error">Could not save</StatusMessage>
       <ContentState state="empty" />
+      <ContentState state="error" title="Failed to load" description="Try again later." retryLabel="Try again" onRetry={() => setSaving(false)} />
       <DataTable
         caption="專案清單"
         rows={rows}

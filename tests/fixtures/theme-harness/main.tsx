@@ -4,7 +4,7 @@ import '@luca-style/tokens/css';
 import '../../../packages/react/src/styles.css';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, Checkbox, ContentState, DataTable, MetricCard, Navigation, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type NavigationLinkProps, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
+import { Button, Checkbox, ContentState, DataTable, MetricCard, Navigation, Select, StatusMessage, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type NavigationLinkProps, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
 
 const params = new URLSearchParams(window.location.search);
 const persist = params.get('persist') !== '0';
@@ -121,11 +121,37 @@ function LinkSamples() {
   </section>;
 }
 
+// 文字替換樣本（PR-STYLE-59、60）：預設文字與替換後的文字並列；重試次數記在 output。
+// 空字串的 label、retryLabel 要退回預設文字。缺名稱樣本只在 samples=nameless 時渲染，給 axe 的反向控制用。
+function TextSamples() {
+  const [retries, setRetries] = useState(0);
+  const [hidden, setHidden] = useState(false);
+  return <>
+    <section aria-label="文字替換樣本">
+      <StatusMessage tone="success">預設成功</StatusMessage>
+      <StatusMessage tone="warning">預設警告</StatusMessage>
+      <StatusMessage tone="error">預設錯誤</StatusMessage>
+      <StatusMessage tone="success" label="Saved">替換成功</StatusMessage>
+      <StatusMessage tone="warning" label="">空前綴</StatusMessage>
+      <ContentState state="loading"/>
+      <ContentState state="empty"/>
+      <ContentState state="error" onRetry={() => setRetries(value => value + 1)}/>
+      <ContentState state="error" title="Failed to load" description="Try again later." retryLabel="Try again" onRetry={() => setRetries(value => value + 1)}/>
+      <ContentState state="error" title="空重試" retryLabel="" onRetry={() => setRetries(value => value + 1)}/>
+      <output aria-label="重試次數">{retries}</output>
+      <Checkbox label="隱藏標籤核取" hideLabel checked={hidden} onChange={event => setHidden(event.target.checked)} helper="隱藏標籤的說明"/>
+      <output aria-label="隱藏標籤核取值">{String(hidden)}</output>
+      <Checkbox label="可見標籤核取"/>
+    </section>
+    {params.get('samples') === 'nameless' && <section aria-label="缺名稱樣本"><Checkbox label="" hideLabel/></section>}
+  </>;
+}
+
 function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/><LinkSamples/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/><LinkSamples/><TextSamples/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
   </>;
 }
 

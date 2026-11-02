@@ -70,8 +70,9 @@ export function Select({label,error,helper,id:providedId,className='',children,v
 }
 // Checkbox 以 Base UI 的 Checkbox 實作（ADR 0006）：可見的方框是 role="checkbox" 的節點，旁邊另有隱藏的 <input> 負責表單送出。
 // 公開 props 沿用 0.1.0 原生 input 的寫法，onChange 仍收到 event.target.checked；與原生事件的差異見升級說明。
-export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>,'type'> & FieldDetails;
-export function Checkbox({label,error,helper,id:providedId,className='',checked,defaultChecked,disabled,required,readOnly,name,form,value,onChange,...props}:CheckboxProps) {
+// hideLabel 只在視覺上隱藏標籤文字（PR-STYLE-60）：文字仍在 <label> 內，方框的名稱照舊來自 label。
+export type CheckboxProps = Omit<InputHTMLAttributes<HTMLInputElement>,'type'> & FieldDetails & {hideLabel?:boolean};
+export function Checkbox({label,hideLabel=false,error,helper,id:providedId,className='',checked,defaultChecked,disabled,required,readOnly,name,form,value,onChange,...props}:CheckboxProps) {
   const generatedId=useId();
   const id=providedId ?? generatedId;
   const description=error ?? helper;
@@ -84,15 +85,19 @@ export function Checkbox({label,error,helper,id:providedId,className='',checked,
     {/* 其餘屬性（aria-*、data-*、焦點事件等）交給方框節點；事件的 currentTarget 因此是該節點而不是 input。 */}
     <BaseCheckbox.Root {...props as HTMLAttributes<HTMLSpanElement>} id={id} className={`luca-checkbox-box ${className}`.trim()} checked={checked} defaultChecked={defaultChecked} disabled={disabled} required={required} readOnly={readOnly} name={name} form={form} value={value === undefined ? undefined : String(value)} onCheckedChange={change} aria-invalid={error ? true : props['aria-invalid']} aria-describedby={describedBy}>
       <BaseCheckbox.Indicator className="luca-checkbox-indicator"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></BaseCheckbox.Indicator>
-    </BaseCheckbox.Root>{label}</label>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
+    </BaseCheckbox.Root>{hideLabel ? <span className="luca-visually-hidden">{label}</span> : label}</label>{description && <span id={`${id}-description`} className={error ? 'luca-field-error' : 'luca-field-helper'}>{description}</span>}</div>;
 }
 export type StatusTone = 'success' | 'warning' | 'error';
 const statusLabels={success:'成功',warning:'警告',error:'錯誤'};
-export function StatusMessage({tone,children}: {tone:StatusTone;children:ReactNode}) {
-  return <div className={`luca-status luca-status-${tone}`} role={tone === 'error' ? 'alert' : 'status'}>{statusLabels[tone]} · {children}</div>;
+// label 取代語氣前綴（PR-STYLE-59）；不提供拿掉前綴，否則語氣只剩顏色表達，所以空字串也退回預設。
+export type StatusMessageProps = {tone:StatusTone; label?:string; children:ReactNode};
+export function StatusMessage({tone,label,children}:StatusMessageProps) {
+  return <div className={`luca-status luca-status-${tone}`} role={tone === 'error' ? 'alert' : 'status'}>{label || statusLabels[tone]} · {children}</div>;
 }
-export type ContentStateProps = {state:'loading'|'empty'|'error'; title?:string; description?:string; onRetry?:()=>void};
-export function ContentState({state,title,description,onRetry}:ContentStateProps) {
+// title、description、retryLabel 取代預設文字（PR-STYLE-59），沒給時沿用下方的中文預設。
+// retryLabel 給空字串也退回「重試」，按鈕才不會沒有名稱；description 的空字串照舊保留（頁面會用它清空說明）。
+export type ContentStateProps = {state:'loading'|'empty'|'error'; title?:string; description?:string; retryLabel?:string; onRetry?:()=>void};
+export function ContentState({state,title,description,retryLabel,onRetry}:ContentStateProps) {
   const titles={loading:'內容載入中',empty:'目前沒有可顯示的內容',error:'內容載入失敗'};
-  return <div className="luca-content-state" role={state === 'error' ? 'alert' : 'status'} aria-busy={state === 'loading'}>{state === 'loading' && <span className="luca-loading-animation" aria-hidden="true"/>}<h3>{title ?? titles[state]}</h3><p>{description ?? (state === 'loading' ? '正在準備內容，請稍候。' : state === 'empty' ? '內容準備好後會顯示於此。' : '請重試以重新顯示內容。')}</p>{state === 'error' && onRetry && <Button variant="secondary" onClick={onRetry}>重試</Button>}</div>;
+  return <div className="luca-content-state" role={state === 'error' ? 'alert' : 'status'} aria-busy={state === 'loading'}>{state === 'loading' && <span className="luca-loading-animation" aria-hidden="true"/>}<h3>{title ?? titles[state]}</h3><p>{description ?? (state === 'loading' ? '正在準備內容，請稍候。' : state === 'empty' ? '內容準備好後會顯示於此。' : '請重試以重新顯示內容。')}</p>{state === 'error' && onRetry && <Button variant="secondary" onClick={onRetry}>{retryLabel || '重試'}</Button>}</div>;
 }

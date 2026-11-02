@@ -6,7 +6,7 @@
 
 ## 核心文件
 
-- [DESIGN.md](https://github.com/Luca0x5755/luca-style/blob/main/DESIGN.md): 給代理的使用指南，含決策規則、五條主題軸（套系、明暗、密度、外形、強調色）、元件與範例，含 `Navigation` 的 `renderLink` 與 `Button` 的 `render` 怎麼接專案的路由連結
+- [DESIGN.md](https://github.com/Luca0x5755/luca-style/blob/main/DESIGN.md): 給代理的使用指南，含決策規則、五條主題軸（套系、明暗、密度、外形、強調色）、元件與範例，含 `Navigation` 的 `renderLink` 與 `Button` 的 `render` 怎麼接專案的路由連結，以及 `StatusMessage`、`ContentState` 的替換文字與 `Checkbox` 的隱藏標籤
 - [設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md): 每個設計變數在每種套系與明暗組合下的值和用途，由 DTCG 原始檔產生
 
 ## 接入與規格

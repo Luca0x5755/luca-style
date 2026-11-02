@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
-import type { Button, ButtonLinkProps, ButtonProps, CheckboxProps, Navigation, NavigationLinkProps, TextFieldProps } from '../packages/react/src/index.js';
+import type { Button, ButtonLinkProps, ButtonProps, CheckboxProps, ContentStateProps, Navigation, NavigationLinkProps, StatusMessageProps, TextFieldProps } from '../packages/react/src/index.js';
 import { buildHarness, origin, serveHarness } from './theme-harness';
 
 // ISSUE-010：Button、TextField、Checkbox 改用 Base UI 後，0.1.0 的公開 props 仍可用（PR-STYLE-40）。
@@ -35,6 +35,13 @@ acceptsLink({render:createElement('a', {href:'/new'}), type:'submit'});
 // PR-STYLE-57：renderLink 可以接需要 href: string 的連結元件（像 next/link）。
 declare function ProjectLink(props:{href:string; className?:string; children?:ReactNode}):ReactElement;
 const renderLink:NonNullable<ComponentProps<typeof Navigation>['renderLink']> = (props:NavigationLinkProps) => createElement(ProjectLink, props);
+// PR-STYLE-59、60：替換文字與隱藏標籤的 props 都是選填，既有寫法不必改。
+const acceptsStatus = (props:StatusMessageProps) => props;
+acceptsStatus({tone:'success', children:'已儲存'});
+acceptsStatus({tone:'error', label:'Error', children:'Failed'});
+const acceptsContentState = (props:ContentStateProps) => props;
+acceptsContentState({state:'error', title:'Failed', description:'Try again later.', retryLabel:'Try again', onRetry:() => undefined});
+acceptsCheckbox({label:'Select row', hideLabel:true});
 void [wrapped, handler, buttonPropsUnchanged, renderLink];
 
 test.describe('0.1.0 props on the ThemeProvider harness', () => {
