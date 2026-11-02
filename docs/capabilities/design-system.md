@@ -174,6 +174,7 @@ PR-FILE-33 — `elevation-enabled` 在 Penpot 以 shadow token 表示：開為�
 PR-ADOPT-03 — Tailwind v3 乾淨專案不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法。
 PR-ADOPT-04 — Tailwind v4 乾淨專案只匯入 Luca 的 CSS 設定檔、不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法；執行期改專案強調色或切換明暗後，顏色跟著改變。
 PR-ADOPT-05 — Tailwind v3 與 v4 依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。例外：不帶狀態的 class 不會蓋掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴；v4 的 `outline-none` 與 `outline-hidden` 都算不帶狀態的 class。
+PR-ADOPT-08 — `DESIGN.md` 開頭的 front matter（顏色、字體、圓角、間距）由 `packages/tokens` 的 DTCG 原始檔經 `npm run generate` 產生，只含 `vibrant` 套系日間模式的代表值，正文說明其他套系與暗黑模式只看設計變數規格。重新產生後 git 沒有差異，原始檔改了卻沒重新產生時 `tests/agent-docs.spec.ts` 失敗；正文是手寫的，重新產生不會改動。`DESIGN.md` 通過 Google DESIGN.md 規格（alpha）的 lint，工具為 `@google/design.md` 0.4.0，釘住版本；規格改版時升級工具並重新確認。
 
 ### 狀態總覽頁承諾
 
