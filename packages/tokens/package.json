@@ -16,6 +16,10 @@
     },
     "./data": "./dist/tokens.json",
     "./typography": "./dist/typography.json",
+    "./tailwind": {
+      "types": "./dist/tailwind-preset.d.cts",
+      "default": "./dist/tailwind-preset.cjs"
+    },
     "./accent": {
       "types": "./accent.d.ts",
       "default": "./accent.js"

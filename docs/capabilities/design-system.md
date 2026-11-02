@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）與 `PR-REVIEW-xx`（狀態總覽頁）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）、`PR-REVIEW-xx`（狀態總覽頁）與 `PR-ADOPT-xx`（接入與發佈）。
 - 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
@@ -149,6 +149,13 @@ PR-FILE-29 — `docs/` 下有 Penpot 自架說明，列出所用 Penpot 版本�
 PR-FILE-30 — `docs/consumer-guide.md` 與 `docs/adoption-prompt.md` 的設計稿起點指向 Penpot 版元件庫設計檔。
 PR-FILE-32 — 腳本由元件庫設計檔的 `.penpot` 產生正規化文字 dump（排序固定、不含時間戳與隨機 id 等易變欄位）並提交進 repo；同一份匯出檔連續產生兩次的 dump 位元組相同；dump 與 `.penpot` 不一致時檢查回報非零結束碼並列出差異。
 PR-FILE-33 — `elevation-enabled` 在 Penpot 以 shadow token 表示：開為原陰影值，關為零偏移、零模糊、透明度 0 的陰影；建置輸出的 token JSON 含此 token，離線測試比對其值與 DTCG 來源。
+
+### 接入與發佈承諾
+
+接法見[使用端接入](../consumer-guide.md#與-tailwind-v3-並用)，路線見 ADR 0010。`npm run test:clean-projects` 從打包檔安裝到 repo 外的乾淨專案，用瀏覽器檢查。
+
+PR-ADOPT-03 — Tailwind v3 乾淨專案不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法。
+PR-ADOPT-05 — Tailwind v3 依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。例外：不帶狀態的 class 不會蓋掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴。Tailwind v4 的部分由 ISSUE-003 驗證。
 
 ### 狀態總覽頁承諾
 

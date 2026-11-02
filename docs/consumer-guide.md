@@ -134,6 +134,62 @@ node scripts/design/penpot-accent.mjs --accent '{"light":"#B5179E"}' --out accen
 
 `ContentState state="loading"` 會隨 `ThemeProvider` 的套系與明暗模式顯示專屬載入 GIF（活力：潮汐波紋；專業：方序循環）。載入套件 CSS 即可；GIF 與減少動態使用的靜態 PNG 位於套件 `loading/`，由建置工具解析 CSS 相對路徑，不需複製到網站 public。動畫顯示 72px，保留文字與 `aria-busy`；離開 loading 狀態後移除。
 
+## 與 Tailwind v3 並用
+
+`@luca-style/tokens/tailwind` 是 Tailwind v3 的 preset，涵蓋所有色彩角色，專案不用自己寫色彩對應。`border-success/40` 這類透明度寫法也能用，顏色會跟著風格套系、明暗模式和專案強調色改變。值用到 `color-mix`，瀏覽器要支援它（Chrome 111、Safari 16.2、Firefox 113 起）。
+
+```sh
+npm install -D tailwindcss@3 postcss autoprefixer
+npm install tailwind-merge@2.6
+```
+
+`tailwind-merge` 要用 2.6，3.x 只支援 Tailwind v4。
+
+`tailwind.config.js`：
+
+```js
+import lucaPreset from '@luca-style/tokens/tailwind';
+
+export default {
+  presets: [lucaPreset],
+  content: ['./src/**/*.{ts,tsx}'],
+};
+```
+
+業務資料色和專案衍生色屬於專案，放在這個檔案的 `theme.extend.colors`。
+
+`postcss.config.js`：
+
+```js
+export default {plugins: {tailwindcss: {}, autoprefixer: {}}};
+```
+
+CSS 入口要照這個順序，不要再從 JavaScript 匯入 Luca 的 CSS：
+
+```css
+@import 'tailwindcss/base';
+@import '@luca-style/tokens/css';
+@import '@luca-style/react/fonts.css';
+@import '@luca-style/react/css';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+```
+
+Luca CSS 不分層，順序決定誰贏：排在 `tailwindcss/base` 之前，preflight 會蓋掉部分 Luca 樣式，例如停用按鈕的 `not-allowed` 游標；排在 `tailwindcss/utilities` 之後，傳給元件的 class 會失效。
+
+頁面字體由專案設定：preflight 給 `html` 的字體不是 Luca 的字體，請在 `body` 寫 `font-family: var(--font-body)`。
+
+傳給 `Button`、`TextField`、`Select`、`Checkbox` 的 class 能生效，包括 `hover:`、`active:`、`disabled:`、`aria-[invalid=true]:`、`data-[checked]:`、`data-[indeterminate]:`、`data-[disabled]:` 這些狀態前綴。
+
+但 `:focus-visible` 是例外：不帶狀態的 class（例如 `outline-none`）不會蓋掉焦點框，要改焦點樣式用 `focus-visible:` 前綴。
+
+### 狀態樣式的特異度改變
+
+Luca 的滑過、按下、停用、錯誤、勾選樣式改用 `:where()`，特異度降為一個 class。沒有 Tailwind 的專案也受影響。排在 Luca CSS 之後、只有一個 class 的專案樣式，現在也會在這些狀態生效：
+
+- 傳 `bg-x` 的按鈕，滑過不再變成 `--accent-hover`；傳 `bg-x` 的 `Checkbox`，勾選後不再填主色。要保留狀態外觀，請另外寫 `hover:`、`data-[checked]:` 前綴。
+- `border-x` 會蓋掉 `aria-invalid` 的錯誤邊框，`opacity-100` 會蓋掉停用的半透明。錯誤訊息文字和停用行為不受影響。
+
 ## 獨立消費端驗證
 
 ```sh

@@ -35,9 +35,9 @@ Luca Style 想成為多數前端專案的起點，但現在只能手動打包 ta
 
 - `PR-ADOPT-01` — Next 乾淨專案可以建置，首屏沒有 hydration 錯誤，也不會閃一下日間模式。
 - `PR-ADOPT-02` — React 18 不改程式碼就通過時放寬 peer，否則維持 `^19`，並寫進文件。
-- `PR-ADOPT-03` — Tailwind v3 乾淨專案不寫色彩對應，就能用所有 Luca 角色的 class，包括 `border-ok/40` 這類透明度寫法。
+- `PR-ADOPT-03` — Tailwind v3 乾淨專案不寫色彩對應，就能用所有 Luca 角色的 class，包括 `border-success/40` 這類透明度寫法。
 - `PR-ADOPT-04` — Tailwind v4 乾淨專案也能做到 `PR-ADOPT-03` 的事。
-- `PR-ADOPT-05` — 兩個 Tailwind 版本依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。
+- `PR-ADOPT-05` — 兩個 Tailwind 版本依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。例外：不帶狀態的 class 不會蓋掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴。
 - `PR-ADOPT-06` — 全新的代理只靠文件，用一個指令安裝，其餘照貼，就能在乾淨專案跑通。跑 3 次，記錄每次是否需要人介入。
 - `PR-ADOPT-07` — `docs/consumer-guide.md` 補上 P0 回報的 7 項錯漏：
   1. 同步 effect 刪除後，依賴該時機的程式要改用 MutationObserver 監看 `data-mode`。

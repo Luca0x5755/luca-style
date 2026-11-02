@@ -11,6 +11,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run test:consumer
+npm run test:clean-projects
 ```
 
 `test:consumer` 涵蓋 repo 外安裝、公開輸出、typecheck、production build、主題／模式／強調色／狀態、字體與授權。字體自託管與 OFL 隨建置交付，Noto Sans TC 原始字體約 11.94 MB；目前沒有子集化，不宣稱初次載入已最佳化。
@@ -45,6 +46,8 @@ npm run test:consumer
 | PR-STYLE-22 | readme.spec：clone／`npm ci`／`npm run dev`、連到使用端接入文件、程式碼片段 ≤10 行且逐字來自 examples/consumer、相對連結皆存在且被 git 追蹤。 |
 | PR-STYLE-23 | `npm run screenshots` 產生 `docs/images/` 四張；`npm run verify:screenshots` 驗證穩定；readme.spec 檢查 README 引用四張且檔案存在。不屬於 `npm test`。 |
 | PR-STYLE-24 | 前端 §5.2 路由表下方註明路徑相對於 base path；架構 §3.1 的 Pages 部署由 deploy-workflow.spec 檢查包含必要用語。 |
+| PR-ADOPT-03 | `test:clean-projects`：18 個色彩角色 × 17 個 Tailwind 色彩工具 × 實色與 `/40` × 四種主題，比對計算值與 `tokens.json`；反向控制刪掉或弄壞 preset 的角色時變紅。 |
+| PR-ADOPT-05 | `test:clean-projects` 的 v3 部分：傳入 class 的一般、互動、資料與焦點狀態；基準頁與 Tailwind 頁逐元素比對；反向控制把 Luca CSS 放錯順序時變紅。v4 待 ISSUE-003。 |
 
 ## 五頁矩陣與操作
 

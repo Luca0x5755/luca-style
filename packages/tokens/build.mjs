@@ -6,10 +6,10 @@ import { deriveAccent } from './accent.js';
 
 // 設計變數產生器：讀 DTCG 分層原始檔，經 Style Dictionary 產生與 0.1.0 相同結構的 css、data、typography。
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
-// --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，公開輸出維持三份。
+// --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，不是公開輸出。
 // --penpot <路徑>：另外寫一份 Penpot 可匯入的 token JSON（ISSUE-018）；同樣不放進 --out。
 // --variables <路徑>：另外寫一份設計檔變數資料（variables.json；Penpot token JSON 與 npm run check:penpot 都以它為基準）；
-//   不放進 --out，因為 dist 會發布到 npm，且公開輸出只有三份。
+//   不放進 --out，因為 dist 會發布到 npm，而它不是公開輸出。
 const { values: args } = parseArgs({ options: {
   source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, variables: { type: 'string' }, penpot: { type: 'string' }, doc: { type: 'string' },
 } });
@@ -393,9 +393,18 @@ const docText = [
   '',
 ].join('\n');
 
+// 第七步：Tailwind v3 preset（PR-ADOPT-03）。值引用 CSS 變數，才會跟著套系、明暗與專案強調色改變；
+// 不用通道變數，因為 ThemeProvider 在執行期只寫十六進位的強調色。<alpha-value> 讓 border-success/40 這類寫法有效。
+const colorRoles = [...new Set(themes.flatMap(({ allTokens }) => published(allTokens).filter(token => token.$type === 'color').map(nameOf)))];
+const tailwindColors = Object.fromEntries(colorRoles.map(name => [name, `color-mix(in srgb, var(--${name}) calc(<alpha-value> * 100%), transparent)`]));
+const tailwindPreset = `// 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改。\nmodule.exports = ${JSON.stringify({ theme: { extend: { colors: tailwindColors } } }, null, 2)};\n`;
+const tailwindPresetTypes = 'declare const preset: { theme: { extend: { colors: Record<string, string> } } };\nexport = preset;\n';
+
 await mkdir(out, { recursive: true });
 await Promise.all([
   writeFile(join(out, 'css.d.ts'), 'export {};\n'),
+  writeFile(join(out, 'tailwind-preset.cjs'), tailwindPreset),
+  writeFile(join(out, 'tailwind-preset.d.cts'), tailwindPresetTypes),
   writeFile(join(out, 'typography.json'), JSON.stringify(typography, null, 2) + '\n'),
   writeFile(join(out, 'tokens.json'), JSON.stringify(data, null, 2) + '\n'),
   writeFile(join(out, 'tokens.css'), css.join('\n') + '\n'),

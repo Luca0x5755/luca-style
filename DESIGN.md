@@ -6,7 +6,7 @@
 
 | 套件 | 內容 |
 | --- | --- |
-| `@luca-style/tokens` | 設計變數：`/css`（CSS 自訂屬性）、`/data`（以套系、明暗兩層索引的 JSON）、`/typography`（響應式字體角色）、`/accent`（`deriveAccent` 推算函式）。 |
+| `@luca-style/tokens` | 設計變數：`/css`（CSS 自訂屬性）、`/data`（以套系、明暗兩層索引的 JSON）、`/typography`（響應式字體角色）、`/accent`（`deriveAccent` 推算函式）、`/tailwind`（Tailwind v3 的 preset，涵蓋所有色彩角色）。 |
 | `@luca-style/react` | React 19 元件與主題控制，互動行為由 Base UI 處理；`/css` 是元件樣式，`/fonts.css` 自行託管 Inter、Noto Sans TC、IBM Plex Mono。 |
 
 兩個套件版本須一致。每個變數在每種「套系 × 明暗」組合下的值與用途，見[設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md)（隨 `@luca-style/tokens` 發布為 `design-tokens.md`，由 DTCG 原始檔產生，是變數值的唯一依據；不要憑記憶或從本文件抄值）。

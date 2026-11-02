@@ -1,0 +1,4 @@
+/* 專案自己的頁面基礎：兩個入口相同，比對時差異才只來自 preflight。
+   box-sizing 是 .luca-button、.luca-input 目前依賴的前提（ISSUE-004 會改這兩條規則），所以基準頁也帶它。 */
+*, ::before, ::after { box-sizing:border-box; }
+body { margin:0; font-family:var(--font-body); line-height:1.5; }

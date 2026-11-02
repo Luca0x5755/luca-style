@@ -1,21 +1,24 @@
 .luca-button { display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-3) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
 /* 滑過、按下用推算出的強調色角色（PR-STYLE-45），不再用 brightness 濾鏡。 */
-.luca-button-primary:not(:disabled):hover { background:var(--accent-hover); }
-.luca-button-primary:not(:disabled):active { background:var(--accent-pressed); }
-.luca-button:disabled { opacity:.5; cursor:not-allowed; }
+/* 會收到專案 className 的元素，狀態選擇器都包進 :where()，特異度維持 (0,1,0)，專案的 class 才能生效（PR-ADOPT-05）。:focus-visible 例外，見檔尾。 */
+.luca-button-primary:where(:not(:disabled):hover) { background:var(--accent-hover); }
+.luca-button-primary:where(:not(:disabled):active) { background:var(--accent-pressed); }
+.luca-button:where(:disabled) { opacity:.5; cursor:not-allowed; }
 [data-luca-theme] { min-height:100vh; background:var(--bg); color:var(--text); transition:background-color var(--motion-standard), color var(--motion-standard); }
 .luca-button { transition:background-color var(--motion-feedback), border-color var(--motion-feedback), color var(--motion-feedback); }
 @media (prefers-reduced-motion: reduce) { [data-luca-theme], [data-luca-theme] *, [data-luca-theme] *::before, [data-luca-theme] *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 .luca-button-secondary { background:var(--surface); color:var(--accent); border-color:var(--accent); }
-.luca-button-secondary:not(:disabled):hover { color:var(--accent-hover); border-color:var(--accent-hover); }
-.luca-button-secondary:not(:disabled):active { color:var(--accent-pressed); border-color:var(--accent-pressed); }
+.luca-button-secondary:where(:not(:disabled):hover) { color:var(--accent-hover); border-color:var(--accent-hover); }
+.luca-button-secondary:where(:not(:disabled):active) { color:var(--accent-pressed); border-color:var(--accent-pressed); }
 .luca-field { display:grid; gap:var(--space-2); min-width:0; }
 .luca-field > label { font:500 1rem/1.5 var(--font-body); }
 .luca-input { width:100%; min-width:0; min-height:var(--control-height); padding:var(--space-3) var(--space-4); font:500 1rem/1.5 var(--font-body); color:var(--text); background:var(--surface); border:1px solid var(--control-border); border-radius:var(--radius-control); }
-.luca-input[aria-invalid=true] { border-color:var(--error); }
-.luca-input:disabled { opacity:.6; cursor:not-allowed; }
+.luca-input:where([aria-invalid=true]) { border-color:var(--error); }
+.luca-input:where(:disabled) { opacity:.6; cursor:not-allowed; }
 /* Select 欄位與選單，對照元件庫母版 C/Select/Open 與前端規格 §5.5.2。 */
 .luca-select-trigger { display:flex; align-items:center; gap:var(--space-3); text-align:left; cursor:pointer; }
+/* 停用游標要排在上一行之後：:where() 讓 .luca-input 的停用規則與上一行特異度相同，只能靠順序。 */
+.luca-select-trigger:where(:disabled) { cursor:not-allowed; }
 .luca-select-value { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .luca-select-icon { display:flex; flex:none; color:var(--muted); }
 .luca-select-positioner { z-index:10; outline:0; }
@@ -32,16 +35,17 @@
 .luca-checkbox { display:flex; gap:var(--space-3); align-items:center; min-height:var(--control-height); cursor:pointer; }
 .luca-checkbox-box { display:flex; flex:none; align-items:center; justify-content:center; box-sizing:border-box; width:1.25rem; height:1.25rem; margin:0; padding:0; border:1px solid var(--control-border); border-radius:calc(var(--radius-control) / 2); background:var(--surface); color:var(--accent-ink); cursor:pointer; }
 /* 勾選或不確定時填主色，打勾圖示用填色按鈕的文字色；未勾選時圖示不渲染。 */
-.luca-checkbox-box[data-checked], .luca-checkbox-box[data-indeterminate] { background:var(--accent); border-color:var(--accent); }
-.luca-checkbox-box[aria-invalid=true] { border-color:var(--error); }
-.luca-checkbox-box[data-disabled] { opacity:.6; cursor:not-allowed; }
+.luca-checkbox-box:where([data-checked], [data-indeterminate]) { background:var(--accent); border-color:var(--accent); }
+.luca-checkbox-box:where([aria-invalid=true]) { border-color:var(--error); }
+.luca-checkbox-box:where([data-disabled]) { opacity:.6; cursor:not-allowed; }
 .luca-checkbox-indicator { display:flex; }
 .luca-checkbox-indicator[data-unchecked] { display:none; }
 .luca-status { padding:var(--space-3) var(--space-4); border:1px solid currentColor; border-radius:var(--radius-control); background:var(--surface); font:400 .875rem/1.6 var(--font-body); overflow-wrap:anywhere; }
 .luca-status-success { color:var(--success); } .luca-status-warning { color:var(--warning); } .luca-status-error { color:var(--error); }
 .luca-content-state { padding:var(--card-padding); border:var(--border-width) solid var(--border); border-radius:var(--radius-card); background:var(--surface); min-width:0; }
 .luca-content-state h3 { margin:0; color:var(--text); font:600 1.125rem/1.5 var(--font-body); }
-.luca-content-state p { color:var(--muted); font:400 .875rem/1.6 var(--font-body); }
+/* 外距與底線寫明瀏覽器預設值，Tailwind 的 preflight 才不會歸零（PR-ADOPT-05）。 */
+.luca-content-state p { margin:1em 0; color:var(--muted); font:400 .875rem/1.6 var(--font-body); }
 .luca-loading-animation { display:block; width:72px; height:72px; margin-bottom:var(--space-3); background:var(--loading-animation,url('../loading/tide-light.gif')) center/contain no-repeat; }
 [data-luca-theme][data-suite="vibrant"][data-mode="light"] { --loading-animation:url('../loading/tide-light.gif'); --loading-static:url('../loading/tide-light.png'); }
 [data-luca-theme][data-suite="vibrant"][data-mode="dark"] { --loading-animation:url('../loading/tide-dark.gif'); --loading-static:url('../loading/tide-dark.png'); }
@@ -51,7 +55,7 @@
 .luca-navigation { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-4); padding:var(--space-4) var(--space-6); background:var(--surface); border-bottom:var(--border-width) solid var(--border); }
 .luca-navigation .luca-brand { margin-right:auto; color:var(--text); text-decoration:none; font:600 1.125rem/1.5 var(--font-body); }
 .luca-navigation-list { display:flex; flex-wrap:wrap; gap:var(--space-4); margin:0; padding:0; list-style:none; }
-.luca-navigation a { color:var(--muted); font-size:.875rem; text-underline-offset:4px; }
+.luca-navigation a { color:var(--muted); font-size:.875rem; text-decoration:underline; text-underline-offset:4px; }
 .luca-navigation a[aria-current=page] { color:var(--accent); font-weight:600; }
 .luca-metric { min-width:0; padding:var(--card-padding); border:var(--border-width) solid var(--border); border-left-width:var(--metric-border-left); border-radius:var(--radius-card); background:var(--surface); }
 .luca-metric-highlight { background:var(--metric-background); box-shadow:var(--metric-shadow); }
@@ -65,5 +69,6 @@
 .luca-table th { color:var(--muted); font-weight:500; }
 /* 儲存格內距隨資訊密度改變（§5.4.1），standard 即 0.1.0 的 12px／8px。 */
 .luca-table th,.luca-table td { padding:var(--table-cell-padding-block) var(--table-cell-padding-inline); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
-/* 所有元件共用的雙圈焦點框（PR-STYLE-46）：外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
+/* 所有元件共用的雙圈焦點框（PR-STYLE-46）。不包 :where()：不帶狀態的 class（如 outline-none）不該拿掉焦點框，要改用 focus-visible: 前綴（PR-ADOPT-05 的例外）。 */
+/* 外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
 .luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox-box:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }

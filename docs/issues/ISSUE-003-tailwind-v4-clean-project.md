@@ -3,7 +3,7 @@
 ## Done when
 
 - ISSUE-002 的腳本也會驗證 Vite + Tailwind v4 乾淨專案。
-- 專案只加 Luca 提供的 CSS 設定，不寫色彩對應，所有 Luca 角色的 class 都會產生規則，包括 `border-ok/40` 這類透明度寫法（`PR-ADOPT-04`）。
+- 專案只加 Luca 提供的 CSS 設定，不寫色彩對應，所有 Luca 角色的 class 都會產生規則，包括 `border-success/40` 這類透明度寫法（`PR-ADOPT-04`）。
 - 依文件的方式載入 CSS 後，傳給元件的 class 能生效，Luca 元件樣式不被 preflight 蓋掉（`PR-ADOPT-05` 的 v4 部分）。
 - 承諾已移入 `docs/capabilities/design-system.md`。
 
