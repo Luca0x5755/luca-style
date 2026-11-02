@@ -87,3 +87,4 @@
 2026-11-02 — Next SSR 沒過就先修好才發佈；React 18 只有不用改程式碼就通過才放寬 peer，否則維持只支援 React 19 並寫進文件，因為多支援一個舊版本，之後每次改動都要多驗一次。
 2026-11-02 — npm 首次發佈用 0.3.0，兩個套件版本一致，以 changesets 管理版本說明，由 CI 發佈並附來源證明。`@luca-style` 組織與權杖由擁有者建立，不經過代理、不進 repo。0.x 期間不相容變更升次版號並附升級說明。發佈前要再次確認，因為版本號不能重複使用。
 2026-11-02 — Tailwind v4 不在 `@import` 時把 Luca CSS 放進圖層：乾淨專案實測時，`utilities` 圖層一律贏過放進 `components` 的 Luca，4 個元件的 `outline-none` 與 `outline-hidden` 都拿掉了焦點框，違反 `PR-ADOPT-05` 的例外與 `PR-STYLE-46`。改為 `theme` 與 `preflight` 放進圖層、Luca CSS 不分層、`tailwindcss/utilities.css` 不分層並排在 Luca 之後，與 v3 同一套規則；不放寬承諾。
+2026-11-03 — 發佈流程拆成兩個檔：`publish-dry-run.yml`（PR 與 main 試跑，含 `id-token: write` 以涵蓋來源證明設定，不用機密）與 `publish.yml`（只有 `workflow_dispatch`，閘門步驟加環境審核者）；不放同一檔，因為這樣 `on` 區塊就能直接證明真正發佈不會被 push 或 PR 觸發。Dependabot 的 PR 雖是同 repo 但拿不到 id-token，接受試跑跳過。
