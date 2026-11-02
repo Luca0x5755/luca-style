@@ -676,6 +676,9 @@ async function react18Problems(browser, base) {
   }
 }
 
+// vite build 的警告行（Rolldown 的 [CODE] 開頭、(!) 或 warn）；照接入文件的 vite.config.js 靜音 'use client' 後，輸出不得剩下任何一行。
+const buildWarnings = output => output.replace(/\x1b\[[0-9;]*m/g, '').split(/\r?\n/).map(line => line.trim()).filter(line => /^\[[A-Z_]+\]|^\(!\)|^warn/i.test(line));
+
 async function verifyReact18({project, browser, tarballs}) {
   // peer 範圍決定走哪條路，peer 與驗證結果才不會不同步。
   const peer = JSON.parse(await readFile(join(root, 'packages/react/package.json'), 'utf8')).peerDependencies.react;
@@ -692,6 +695,20 @@ async function verifyReact18({project, browser, tarballs}) {
   }
   const build = npm(['run', 'build'], project, {allowFailure: true});
   const problems = build.status === 0 ? [] : [`建置失敗：${`${build.stdout}\n${build.stderr}`.split('\n').filter(line => /error/i.test(line)).slice(0, 5).join('；')}`];
+  // 照接入文件的 vite.config.js 建置，輸出不得有警告（PR-ADOPT-07）。
+  const warnings = buildWarnings(`${build.stdout}\n${build.stderr}`);
+  if (warnings.length) problems.push(`建置出現警告：${warnings.slice(0, 3).join('；')}`);
+  // 反向控制：拿掉靜音設定的設定檔，同樣的建置要出現 'use client' 警告，否則上面的檢查是恆真。
+  const configPath = join(project, 'vite.config.js');
+  const configSource = await readFile(configPath, 'utf8');
+  try {
+    await writeFile(configPath, 'export default {};\n');
+    const bare = npm(['exec', '--no', '--', 'vite', 'build'], project, {allowFailure: true});
+    assert.ok(buildWarnings(`${bare.stdout}\n${bare.stderr}`).some(line => line.startsWith('[MODULE_LEVEL_DIRECTIVE]')), '反向控制「沒有靜音設定」沒有讓建置出現 use client 警告');
+    console.log('PASS 反向控制：沒有靜音設定的 vite.config.js → 建置出現 use client 警告');
+  } finally {
+    await writeFile(configPath, configSource);
+  }
   const devServer = () => startServer([join(project, 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', String(react18Port), '--strictPort'], project, react18Port);
   const base = `http://127.0.0.1:${react18Port}`;
   let server = await devServer();
