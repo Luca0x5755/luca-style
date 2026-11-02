@@ -1,0 +1,427 @@
+{
+  "task": "crud",
+  "group": "plain",
+  "startedAt": "2026-11-02T12:30:47.610Z",
+  "claudeVersion": "2.1.316 (Claude Code)",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "budgetUsd": 5,
+  "flags": [
+    "-p",
+    "--output-format",
+    "json",
+    "--verbose",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--max-budget-usd",
+    "5",
+    "--safe-mode",
+    "--setting-sources",
+    "",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--no-session-persistence",
+    "--restricted",
+    "--tools",
+    "Read,Write,Edit,Glob,Grep,Bash",
+    "--permission-mode",
+    "dontAsk",
+    "--permission-prompts",
+    "none",
+    "--allowedTools",
+    "Read",
+    "Write",
+    "Edit",
+    "Glob",
+    "Grep",
+    "Bash(npm install)",
+    "Bash(npm install *)",
+    "Bash(npm run build)",
+    "Bash(npx tsc)",
+    "Bash(npx tsc *)",
+    "--settings",
+    "<暫存區>/settings.json",
+    "--debug-file",
+    "<暫存區>/debug.log"
+  ],
+  "exitCode": 0,
+  "stderrTail": "",
+  "finalText": "訂單管理頁面做好了，`npm run build` 成功（型別檢查通過），輸出在 `dist/`。我沒有啟動開發伺服器，所以沒有在瀏覽器裡實際看過頁面，也沒有量過 1280、834、390 三種寬度和對比。\n\n程式在 `src/App.tsx` 和 `src/styles.css`，用 9 筆記憶體假資料。\n\n- **列表：** 表格有編號、客戶、金額、狀態、建立日期和操作欄。可以用關鍵字搜尋客戶，也可以依狀態篩選。\n- **新增與編輯：** 用對話框表單，欄位有標籤。客戶必填、金額要大於 0，不合格時在欄位旁顯示錯誤訊息並把焦點移到該欄。\n- **刪除：** 刪除前會跳出確認對話框。\n- **四種狀態：** 網址參數 `state` 對應四種狀態，沒有參數時是 `success`。列表區容器都有 `data-eval-state`。\n  - `loading` 會一直維持載入中。\n  - `empty` 顯示沒有訂單，仍可從畫面新增。\n  - `error` 有「重試」按鈕，但資料是假的，所以重試後仍會失敗，只會顯示提示文字。\n  - `success` 顯示假資料。\n- **版面：** 寬度在 720px 以下時，表格改成一筆一張卡片的排列，避免左右捲動。\n\n另外，在 `success` 下把訂單全部刪光後，列表區會切成 `empty` 的畫面。",
+  "isolation": {
+    "ok": true,
+    "problems": [],
+    "init": {
+      "model": "claude-sonnet-5-5",
+      "tools": [
+        "Bash",
+        "Edit",
+        "Glob",
+        "Grep",
+        "Read",
+        "Write"
+      ],
+      "permissionMode": "dontAsk",
+      "skills": [],
+      "plugins": [
+        {
+          "name": "cc-plugin-agents-md",
+          "path": "builtin",
+          "source": "cc-plugin-agents-md@builtin"
+        },
+        {
+          "name": "cc-plugin-telemetry",
+          "path": "builtin",
+          "source": "cc-plugin-telemetry@builtin"
+        },
+        {
+          "name": "cc-plugin-plugin-authoring",
+          "path": "builtin",
+          "source": "cc-plugin-plugin-authoring@builtin"
+        }
+      ],
+      "mcp_servers": [],
+      "slash_commands": [],
+      "agents": [
+        "claude",
+        "Explore",
+        "general-purpose",
+        "Plan",
+        "web-fetch"
+      ]
+    },
+    "canaryFound": false,
+    "debugLines": [
+      "2026-11-02T12:30:48.054Z [DEBUG] Loading skills from: managed=C:\\Program Files\\ClaudeCode\\.claude\\skills, user=C:\\Users\\x1596\\.claude\\skills, project=[]",
+      "2026-11-02T12:30:48.054Z [DEBUG] [reduced mode] Skipping skill dir discovery",
+      "2026-11-02T12:30:48.055Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills, 31 bundled skills, 1 builtin plugin skills",
+      "2026-11-02T12:30:48.547Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:48.547Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:50.526Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:50.526Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:52.892Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:52.892Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:53.299Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:53.299Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:53.464Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:53.464Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:55.392Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-02T12:30:55.392Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off"
+    ],
+    "toolUses": 11,
+    "trespasses": [],
+    "permissionDenials": [
+      {
+        "tool_name": "Bash",
+        "tool_use_id": "toolu_01AdgMPVSLetArSLPFHR3uip",
+        "tool_input": {
+          "command": "cat > src/main.tsx <<'EOF'\nimport { createRoot } from 'react-dom/client';\nimport App from './App';\nimport './styles.css';\n\ncreateRoot(document.getElementById('root')!).render(<App />);\nEOF\ncat > src/App.tsx <<'EOF'\nimport { useEffect, useId, useMemo, useRef, useState } from 'react';\nimport type { FormEvent } from 'react';\n\ntype Status = '待付款' | '已付款' | '已出貨' | '已取消';\ninterface Order {\n  id: string;\n  customer: string;\n  amount: number;\n  status: Status;\n  createdAt: string;\n}\nconst STATUSES: Status[] = ['待付款', '已付款', '已出貨', '已取消'];\nconst BADGE: Record<Status, string> = { 待付款: 'pending', 已付款: 'paid', 已出貨: 'shipped', 已取消: 'cancelled' };\n\nconst SEED: Order[] = [\n  { id: 'A1001', customer: '王小明', amount: 1280, status: '待付款', createdAt: '2026-10-01' },\n  { id: 'A1002', customer: '陳美玲', amount: 3560, status: '已付款', createdAt: '2026-10-03' },\n  { id: 'A1003', customer: '林志豪', amount: 920, status: '已出貨', createdAt: '2026-10-05' },\n  { id: 'A1004', customer: '張雅婷', amount: 4800, status: '已取消', createdAt: '2026-10-08' },\n  { id: 'A1005', customer: '李大衛', amount: 2150, status: '已付款', createdAt: '2026-10-12' },\n  { id: 'A1006', customer: '黃淑芬', amount: 760, status: '待付款', createdAt: '2026-10-15' },\n  { id: 'A1007', customer: '吳宗翰', amount: 15999, status: '已出貨', createdAt: '2026-10-21' },\n  { id: 'A1008', customer: '劉佳穎', amount: 3320, status: '已付款', createdAt: '2026-10-27' },\n  { id: 'A1009', customer: '王小美', amount: 640, status: '待付款', createdAt: '2026-10-30' },\n];\n\ntype ViewState = 'loading' | 'empty' | 'error' | 'success';\nfunction readState(): ViewState {\n  const s = new URLSearchParams(window.location.search).get('state');\n  return s === 'loading' || s === 'empty' || s === 'error' || s === 'success' ? s : 'success';\n}\n\nconst fmt = new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 });\n\nexport default function App() {\n  const state = readState();\n  const [orders, setOrders] = useState<Order[]>(state === 'empty' ? [] : SEED);\n  const [query, setQuery] = useState('');\n  const [filter, setFilter] = useState<'all' | Status>('all');\n  const [editing, setEditing] = useState<Order | 'new' | null>(null);\n  const [deleting, setDeleting] = useState<Order | null>(null);\n  const [retryMsg, setRetryMsg] = useState('');\n  const nextId = useRef(1010);\n\n  const filtered = useMemo(() => {\n    const q = query.trim().toLowerCase();\n    return orders.filter(\n      (o) => (filter === 'all' || o.status === filter) && (!q || o.customer.toLowerCase().includes(q)),\n    );\n  }, [orders, query, filter]);\n\n  function save(data: { customer: string; amount: number; status: Status }) {\n    if (editing === 'new') {\n      const o: Order = {\n        id: 'A' + nextId.current++,\n        ...data,\n        createdAt: new Date().toISOString().slice(0, 10),\n      };\n      setOrders((p) => [o, ...p]);\n    } else if (editing) {\n      const id = editing.id;\n      setOrders((p) => p.map((o) => (o.id === id ? { ...o, ...data } : o)));\n    }\n    setEditing(null);\n  }\n\n  const showList = state === 'success' || state === 'empty';\n  const isEmpty = orders.length === 0;\n\n  return (\n    <main className=\"page\">\n      <header className=\"head\">\n        <h1>訂單管理</h1>\n        {showList && (\n          <button className=\"btn primary\" onClick={() => setEditing('new')}>\n            新增訂單\n          </button>\n        )}\n      </header>\n\n      {showList && !isEmpty && (\n        <div className=\"toolbar\" role=\"search\">\n          <div className=\"field\">\n            <label htmlFor=\"q\">搜尋客戶</label>\n            <input id=\"q\" type=\"search\" value={query} onChange={(e) => setQuery(e.target.value)} placeholder=\"輸入客戶名稱\" />\n          </div>\n          <div className=\"field\">\n            <label htmlFor=\"st\">狀態</label>\n            <select id=\"st\" value={filter} onChange={(e) => setFilter(e.target.value as 'all' | Status)}>\n              <option value=\"all\">全部狀態</option>\n              {STATUSES.map((s) => (\n                <option key={s}>{s}</option>\n              ))}\n            </select>\n          </div>\n        </div>\n      )}\n\n      {state === 'loading' && (\n        <section data-eval-state=\"loading\" className=\"panel\" aria-busy=\"true\" aria-label=\"訂單列表\">\n          <p role=\"status\" className=\"muted\">載入中…</p>\n          <div className=\"skeletons\" aria-hidden=\"true\">\n            {[0, 1, 2, 3, 4].map((i) => (\n              <div key={i} className=\"skeleton\" />\n            ))}\n          </div>\n        </section>\n      )}\n\n      {state === 'error' && (\n        <section data-eval-state=\"error\" className=\"panel center\" aria-label=\"訂單列表\">\n          <h2>載入失敗</h2>\n          <p className=\"muted\">無法取得訂單資料，請稍後再試。</p>\n          <button\n            className=\"btn primary\"\n            onClick={() => setRetryMsg('重試後仍然失敗，請稍後再試。（' + new Date().toLocaleTimeString('zh-TW') + '）')}\n          >\n            重試\n          </button>\n          <p role=\"status\" className=\"muted\">{retryMsg}</p>\n        </section>\n      )}\n\n      {showList && isEmpty && (\n        <section data-eval-state=\"empty\" className=\"panel center\" aria-label=\"訂單列表\">\n          <h2>目前沒有訂單</h2>\n          <p className=\"muted\">按「新增訂單」建立第一筆訂單。</p>\n        </section>\n      )}\n\n      {showList && !isEmpty && (\n        <section data-eval-state=\"success\" className=\"panel\" aria-label=\"訂單列表\">\n          <p role=\"status\" className=\"muted count\">共 {filtered.length} 筆</p>\n          {filtered.length === 0 ? (\n            <p className=\"center muted\">沒有符合條件的訂單。</p>\n          ) : (\n            <table>\n              <thead>\n                <tr>\n                  <th scope=\"col\">編號</th>\n                  <th scope=\"col\">客戶</th>\n                  <th scope=\"col\" className=\"num\">金額</th>\n                  <th scope=\"col\">狀態</th>\n                  <th scope=\"col\">建立日期</th>\n                  <th scope=\"col\">操作</th>\n                </tr>\n              </thead>\n              <tbody>\n                {filtered.map((o) => (\n                  <tr key={o.id}>\n                    <td data-label=\"編號\">{o.id}</td>\n                    <td data-label=\"客戶\">{o.customer}</td>\n                    <td data-label=\"金額\" className=\"num\">{fmt.format(o.amount)}</td>\n                    <td data-label=\"狀態\"><span className={'badge ' + BADGE[o.status]}>{o.status}</span></td>\n                    <td data-label=\"建立日期\">{o.createdAt}</td>\n                    <td data-label=\"操作\" className=\"actions\">\n                      <button className=\"btn\" onClick={() => setEditing(o)} aria-label={`編輯 ${o.id} ${o.customer}`}>編輯</button>\n                      <button className=\"btn danger\" onClick={() => setDeleting(o)} aria-label={`刪除 ${o.id} ${o.customer}`}>刪除</button>\n                    </td>\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          )}\n        </section>\n      )}\n\n      {editing && (\n        <Modal title={editing === 'new' ? '新增訂單' : '編輯訂單'} onClose={() => setEditing(null)}>\n          <OrderForm initial={editing === 'new' ? null : editing} onCancel={() => setEditing(null)} onSave={save} />\n        </Modal>\n      )}\n      {deleting && (\n        <Modal title=\"確認刪除\" onClose={() => setDeleting(null)}>\n          <p>確定要刪除訂單 {deleting.id}（{deleting.customer}）嗎？此操作無法復原。</p>\n          <div className=\"form-actions\">\n            <button className=\"btn\" onClick={() => setDeleting(null)}>取消</button>\n            <button\n              className=\"btn danger-solid\"\n              onClick={() => {\n                const id = deleting.id;\n                setOrders((p) => p.filter((o) => o.id !== id));\n                setDeleting(null);\n              }}\n            >\n              確認刪除\n            </button>\n          </div>\n        </Modal>\n      )}\n    </main>\n  );\n}\n\nfunction Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {\n  const ref = useRef<HTMLDialogElement>(null);\n  const tid = useId();\n  useEffect(() => {\n    const d = ref.current!;\n    const opener = document.activeElement as HTMLElement | null;\n    if (!d.open) d.showModal();\n    return () => {\n      d.close();\n      opener?.focus?.();\n    };\n  }, []);\n  return (\n    <dialog ref={ref} aria-labelledby={tid} onCancel={(e) => { e.preventDefault(); onClose(); }}>\n      <h2 id={tid}>{title}</h2>\n      {children}\n    </dialog>\n  );\n}\n\nfunction OrderForm({\n  initial,\n  onSave,\n  onCancel,\n}: {\n  initial: Order | null;\n  onSave: (d: { customer: string; amount: number; status: Status }) => void;\n  onCancel: () => void;\n}) {\n  const [customer, setCustomer] = useState(initial?.customer ?? '');\n  const [amount, setAmount] = useState(initial ? String(initial.amount) : '');\n  const [status, setStatus] = useState<Status>(initial?.status ?? '待付款');\n  const [errors, setErrors] = useState<{ customer?: string; amount?: string }>({});\n  const cRef = useRef<HTMLInputElement>(null);\n  const aRef = useRef<HTMLInputElement>(null);\n\n  function submit(e: FormEvent) {\n    e.preventDefault();\n    const errs: typeof errors = {};\n    const n = Number(amount);\n    if (!customer.trim()) errs.customer = '請填寫客戶';\n    if (amount.trim() === '' || !Number.isFinite(n)) errs.amount = '請輸入有效的金額';\n    else if (n <= 0) errs.amount = '金額必須大於 0';\n    setErrors(errs);\n    if (errs.customer) return cRef.current?.focus();\n    if (errs.amount) return aRef.current?.focus();\n    onSave({ customer: customer.trim(), amount: n, status });\n  }\n\n  return (\n    <form onSubmit={submit} noValidate>\n      <div className=\"field\">\n        <label htmlFor=\"f-customer\">客戶（必填）</label>\n        <input\n          id=\"f-customer\" ref={cRef} value={customer} onChange={(e) => setCustomer(e.target.value)}\n          required aria-required=\"true\" aria-invalid={!!errors.customer}\n          aria-describedby={errors.customer ? 'e-customer' : undefined} autoComplete=\"off\"\n        />\n        {errors.customer && <p id=\"e-customer\" className=\"error\">{errors.customer}</p>}\n      </div>\n      <div className=\"field\">\n        <label htmlFor=\"f-amount\">金額（必填，需大於 0）</label>\n        <input\n          id=\"f-amount\" ref={aRef} type=\"number\" inputMode=\"decimal\" step=\"any\" value={amount}\n          onChange={(e) => setAmount(e.target.value)} required aria-required=\"true\"\n          aria-invalid={!!errors.amount} aria-describedby={errors.amount ? 'e-amount' : undefined}\n        />\n        {errors.amount && <p id=\"e-amount\" className=\"error\">{errors.amount}</p>}\n      </div>\n      <div className=\"field\">\n        <label htmlFor=\"f-status\">狀態</label>\n        <select id=\"f-status\" value={status} onChange={(e) => setStatus(e.target.value as Status)}>\n          {STATUSES.map((s) => (\n            <option key={s}>{s}</option>\n          ))}\n        </select>\n      </div>\n      <div className=\"form-actions\">\n        <button type=\"button\" className=\"btn\" onClick={onCancel}>取消</button>\n        <button type=\"submit\" className=\"btn primary\">儲存</button>\n      </div>\n    </form>\n  );\n}\nEOF\ncat > src/styles.css <<'EOF'\n*{box-sizing:border-box}\nhtml,body{margin:0;overflow-x:hidden}\nbody{font-family:system-ui,\"Noto Sans TC\",\"Microsoft JhengHei\",sans-serif;background:#f3f4f6;color:#111827;line-height:1.5}\n.page{max-width:1100px;margin:0 auto;padding:24px 16px}\n.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}\nh1{font-size:1.5rem;margin:0}\nh2{font-size:1.2rem;margin:0 0 8px}\n.muted{color:#4b5563;margin:4px 0}\n.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}\n.toolbar .field{flex:1 1 200px;margin:0}\n.field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;min-width:0}\nlabel{font-weight:600;font-size:.9rem}\ninput,select{font:inherit;padding:8px 10px;border:1px solid #6b7280;border-radius:6px;background:#fff;color:#111827;width:100%;min-height:40px}\ninput[aria-invalid=\"true\"]{border-color:#b91c1c;border-width:2px}\n:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}\n.error{color:#b91c1c;margin:0;font-size:.875rem;font-weight:600}\n.btn{font:inherit;min-height:40px;padding:6px 14px;border-radius:6px;border:1px solid #6b7280;background:#fff;color:#111827;cursor:pointer}\n.btn:hover{background:#e5e7eb}\n.btn.primary{background:#1d4ed8;border-color:#1d4ed8;color:#fff}\n.btn.primary:hover{background:#1e40af}\n.btn.danger{color:#b91c1c;border-color:#b91c1c}\n.btn.danger-solid{background:#b91c1c;border-color:#b91c1c;color:#fff}\n.btn.danger-solid:hover{background:#991b1b}\n.panel{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:16px}\n.center{text-align:center;padding:32px 16px}\n.count{margin-top:0}\ntable{width:100%;border-collapse:collapse}\nth,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e5e7eb;vertical-align:middle}\nth{font-size:.85rem;color:#374151;background:#f9fafb}\n.num{text-align:right}\n.actions{display:flex;gap:8px}\n.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.85rem;font-weight:600}\n.badge.pending{background:#fef3c7;color:#78350f}\n.badge.paid{background:#dbeafe;color:#1e3a8a}\n.badge.shipped{background:#d1fae5;color:#064e3b}\n.badge.cancelled{background:#e5e7eb;color:#374151}\n.skeletons{display:grid;gap:10px;margin-top:12px}\n.skeleton{height:40px;border-radius:6px;background:#e5e7eb}\ndialog{border:1px solid #9ca3af;border-radius:10px;padding:20px;width:min(440px,calc(100vw - 32px));color:#111827}\ndialog::backdrop{background:rgba(17,24,39,.55)}\n.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}\n@media (max-width:720px){\n  .head .btn{flex-shrink:0}\n  table,tbody,tr,td{display:block;width:100%}\n  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}\n  tr{border:1px solid #d1d5db;border-radius:8px;margin-bottom:12px;padding:6px 10px}\n  td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:6px 0;text-align:right}\n  td::before{content:attr(data-label);font-weight:600;color:#374151;text-align:left}\n  .actions{justify-content:flex-end}\n  .actions::before{margin-right:auto}\n}\nEOF\nnpm run build 2>&1 | tail -15"
+        }
+      }
+    ],
+    "originalProblems": [
+      "init 的 plugins 不是空的"
+    ],
+    "builtinPlugins": [
+      "cc-plugin-agents-md",
+      "cc-plugin-telemetry",
+      "cc-plugin-plugin-authoring"
+    ],
+    "rejudgedAt": "2026-11-02T12:49:05.069Z",
+    "userClaudeMdExists": false,
+    "userClaudeMdNote": "執行工具當時還沒記錄這一項；協調者在 2026-11-02 確認使用者層級沒有 ~/.claude/CLAUDE.md，評分時（同日）再查一次也不存在。"
+  },
+  "build": {
+    "ok": true,
+    "outputTail": "\n> build\n> tsc --noEmit && vite build\n\n\u001b[36mvite v8.3.4 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 16 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.32 kB │ gzip:  0.26 kB\ndist/assets/index-CvhQgswy.css    2.90 kB │ gzip:  1.11 kB\ndist/assets/index-CD4053EO.js   227.55 kB │ gzip: 71.27 kB\n\n\u001b[32m✓ built in 142ms\u001b[39m\n\n"
+  },
+  "workspace": "C:\\Users\\x1596\\AppData\\Local\\Temp\\eval-ZFCUUO\\project",
+  "grade": {
+    "hardcodedColors": {
+      "count": 42,
+      "items": [
+        {
+          "file": "src/styles.css",
+          "line": 3,
+          "kind": "hex",
+          "text": "#f3f4f6"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 3,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 8,
+          "kind": "hex",
+          "text": "#4b5563"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 13,
+          "kind": "hex",
+          "text": "#6b7280"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 13,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 13,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 14,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 15,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 16,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 17,
+          "kind": "hex",
+          "text": "#6b7280"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 17,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 17,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 18,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 19,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 19,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 19,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 20,
+          "kind": "hex",
+          "text": "#1e40af"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 21,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 21,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 22,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 22,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 22,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 23,
+          "kind": "hex",
+          "text": "#991b1b"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 24,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 24,
+          "kind": "hex",
+          "text": "#d1d5db"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 28,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 29,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 29,
+          "kind": "hex",
+          "text": "#f9fafb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 33,
+          "kind": "hex",
+          "text": "#fef3c7"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 33,
+          "kind": "hex",
+          "text": "#78350f"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 34,
+          "kind": "hex",
+          "text": "#dbeafe"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 34,
+          "kind": "hex",
+          "text": "#1e3a8a"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 35,
+          "kind": "hex",
+          "text": "#d1fae5"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 35,
+          "kind": "hex",
+          "text": "#064e3b"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 36,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 36,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 38,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 39,
+          "kind": "hex",
+          "text": "#9ca3af"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 39,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 45,
+          "kind": "hex",
+          "text": "#d1d5db"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 47,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 40,
+          "kind": "function",
+          "text": "rgba("
+        }
+      ]
+    },
+    "axe": {
+      "serious": 0,
+      "critical": 0,
+      "items": []
+    },
+    "overflow": {
+      "390": 0,
+      "834": 0,
+      "1280": 0
+    },
+    "missingStates": {
+      "count": 0,
+      "states": []
+    },
+    "pageErrors": [],
+    "costUsd": 0.2279824,
+    "durationMs": 84398,
+    "turns": 12,
+    "model": "claude-sonnet-5-5",
+    "isError": false
+  },
+  "run": {
+    "costUsd": 0.2279824,
+    "durationMs": 84398,
+    "turns": 12,
+    "model": "claude-sonnet-5-5",
+    "isError": false
+  },
+  "archive": "evals/results/2026-11-02-12-30-crud-plain"
+}
