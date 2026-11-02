@@ -159,6 +159,9 @@ const passedClasses = [
   {id: 'checkbox-indeterminate', property: 'backgroundColor', expected: roleColor('error', .4)},
   {id: 'checkbox-invalid', property: 'borderTopColor', expected: roleColor('warning')},
   {id: 'checkbox-disabled', state: 'disabled', property: 'opacity', expected: '1'},
+  // Button 渲染成連結、導覽經 renderLink 接專案連結時，專案的 class 也要生效（PR-STYLE-57、58）。
+  {id: 'button-link', property: 'backgroundColor', expected: roleColor('success', .4)},
+  ...['nav-link-plain', 'nav-link-current', 'nav-link-brand'].map(id => ({id, property: 'color', expected: roleColor('success')})),
   // focus-visible: 前綴要能生效。
   ...['button', 'input', 'select', 'checkbox'].map(name => ({id: `${name}-focus`, state: 'focus', property: 'outlineColor', expected: roleColor('warning')})),
   // 例外：不帶狀態的 outline-none 不會拿掉焦點框（PR-STYLE-46）。
@@ -282,14 +285,17 @@ async function verifyTailwindV3({project, browser, roles, tokens, build}) {
   const presetWith = edit => { const copy = structuredClone(preset); edit(copy.theme.extend.colors); return `module.exports = ${JSON.stringify(copy)};\n`; };
   const missing = 'color-mix(in srgb, var(--luca-missing) calc(<alpha-value> * 100%), transparent)';
   const whereHover = '.luca-button-primary:where(:not(:disabled):hover)';
+  const navigationLink = '.luca-navigation-link {';
   const styles = await readFile(stylesPath, 'utf8');
   assert.ok(styles.includes(whereHover), `styles.css 沒有 ${whereHover}，反向控制要改的文字不存在`);
+  assert.ok(styles.includes(navigationLink), `styles.css 沒有 ${navigationLink}，反向控制要改的文字不存在`);
   const controls = [
     {name: `preset 少了 ${lastRole}`, file: presetPath, content: presetWith(colors => { delete colors[lastRole]; }), check: 'roles', mention: lastRole},
     {name: `preset 的 ${lastRole} 值無效`, file: presetPath, content: presetWith(colors => { colors[lastRole] = missing; }), check: 'roles', mention: lastRole},
     {name: 'Luca 排在 tailwindcss/base 之前', file: entryPath, content: `${[...luca, ...others].join('\n')}\n`, check: 'preflight', mention: 'luca-button'},
     {name: 'Luca 排在 tailwindcss/utilities 之後', file: entryPath, content: `${[...others, ...luca].join('\n')}\n`, check: 'classes', mention: 'button-merged'},
     {name: '按鈕滑過的 :where() 還原', file: stylesPath, content: styles.replace(whereHover, '.luca-button-primary:not(:disabled):hover'), check: 'classes', mention: 'button-hover'},
+    {name: '導覽連結改回 .luca-navigation a', file: stylesPath, content: styles.replace(navigationLink, '.luca-navigation a {'), check: 'classes', mention: 'nav-link-plain'},
   ];
   for (const control of controls) {
     const original = await readFile(control.file, 'utf8');

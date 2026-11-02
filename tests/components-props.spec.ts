@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import type { ButtonProps, CheckboxProps, TextFieldProps } from '../packages/react/src/index.js';
+import { createElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
+import type { Button, ButtonLinkProps, ButtonProps, CheckboxProps, Navigation, NavigationLinkProps, TextFieldProps } from '../packages/react/src/index.js';
 import { buildHarness, origin, serveHarness } from './theme-harness';
 
 // ISSUE-010：Button、TextField、Checkbox 改用 Base UI 後，0.1.0 的公開 props 仍可用（PR-STYLE-40）。
@@ -14,6 +15,27 @@ acceptsText({label:'欄位', id:'a', name:'a', value:'v', defaultValue:'v', help
 const acceptsCheckbox = (props:CheckboxProps) => props;
 acceptsCheckbox({label:'核取', id:'c', name:'c', value:'yes', checked:true, defaultChecked:false, helper:'說明', error:'錯誤', required:true, disabled:false, readOnly:false, form:'f', className:'x', 'aria-describedby':'n',
   onChange:event => { const checked:boolean = event.target.checked; return checked; }, onFocus:() => undefined});
+
+// PR-STYLE-58：連結寫法另用 ButtonLinkProps，既有 ButtonProps 的用法照舊編譯。
+interface WrappedButtonProps extends ButtonProps { tone?:'quiet' }
+const wrapped:WrappedButtonProps = {tone:'quiet', variant:'secondary', onClick:event => event.currentTarget.blur()};
+const handler:ButtonProps['onClick'] = event => event.currentTarget.blur();
+// ComponentProps<typeof Button> 只取最後一個多載；兩個方向都可指派才算相等。
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+const buttonPropsUnchanged:Equal<ComponentProps<typeof Button>, ButtonProps> = true;
+const acceptsLink = (props:ButtonLinkProps) => props;
+acceptsLink({render:createElement('a', {href:'/new'}), variant:'secondary', className:'x', onClick:event => event.currentTarget.blur()});
+acceptsLink({href:'/new', render:props => createElement('a', props)});
+// @ts-expect-error 連結不能停用。
+acceptsLink({render:createElement('a', {href:'/new'}), disabled:true});
+// @ts-expect-error 連結沒有載入狀態。
+acceptsLink({render:createElement('a', {href:'/new'}), loading:true});
+// @ts-expect-error 連結沒有按鈕的 type。
+acceptsLink({render:createElement('a', {href:'/new'}), type:'submit'});
+// PR-STYLE-57：renderLink 可以接需要 href: string 的連結元件（像 next/link）。
+declare function ProjectLink(props:{href:string; className?:string; children?:ReactNode}):ReactElement;
+const renderLink:NonNullable<ComponentProps<typeof Navigation>['renderLink']> = (props:NavigationLinkProps) => createElement(ProjectLink, props);
+void [wrapped, handler, buttonPropsUnchanged, renderLink];
 
 test.describe('0.1.0 props on the ThemeProvider harness', () => {
   let outDir = '';

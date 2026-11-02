@@ -1,5 +1,5 @@
 import {createRoot} from 'react-dom/client';
-import {Button, Checkbox, Select, TextField, ThemeProvider} from '@luca-style/react';
+import {Button, Checkbox, Navigation, Select, TextField, ThemeProvider, type NavigationLinkProps} from '@luca-style/react';
 import {twMerge} from 'tailwind-merge';
 import {roleProbes} from './role-probes';
 import './index.css';
@@ -8,6 +8,8 @@ import './page.css';
 // CheckboxProps 沒有宣告 indeterminate，執行期會傳到 Base UI，所以用展開避開型別檢查。
 const indeterminate = {indeterminate:true};
 const option = <option value="a">選項</option>;
+// 專案的連結元件加上自己的 class；id 取自 href，腳本用它找導覽裡的一般連結、目前頁面與品牌連結。
+const projectLink = ({className, ...props}:NavigationLinkProps) => <a {...props} id={`nav-link-${props.href.slice(1)}`} className={`${className ?? ''} text-success`}/>;
 
 // 角色探針掛在自己的主題容器，腳本切換 data-suite、data-mode 後讀計算值。
 function RoleProbes() {
@@ -51,6 +53,8 @@ function PassedClasses() {
     <Checkbox id="checkbox-disabled" label="方框停用" disabled className="data-[disabled]:opacity-100"/>
     <Checkbox id="checkbox-focus" label="方框焦點" className="focus-visible:outline-warning"/>
     <Checkbox id="checkbox-outline-none" label="方框拿掉外框" className="outline-none"/>
+    <Button id="button-link" render={<a href="#link"/>} className="bg-success/40">連結按鈕</Button>
+    <Navigation label="探針導覽" brandHref="/brand" currentPath="/current" renderLink={projectLink} items={[{label:'一般', href:'/plain'}, {label:'目前', href:'/current'}]}/>
   </main></ThemeProvider>;
 }
 

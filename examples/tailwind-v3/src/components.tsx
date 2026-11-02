@@ -14,6 +14,7 @@ export function LucaComponents() {
       <Button id="hover-secondary" variant="secondary">次要操作</Button>
       <Button disabled>停用</Button>
       <Button loading>載入中</Button>
+      <Button render={<a href="#link"/>}>連結按鈕</Button>
       <TextField label="欄位" helper="說明文字" defaultValue="內容"/>
       <TextField label="錯誤欄位" error="錯誤訊息" defaultValue="內容"/>
       <TextField label="停用欄位" disabled defaultValue="內容"/>
