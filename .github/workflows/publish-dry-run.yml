@@ -1,0 +1,34 @@
+# 發佈試跑：套用 changeset 把版本帶到 0.3.0，再對兩個套件各跑一次 npm publish --dry-run（含來源證明設定）。
+# 只做試跑，不使用任何機密、也不指定環境；真正發佈在 publish.yml，只能手動觸發。
+# 來源證明需要 id-token: write；分叉的 PR 拿不到，所以跳過。Dependabot 的 PR 雖是同 repo 也拿不到 id-token，這類 PR 的試跑接受跳過或失敗。
+# 所有 action 皆固定到 commit SHA（行尾註解為對應的發行版本）。
+name: Publish dry run
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm audit signatures
+      - run: npm run build
+      # 套用 changeset，兩個套件都到 0.3.0（只改工作目錄，不提交）。
+      - run: npx changeset version
+      - run: npm publish --dry-run --provenance --access public --workspace @luca-style/tokens
+      - run: npm publish --dry-run --provenance --access public --workspace @luca-style/react
