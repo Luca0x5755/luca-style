@@ -1,5 +1,6 @@
 // 乾淨專案驗證：打包兩個套件、從打包檔安裝到 repo 外、建置，再用瀏覽器檢查（PR-ADOPT-03、04、05）。
-// 用法：npm run test:clean-projects [-- <專案名>]；要先 npm run build。後續的乾淨專案加進下方的 projects。
+// 用法：npm run test:clean-projects [-- <專案名>]；要先 npm run build。
+// 另一個用法：node scripts/verify-clean-projects.mjs --grade <專案目錄> 評分代理接好的 Tailwind v3 專案（見 gradeAgentProject）。後續的乾淨專案加進下方的 projects。
 // Next 與 React 18 專案（PR-ADOPT-01、02）不跑 Tailwind 檢查，自己管安裝、建置與伺服器，見 verifyNext、verifyReact18。
 // 每個專案除了檢查要過，還要跑反向控制：故意弄壞安裝結果後，對應的檢查必須變紅，否則整支失敗。
 import assert from 'node:assert/strict';
@@ -755,12 +756,148 @@ const fillRoleProbes = toolList => async (project, roles) => {
   await writeFile(file, stub.replace('= [];', `= ${JSON.stringify(roleProbes(roles, toolList), null, 1)};`));
 };
 
+// ISSUE-012（PR-ADOPT-06）：評分「全新代理照指南接好的 Tailwind v3 乾淨專案」。
+// 把探針頁從 examples/tailwind-v3 蓋進代理的專案，建置，跑角色 class、傳入 class、preflight 三項（不跑反向控制）。
+// 通過證明：代理接的線（套件安裝、Tailwind preset、CSS 入口順序、字體，加上 src 有用 ThemeProvider 的靜態檢查）在評分者的探針頁上有效。
+// 不證明：代理自己的頁面能用（探針頁與其中的 ThemeProvider 用法是評分者的）；也只涵蓋 Tailwind v3。
+// 失敗項目 item：themeProvider（靜態）、build、install、roles、classes、preflight。蓋進去的檔案評完會還原。
+const overlayFiles = ['index.html', 'baseline.html', 'probes.html', 'vite.config.js', 'src/baseline.css', 'src/baseline.tsx', 'src/components.tsx', 'src/main.tsx', 'src/page.css', 'src/probes.tsx', 'src/role-probes.ts'];
+
+// 角色檢查的問題很多（角色 × 工具 × 主題），逐角色合併成一筆並留第一筆當例子，每個角色都看得到；其餘照舊，最多 60 筆。
+function summarizeProblems(problems) {
+  const byRole = new Map();
+  const rest = [];
+  for (const problem of problems) {
+    const role = problem.match(/^\S+ [a-z-]+\|([a-z0-9-]+)\|/)?.[1];
+    if (!role) rest.push(problem);
+    else if (byRole.has(role)) byRole.get(role).count += 1;
+    else byRole.set(role, {count: 1, first: problem});
+  }
+  return [...rest, ...[...byRole].map(([role, {count, first}]) => `角色 ${role}：${count} 項不符，例如 ${first}`)].slice(0, 60);
+}
+
+async function gradeAgentProject({project, browser, roles}) {
+  const failures = [];
+  const add = (item, details) => { for (const detail of [details].flat()) failures.push({item, detail}); };
+  // 靜態：代理自己的原始碼要從 @luca-style/react 匯入 ThemeProvider（蓋探針頁之前檢查）。
+  const sources = (await readdir(join(project, 'src'), {recursive: true, withFileTypes: true})).filter(entry => entry.isFile() && /\.[cm]?[jt]sx?$/.test(entry.name));
+  const texts = await Promise.all(sources.map(entry => readFile(join(entry.parentPath, entry.name), 'utf8')));
+  if (!texts.some(text => /import[^;]*\bThemeProvider\b[^;]*from\s*['"]@luca-style\/react['"]/.test(text))) add('themeProvider', 'src 裡沒有從 @luca-style/react 匯入 ThemeProvider');
+
+  const fixture = join(root, 'examples/tailwind-v3');
+  const backup = new Map();
+  for (const file of overlayFiles) backup.set(file, await readFile(join(project, file), 'utf8').catch(() => null));
+  let server;
+  try {
+    for (const file of overlayFiles) {
+      await mkdir(join(project, file, '..'), {recursive: true});
+      await cp(join(fixture, file), join(project, file));
+    }
+    await fillRoleProbes(colorTools)(project, roles);
+    const build = npm(['run', 'build'], project, {allowFailure: true});
+    if (build.status !== 0) {
+      const lines = `${build.stdout}\n${build.stderr}`.split('\n').filter(line => /error|cannot find|not found/i.test(line)).slice(0, 5);
+      const missing = /@luca-style|tailwind-merge/.test(lines.join('\n'));
+      add(missing ? 'install' : 'build', `npm run build 失敗：${lines.join('；') || '沒有錯誤訊息'}`);
+      return {pass: false, failures};
+    }
+    server = await startServer([join(project, 'node_modules/vite/bin/vite.js'), 'preview', '--host', '127.0.0.1', '--port', String(port), '--strictPort'], project, port);
+    const tokens = createRequire(join(project, 'package.json'))('@luca-style/tokens/data');
+    const checks = {
+      roles: () => checkRoles(browser, tokens, roles, colorTools),
+      classes: () => checkPassedClasses(browser, tokens, passedClasses(['outline-none'])),
+      preflight: () => checkPreflight(browser),
+    };
+    for (const [item, check] of Object.entries(checks)) {
+      try { add(item, summarizeProblems(await check())); } catch (error) { add(item, `檢查本身出錯：${error.message.split('\n')[0]}`); }
+    }
+  } catch (error) {
+    add('build', `評分流程出錯：${error.message.split('\n')[0]}`);
+  } finally {
+    await server?.stop();
+    for (const [file, content] of backup) {
+      if (content === null) await rm(join(project, file), {force: true});
+      else await writeFile(join(project, file), content);
+    }
+  }
+  return {pass: failures.length === 0, failures};
+}
+
+// 評分的自我檢查（反向控制）：乾淨起始專案 → 沒通過；加上範例的接線 → 通過；四種破壞各自沒通過，而且失敗項目與訊息指名壞掉的那一項。
+async function verifyOnboardingGrade({project, browser, tarballs}) {
+  const roles = await colorRoles();
+  const lastRole = roles.at(-1);
+  npm(['install', '--no-audit', '--no-fund'], project);
+  const clean = await gradeAgentProject({project, browser, roles});
+  assert.equal(clean.pass, false, '沒接線的起始專案不該通過');
+  assert.ok(['themeProvider', 'install'].every(item => clean.failures.some(failure => failure.item === item)), `沒接線的起始專案應同時敗在 themeProvider 與 install（${JSON.stringify(clean.failures)}）`);
+  console.log(`PASS 評分自我檢查：沒接線的起始專案 → 沒通過（${clean.failures.map(failure => failure.item).join('、')}）`);
+
+  const fixture = join(root, 'examples/tailwind-v3');
+  npm(['install', '--no-audit', '--no-fund', ...tarballs.map(tarball => relative(project, tarball))], project);
+  npm(['install', '--no-audit', '--no-fund', 'tailwind-merge@2.6.1'], project);
+  const configPath = join(project, 'tailwind.config.js');
+  const entryPath = join(project, 'src/index.css');
+  const mainPath = join(project, 'src/main.tsx');
+  await cp(join(fixture, 'tailwind.config.js'), configPath);
+  await cp(join(fixture, 'src/index.css'), entryPath);
+  const wiredMain = "import {createRoot} from 'react-dom/client';\nimport {Button, ThemeProvider} from '@luca-style/react';\nimport './index.css';\n\ncreateRoot(document.getElementById('root')!).render(<ThemeProvider suite=\"professional\"><Button>新增訂單</Button></ThemeProvider>);\n";
+  await writeFile(mainPath, wiredMain);
+  const wired = await gradeAgentProject({project, browser, roles});
+  assert.deepEqual(wired, {pass: true, failures: []}, `乾淨起始專案加上範例的接線應通過（${JSON.stringify(wired.failures.slice(0, 5))}）`);
+  console.log('PASS 評分自我檢查：起始專案加上範例的接線 → 通過');
+
+  const entryLines = (await readFile(entryPath, 'utf8')).replace(/\r\n/g, '\n').trim().split('\n');
+  const luca = entryLines.filter(line => line.includes('@luca-style'));
+  const others = entryLines.filter(line => !line.includes('@luca-style'));
+  const mutations = [
+    {name: `拿掉 preset（${lastRole} 的 class 不存在）`, file: configPath, content: "export default {\n  content: ['./src/**/*.{ts,tsx}'],\n};\n", item: 'roles', mention: lastRole},
+    {name: 'Luca 排在 tailwindcss/base 之前', file: entryPath, content: `${[...luca, ...others].join('\n')}\n`, item: 'preflight', mention: 'luca-button'},
+    {name: '拿掉字體 CSS', file: entryPath, content: `${entryLines.filter(line => !line.includes('fonts.css')).join('\n')}\n`, item: 'preflight', mention: '字體沒有載入'},
+    {name: '拿掉 ThemeProvider', file: mainPath, content: wiredMain.replace('Button, ThemeProvider', 'Button').replace('<ThemeProvider suite="professional"><Button>新增訂單</Button></ThemeProvider>', '<Button>新增訂單</Button>'), item: 'themeProvider', mention: 'ThemeProvider'},
+  ];
+  for (const mutation of mutations) {
+    const original = await readFile(mutation.file, 'utf8');
+    await writeFile(mutation.file, mutation.content);
+    try {
+      const graded = await gradeAgentProject({project, browser, roles});
+      assert.equal(graded.pass, false, `破壞「${mutation.name}」後不該通過`);
+      // 失敗要落在指定的項目、訊息指名壞掉的那一項；不是隨便一個失敗。
+      const named = graded.failures.filter(failure => failure.item === mutation.item && failure.detail.includes(mutation.mention));
+      assert.ok(named.length > 0, `破壞「${mutation.name}」沒有讓 ${mutation.item} 以「${mutation.mention}」變紅（${JSON.stringify(graded.failures.slice(0, 3))}）`);
+      console.log(`PASS 評分自我檢查：${mutation.name} → ${mutation.item} 變紅，例如 ${named[0].detail.slice(0, 120)}`);
+    } finally {
+      await writeFile(mutation.file, original);
+    }
+  }
+}
+
+// 供 eval harness 呼叫：node scripts/verify-clean-projects.mjs --grade <專案目錄>。最後一行是 GRADE-JSON:<結果>。
+async function gradeCli(directory) {
+  if (!directory) throw new Error('用法：node scripts/verify-clean-projects.mjs --grade <專案目錄>');
+  const browser = await chromium.launch();
+  try {
+    const graded = await gradeAgentProject({project: resolve(directory), browser, roles: await colorRoles()});
+    console.log(`GRADE-JSON:${JSON.stringify(graded)}`);
+    process.exitCode = graded.pass ? 0 : 1;
+  } finally {
+    await browser.close();
+  }
+}
+
 const projects = {
   'tailwind-v3': {fixture: 'examples/tailwind-v3', prepare: fillRoleProbes(colorTools), verify: verifyTailwindV3},
   'tailwind-v4': {fixture: 'examples/tailwind-v4', prepare: fillRoleProbes(colorToolsV4), verify: verifyTailwindV4},
   next: {fixture: 'examples/next', run: verifyNext},
   'react-18': {fixture: 'examples/react-18', run: verifyReact18},
+  // 評分工具本身的自我檢查（ISSUE-012）；起始專案不是範例的複本。
+  'onboarding-grade': {fixture: 'evals/starters/onboarding', run: verifyOnboardingGrade},
 };
+
+if (process.argv[2] === '--grade') {
+  await gradeCli(process.argv[3]);
+  process.exit(process.exitCode ?? 0);
+}
 
 const selected = process.argv[2] ? [process.argv[2]] : Object.keys(projects);
 for (const name of selected) if (!projects[name]) throw new Error(`不認得的專案：${name}（可用：${Object.keys(projects).join('、')}）`);

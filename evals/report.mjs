@@ -31,6 +31,20 @@ export function estimateBaseline(runs) {
   };
 }
 
+// PR-ADOPT-06 的 CLI 結論（ISSUE-012）：指南某個版本（內容 sha256）剛好要有 3 次；3 次中 2 次以上沒通過就需要補 CLI。
+// 逾時、超出預算、輸出不是 JSON、隔離失敗都沒有通過的評分，所以算失敗（保守）。version 沒給時取最後一次的版本。
+export const cliThreshold = 2;
+export function onboardingSummary(runs, version) {
+  const target = version ?? runs.at(-1)?.guide?.sha256;
+  const selected = runs.filter(run => run.guide?.sha256 === target);
+  if (selected.length !== 3) throw new Error(`指南版本 ${String(target).slice(0, 12)} 的結果要剛好 3 次，目前 ${selected.length} 次`);
+  const failCount = selected.filter(run => !run.grade?.pass).length;
+  return {
+    version: target, guideSha: selected[0].guide.sha, runs: selected, failCount, cliNeeded: failCount >= cliThreshold,
+    costUsd: selected.reduce((sum, run) => sum + (run.run?.costUsd ?? 0), 0),
+  };
+}
+
 const usd = value => (typeof value === 'number' ? `$${value.toFixed(2)}` : '—');
 const minutes = ms => (typeof ms === 'number' ? `${(ms / 60000).toFixed(1)} 分` : '—');
 const cell = value => (value === null || value === undefined ? '—' : String(value));
@@ -90,12 +104,78 @@ function render(results, estimate) {
   ].join('\n');
 }
 
+// 接入實測報告（ISSUE-012）。manual 是人讀完逐字紀錄後補在結果檔的人工歸納：{stuckAt, guideChange}，沒有通過的每一次都要有。
+export function renderOnboarding(files, summary, limits) {
+  const failedWithoutNote = summary.runs.map((run, index) => ({ run, file: files[index] })).filter(({ run }) => run.outcome !== 'passed' && !run.manual?.guideChange);
+  if (failedWithoutNote.length) throw new Error(`沒通過的結果檔還沒有人工歸納（manual.stuckAt、manual.guideChange）：${failedWithoutNote.map(item => item.file).join('、')}`);
+  const rows = summary.runs.map((run, index) => `| ${files[index]} | ${run.grade?.pass ? '通過' : '沒通過'} | ${run.outcome} | ${cell(run.manual?.stuckAt ?? (run.grade?.pass ? '沒卡住' : null))} | ${usd(run.run?.costUsd)} | ${minutes(run.run?.durationMs)} | ${run.guide.sha} |`);
+  const failures = summary.runs.flatMap((run, index) => (run.grade?.pass ? [] : [`- ${files[index]}：${run.reason}；檢查失敗項目 ${(run.grade?.failures ?? []).map(failure => `${failure.item}（${String(failure.detail).slice(0, 120)}）`).join('；') || '無'}`]));
+  const changes = summary.runs.flatMap((run, index) => (run.manual?.guideChange ? [`- ${files[index]}：${run.manual.guideChange}`] : []));
+  return [
+    '# 全新代理只靠文件接入實測（PR-ADOPT-06）',
+    '',
+    '由 `node evals/report.mjs` 從 `evals/results/*-onboarding-*.json` 產生，不要手改；「卡在哪裡」與「指南修改」是人讀紀錄後的人工歸納（結果檔的 `manual`），其餘欄位由程式從結果檔機械產生。',
+    '',
+    `指南版本：\`${summary.guideSha}\`（內容 sha256 \`${summary.version.slice(0, 12)}\`）。這 3 次都用這個版本；之後修過指南，這些結果照舊保留，不重跑。`,
+    '',
+    '題目是 `evals/tasks/onboarding.md`，起始專案是 `evals/starters/onboarding`（乾淨的 Tailwind v3 專案）。代理只看得到 `docs/consumer-guide.md` 與 `packs/` 的兩個打包檔；題目只說明 npm 安裝指令改用打包檔，沒有其他提示。模型、effort、隔離旗標與 ISSUE-011 相同。',
+    '',
+    '| 結果檔 | 檢查 | outcome | 卡在哪裡（人工歸納） | 費用 | 時間 | 指南 sha |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    ...rows,
+    '',
+    '## 結論',
+    '',
+    `- 沒通過 ${summary.failCount} / 3 次（failCount = runs.filter(r => !r.grade?.pass).length；逾時、超出預算、輸出不是 JSON、隔離失敗都算沒通過）。`,
+    `- 門檻：3 次中 ${limits.threshold} 次以上沒通過就補 CLI。**CLI needed = ${summary.cliNeeded}**`,
+    summary.cliNeeded ? '- 需要補 CLI。依協調者裁定，不在這個分支加議題檔（CI 的 issues-check 會因新增議題檔失敗），結論由協調者轉給擁有者。' : '- 不需要補 CLI（決策紀錄：P1 不做 CLI，除非代理在實測中常接錯）。',
+    '',
+    '「需要人介入」的定義：代理結束後，ISSUE-002 的乾淨專案檢查沒有通過（`claude -p` 執行時沒有人在場）。',
+    '',
+    '## 通過代表什麼',
+    '',
+    '通過證明：代理接的線（Tailwind preset、CSS 入口順序、字體、套件安裝、專案裡有用 ThemeProvider）在評分者的探針頁上有效。不證明：代理自己的頁面能用（探針頁由評分者蓋進專案，頁面與 ThemeProvider 的用法是評分者的）；也只涵蓋 Tailwind v3，不涵蓋 v4、Next、React 18 的接入。',
+    '',
+    '## 沒通過的原因',
+    '',
+    ...(failures.length ? failures : ['- 沒有。']),
+    '',
+    '## 失敗原因對應的指南修改',
+    '',
+    ...(changes.length ? changes : ['- 3 次都通過，沒有發現指南的問題。']),
+    '',
+    '## 費用',
+    '',
+    `- 實際合計 ${usd(summary.costUsd)}（預期約 $2）。`,
+    `- 硬上限：3 次 × $${limits.budgetUsd} = $${3 * limits.budgetUsd}（每次 \`--max-budget-usd ${limits.budgetUsd}\`，逾時 ${limits.timeoutMinutes} 分鐘）。`,
+    '- 停止條件：任何一次撞到預算就中止整個系列；累計超過 $6 就停下回報協調者（程式在開下一次前檢查）。',
+    '',
+    '## 揭露',
+    '',
+    '- 隔離沿用 ISSUE-011 的旗標；路徑拒絕規則只涵蓋 Read、Edit 且從未被實際觸發。Glob、Grep、Bash 不在其內，所以改為事後判定：任何工具呼叫提到 repo 路徑、examples、llms.txt 都算隔離失敗（outcome `harness-error`、`harnessCause: isolation`），仍算進 3 次且算沒通過，不自動重跑。',
+    '- 打包的 `@luca-style/react` 隨套件附 DESIGN.md 與 llms.txt（發佈後的使用者也有）；工作區本身沒有，代理若去讀 llms.txt 會被判隔離失敗，讀 DESIGN.md 只記次數（`designMdTouched`）。',
+    '- 新結果檔已把工作區路徑換成 <workspace>、家目錄換成 <home>（反斜線、正斜線、JSON 轉義與 msys 寫法）；ISSUE-011 既有的結果沒有去識別，照舊保留。',
+    '- 樣本只有 3 次、一個題目（Tailwind v3），結論是門檻判斷，不是統計。',
+    '',
+  ].join('\n');
+}
+
 // 直接執行時才寫檔；被測試匯入時不動檔案。
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const directory = fileURLToPath(new URL('./results/', import.meta.url));
   const files = (await readdir(directory)).filter(name => name.endsWith('.json')).sort();
-  const results = await Promise.all(files.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+  const all = await Promise.all(files.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+  // 接入實測（ISSUE-012）的結果另出報告，不混進評測試跑的表。
+  const results = all.filter(({ data }) => data.task !== 'onboarding');
+  const onboarding = all.filter(({ data }) => data.task === 'onboarding');
   const estimate = estimateBaseline(results.map(({ data }) => ({ group: data.group, costUsd: data.run?.costUsd ?? null, budgetUsd: data.budgetUsd })));
   await writeFile(join(directory, 'report.md'), render(results, estimate));
   console.log(`寫入 ${join(directory, 'report.md')}：預估 ${usd(estimate.estimateUsd)}，上限 ${usd(estimate.ceilingUsd)}`);
+  if (onboarding.length) {
+    const summary = onboardingSummary(onboarding.map(({ data }) => data));
+    const selected = onboarding.filter(({ data }) => data.guide.sha256 === summary.version);
+    const limits = { threshold: cliThreshold, budgetUsd: selected[0].data.budgetUsd, timeoutMinutes: selected[0].data.timeoutMs / 60000 };
+    await writeFile(join(directory, 'onboarding-report.md'), renderOnboarding(selected.map(({ file }) => file), summary, limits));
+    console.log(`寫入 ${join(directory, 'onboarding-report.md')}：沒通過 ${summary.failCount} / 3，CLI needed = ${summary.cliNeeded}，費用 ${usd(summary.costUsd)}`);
+  }
 }

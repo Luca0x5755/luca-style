@@ -1,0 +1,10 @@
+@import 'tailwindcss/base';
+@import '@luca-style/tokens/css';
+@import '@luca-style/react/fonts.css';
+@import '@luca-style/react/css';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+body {
+  font-family: var(--font-body);
+}

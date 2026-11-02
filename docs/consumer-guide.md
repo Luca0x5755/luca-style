@@ -134,7 +134,7 @@ npm install -D tailwindcss@3 postcss autoprefixer
 npm install tailwind-merge@2.6
 ```
 
-`tailwind-merge` 要用 2.6，3.x 只支援 Tailwind v4。
+`tailwind-merge` 是專案自己合併傳給元件的 class 時才用（例如 `twMerge('bg-accent', 'bg-success/40')`），Luca 套件不依賴它。乾淨專案的檢查頁面會用到它，所以要照這份文件驗證接入時一定要裝；不合併 class 的專案可以略過上面第二行。要裝就用 2.6，3.x 只支援 Tailwind v4。
 
 `tailwind.config.js`：
 
@@ -190,7 +190,7 @@ npm install -D tailwindcss@4 @tailwindcss/vite
 npm install tailwind-merge@3
 ```
 
-`tailwind-merge` 要用 3.x，2.6 只支援 Tailwind v3。乾淨專案驗證的版本是 `tailwindcss` 4.3.3 與 `tailwind-merge` 3.7.0。
+`tailwind-merge` 是專案自己合併傳給元件的 class 時才用，Luca 套件不依賴它；要照這份文件驗證接入時一定要裝，不合併 class 的專案可以略過上面第二行。要裝就用 3.x，2.6 只支援 Tailwind v3。乾淨專案驗證的版本是 `tailwindcss` 4.3.3 與 `tailwind-merge` 3.7.0。
 
 `vite.config.js` 加上 Tailwind 的 Vite 外掛（下面是併進現有設定的片段，不是完整檔案）：
 

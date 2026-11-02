@@ -49,6 +49,7 @@ npm run test:clean-projects
 | PR-ADOPT-01 | `test:clean-projects` 的 next 專案：`next build` 通過（伺服器元件的 layout 匯入 `themeInitScript`）；`next start` 對三種明暗情境檢查首屏屬性、首幀底色與 `<head>` 內阻擋渲染的 Luca CSS；`next start`、`next dev` 的 console 沒有 hydration 錯誤；`next/link` 經 `renderLink` 與 `Button render` 導覽不重載、`aria-current` 正確。反向控制涵蓋沒傳 suite、腳本移出 `<head>`、CSS 延遲載入、拿掉 `suppressHydrationWarning`、元件輸出不一致、`renderLink` 改回 `<a>`、拿掉 `'use client'`。 |
 | PR-ADOPT-02 | `test:clean-projects` 的 react-18 專案：peer 放寬時一般 `npm install` 成功，`tsc`、`vite build` 通過，dev server 上操作全部公開元件且 console 沒有 error 或 warning；反向控制：連結元件沒有 `forwardRef` 時出現 ref 警告。`test:consumer` 檢查 `vite build` 只有文件寫明的 `'use client'` 警告。 |
 | PR-ADOPT-03 | `test:clean-projects`：18 個色彩角色 × 17 個 Tailwind 色彩工具 × 實色與 `/40` × 四種主題，比對計算值與 `tokens.json`；反向控制刪掉或弄壞 preset 的角色時變紅。 |
+| PR-ADOPT-06 | `eval-onboarding.spec` 檢查起始專案沒有 Luca 接線、`--dry-run` 建出的工作區只有指南與兩個打包檔、越界判定、結果分類（逾時與超出預算算沒通過）、路徑去識別、1/3 與 2/3 沒通過的 CLI 結論；`test:clean-projects onboarding-grade` 的自我檢查：沒接線的起始專案沒通過、加上範例接線通過、四種破壞各自在指定項目以該項名稱變紅。真正的 3 次實測結果在 `evals/results/`，報告 `onboarding-report.md`，不在 CI 重跑（花真的錢）。 |
 | PR-ADOPT-05 | `test:clean-projects` 的 v3 部分：傳入 class 的一般、互動、資料與焦點狀態；基準頁與 Tailwind 頁逐元素比對；反向控制把 Luca CSS 放錯順序時變紅。v4 待 ISSUE-003。 |
 
 ## 五頁矩陣與操作

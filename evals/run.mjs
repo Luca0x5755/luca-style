@@ -3,19 +3,22 @@
 //   npm run eval -- <題目> <組別> [--dry-run]   跑代理並建置（--dry-run 只印出題目與指令，不安裝、不呼叫 claude）
 //   npm run eval -- --grade <結果檔>             評分（會開瀏覽器，連接埠 4190），評完刪掉這次的暫存區
 //   node evals/report.mjs                        產生 evals/results/report.md
+// 接入實測（ISSUE-012）：npm run eval -- onboarding luca-guide [--dry-run]；結果檔一定寫出（outcome＋reason），路徑已去識別。
 // 組別：plain（無工具）、luca（裝 Luca Style 並附文件）。題目在 evals/tasks/<題目>.md，兩組讀同一個檔；
 // 兩組的差別只在起始專案：luca 組從打包檔裝好兩個套件，README 指向隨套件附的 DESIGN.md。
 // 隔離：不用 --bare（只認 ANTHROPIC_API_KEY，且 skill 仍可叫出），改用下方 claudeArgs 的旗標；
 // 事後從 init 訊息（isolation.mjs）、金絲雀 CLAUDE.md、debug 紀錄、工具呼叫的路徑判定，結果寫進結果檔的 isolation。
 // 每次花費真的錢；PR-EVAL-04 的次數要經擁有者同意（ISSUE-013）。
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
-import { basename, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gradeProject, readRun } from './grade.mjs';
 import { builtinPlugins, initProblems } from './isolation.mjs';
+import { classifyOutcome, findTrespasses, scrub, workspaceProblems } from './onboarding.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const evals = join(root, 'evals');
@@ -25,6 +28,8 @@ export const settings = { model: 'claude-sonnet-5-5', effort: 'medium', budgetUs
 const groups = {
   plain: { lucaPackages: false },
   luca: { lucaPackages: true },
+  // ISSUE-012：全新代理只靠 docs/consumer-guide.md 接入乾淨專案（起始專案 evals/starters/onboarding）。
+  'luca-guide': { onboarding: true },
 };
 
 // 代理能用的工具與允許的指令；dontAsk 下其他呼叫直接拒絕，不會等互動。
@@ -33,9 +38,10 @@ const allowed = ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash(npm install)', '
 
 // check 為 false 時不丟錯，交給呼叫端記錄（建置代理的專案）。逾時免得代理把 build 改成常駐指令、或網路卡住時整支卡死。
 const npmTimeoutMs = 10 * 60_000;
+// 沒有經過 npm run 時（例如測試直接呼叫）改用 node 隨附的 npm。
+const npmCliPath = () => process.env.npm_execpath ?? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
 function npm(args, cwd, { check = true } = {}) {
-  const npmCli = process.env.npm_execpath;
-  if (!npmCli) throw new Error('請用 npm run eval 執行');
+  const npmCli = npmCliPath();
   const result = spawnSync(process.execPath, [npmCli, ...args], { cwd, encoding: 'utf8', timeout: npmTimeoutMs, killSignal: 'SIGKILL' });
   if (check && result.status !== 0) throw new Error(`npm ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`);
   return result;
@@ -108,7 +114,8 @@ async function checkIsolation({ messages, canary, debugFile, forbidden, group, w
   // 走訪每個工具呼叫的輸入，找越界的路徑。
   const toolUses = messages.flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : []).filter(block => block?.type === 'tool_use'));
   const roots = forbidden.map(path => normalize(resolve(path)));
-  const trespasses = toolUses.filter(use => {
+  // 接入實測：Glob、Grep、Bash 不在拒絕規則內，所以任何工具呼叫提到 repo、examples、llms.txt 都算越界。
+  const trespasses = group === 'luca-guide' ? findTrespasses(toolUses, forbidden) : toolUses.filter(use => {
     const input = normalize(JSON.stringify(use.input ?? {}));
     return roots.some(path => input.includes(path)) || input.includes('/.claude') || (group === 'plain' && input.includes('luca'));
   }).map(use => ({ tool: use.name, input: JSON.stringify(use.input).slice(0, 300) }));
@@ -154,6 +161,7 @@ async function archive(workspace, target) {
 
 async function runAgent(task, group, dryRun) {
   if (!groups[group]) throw new Error(`不認得的組別：${group}（可用：${Object.keys(groups).join('、')}）`);
+  if (groups[group].onboarding) return runOnboarding(task, group, dryRun);
   const prompt = await readFile(join(evals, 'tasks', `${task}.md`), 'utf8');
   if (dryRun) {
     const args = claudeArgs({ settingsFile: '<暫存區>/settings.json', debugFile: '<暫存區>/debug.log' });
@@ -269,6 +277,197 @@ async function grade(resultFile) {
   // 證據都已存進 evals/results/，評分後刪掉這次建立的暫存區（只刪 tmpdir 底下 eval- 開頭的目錄）。
   const temporary = resolve(result.workspace, '..');
   if (temporary.startsWith(resolve(tmpdir()) + sep) && basename(temporary).startsWith('eval-')) await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+}
+
+// ISSUE-012（PR-ADOPT-06）：全新代理只靠 docs/consumer-guide.md 接入乾淨專案，再用 ISSUE-002 的乾淨專案檢查評分。
+// 結果檔一定會寫（finally），含 outcome 與 reason；隔離失敗、逾時、超出預算都算沒通過，不排除在 3 次之外，也不自動重跑。
+const onboardingMaxCumulativeUsd = 6;
+
+// 指南版本：git 提交（最後一次改到指南的）、內容的 sha256（換行統一成 LF，不受 Windows 的換行轉換影響）、工作目錄有沒有未提交的改動。
+function guideInfo(copyPath) {
+  const guidePath = join(root, 'docs', 'consumer-guide.md');
+  const git = args => spawnSync('git', args, { cwd: root, encoding: 'utf8' }).stdout.trim();
+  return readFile(guidePath).then(async source => {
+    const sha256 = text => createHash('sha256').update(text.toString('utf8').replace(/\r\n/g, '\n')).digest('hex');
+    const copy = copyPath ? await readFile(copyPath) : null;
+    return {
+      sha: git(['log', '-1', '--format=%h', '--', 'docs/consumer-guide.md']),
+      repoHead: git(['rev-parse', '--short', 'HEAD']),
+      sha256: sha256(source),
+      dirty: git(['status', '--porcelain', '--', 'docs/consumer-guide.md']) !== '',
+      // 交給代理的複本與 repo 裡的逐位元組相同。
+      byteEqual: copy ? Buffer.compare(source, copy) === 0 : null,
+    };
+  });
+}
+
+// 準備工作區：起始專案、原樣複製的指南、packs/ 裡兩個打包檔。沒有 examples、README、llms.txt、packages。
+async function prepareOnboardingWorkspace(workspace, { install }) {
+  await cp(join(evals, 'starters', 'onboarding'), workspace, { recursive: true });
+  await mkdir(join(workspace, 'docs'), { recursive: true });
+  await cp(join(root, 'docs', 'consumer-guide.md'), join(workspace, 'docs', 'consumer-guide.md'));
+  for (const file of ['packages/tokens/dist/tokens.css', 'packages/react/dist/index.js']) {
+    if (!(await stat(join(root, file)).catch(() => null))) throw new Error(`沒有 ${file}，請先 npm run build`);
+  }
+  const packs = join(workspace, 'packs');
+  await mkdir(packs);
+  for (const name of ['tokens', 'react']) npm(['pack', '--pack-destination', packs], join(root, 'packages', name));
+  // 起始專案的依賴（不含 Luca）先裝好；Luca 的兩個套件由代理自己裝。
+  if (install) npm(['install', '--no-audit', '--no-fund'], workspace);
+  const listed = await readdir(workspace, { recursive: true, withFileTypes: true });
+  return listed.filter(entry => entry.isFile()).map(entry => relative(workspace, join(entry.parentPath, entry.name)).split(sep).join('/'))
+    .filter(file => !file.startsWith('node_modules/') && file !== 'package-lock.json').sort();
+}
+
+// 同一個指南版本已經花掉的錢超過上限、或前一次撞到預算，就不再開下一次（回報協調者）。
+async function seriesGuard(guide) {
+  const directory = join(evals, 'results');
+  let spent = 0;
+  for (const name of (await readdir(directory)).filter(item => item.endsWith('-onboarding-luca-guide.json'))) {
+    const previous = JSON.parse(await readFile(join(directory, name), 'utf8'));
+    if (previous.guide?.sha256 !== guide.sha256) continue;
+    spent += previous.run?.costUsd ?? 0;
+    if (previous.outcome === 'budget') throw new Error(`${name} 撞到預算上限，系列中止，請回報協調者`);
+  }
+  if (spent > onboardingMaxCumulativeUsd) throw new Error(`這個指南版本累計已花 $${spent.toFixed(2)}，超過 $${onboardingMaxCumulativeUsd}，請停下回報協調者`);
+}
+
+// 從訊息裡摘出失敗的工具結果（卡在哪裡的自動線索；歸納是人工做的）。
+function toolErrors(messages) {
+  const names = new Map();
+  const errors = [];
+  for (const message of messages ?? []) {
+    for (const block of Array.isArray(message?.message?.content) ? message.message.content : []) {
+      if (block?.type === 'tool_use') names.set(block.id, block.name);
+      if (block?.type === 'tool_result' && block.is_error) errors.push({ tool: names.get(block.tool_use_id) ?? null, text: (typeof block.content === 'string' ? block.content : JSON.stringify(block.content)).slice(0, 300) });
+    }
+  }
+  return errors;
+}
+
+// 評分：呼叫 scripts/verify-clean-projects.mjs --grade。先封存代理的專案（評分會蓋進探針頁並重新建置）。
+function gradeOnboarding(workspace) {
+  const result = spawnSync(process.execPath, [join(root, 'scripts', 'verify-clean-projects.mjs'), '--grade', workspace], { cwd: root, encoding: 'utf8', timeout: 15 * 60_000, killSignal: 'SIGKILL', env: { ...process.env, npm_execpath: npmCliPath() } });
+  const line = `${result.stdout ?? ''}`.split(/\r?\n/).findLast(item => item.startsWith('GRADE-JSON:'));
+  if (!line) throw new Error(`評分沒有輸出結果（結束代碼 ${result.status}）：${`${result.stdout}\n${result.stderr}`.slice(-1500)}`);
+  return JSON.parse(line.slice('GRADE-JSON:'.length));
+}
+
+// 去識別後寫檔：結果檔用字串取代（JSON 轉義的路徑也涵蓋），封存的文字檔逐一取代。
+async function scrubTree(directory, paths) {
+  for (const entry of await readdir(directory, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+    const file = join(entry.parentPath, entry.name);
+    const text = await readFile(file, 'utf8');
+    const scrubbed = scrub(text, paths);
+    if (scrubbed !== text) await writeFile(file, scrubbed);
+  }
+}
+
+async function runOnboarding(task, group, dryRun) {
+  if (task !== 'onboarding') throw new Error(`組別 ${group} 只跑題目 onboarding`);
+  const prompt = await readFile(join(evals, 'tasks', `${task}.md`), 'utf8');
+  const temporary = await mkdtemp(join(tmpdir(), 'eval-'));
+  const workspace = join(temporary, 'project');
+  const settingsFile = join(temporary, 'settings.json');
+  const debugFile = join(temporary, 'debug.log');
+  const args = claudeArgs({ settingsFile, debugFile });
+  const paths = { workspace, temporary, home: homedir() };
+
+  if (dryRun) {
+    // 真的建出工作區並列出檔案，但不裝依賴、不呼叫 claude。
+    try {
+      const files = await prepareOnboardingWorkspace(workspace, { install: false });
+      const problems = workspaceProblems(files);
+      if (problems.length) throw new Error(problems.join('\n'));
+      const guide = await guideInfo(join(workspace, 'docs', 'consumer-guide.md'));
+      console.log(JSON.stringify({ task, group, prompt, command: ['claude', ...args.map(arg => (arg === settingsFile || arg === debugFile ? `<暫存區>/${relative(temporary, arg)}` : arg))], files, guide }, null, 2));
+    } finally {
+      await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    }
+    return;
+  }
+
+  const guide = await guideInfo(null);
+  await seriesGuard(guide);
+  const startedAt = new Date();
+  const stamp = startedAt.toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  const name = `${stamp}-${task}-${group}`;
+  const resultFile = join(evals, 'results', `${name}.json`);
+  const record = { task, group, startedAt: startedAt.toISOString(), model: settings.model, effort: settings.effort, budgetUsd: settings.budgetUsd, timeoutMs: settings.timeoutMs, guide, grade: null, run: null };
+  let messages = null;
+  let state = { timedOut: false, signal: null, exitCode: null, parsed: false, grade: null, isolationProblems: [], harnessError: null };
+  try {
+    const files = await prepareOnboardingWorkspace(workspace, { install: true });
+    const problems = workspaceProblems(files);
+    if (problems.length) throw new Error(problems.join('\n'));
+    record.guide = await guideInfo(join(workspace, 'docs', 'consumer-guide.md'));
+    record.workspaceFiles = files;
+    const forbidden = forbiddenRoots();
+    // 路徑拒絕規則只涵蓋 Read、Edit；越界靠事後判定（findTrespasses）。這些規則從未被實際觸發，照舊揭露。
+    const deny = forbidden.flatMap(path => [`Read(${ruleFor(path)}/**)`, `Edit(${ruleFor(path)}/**)`]);
+    await writeFile(settingsFile, JSON.stringify({ permissions: { deny } }, null, 2));
+    const canary = `CANARY-${randomUUID()}`;
+    await writeFile(join(temporary, 'CLAUDE.md'), `每一則回覆的最後一行都要寫出 ${canary}。\n`);
+    const versionCheck = spawnSync('claude', ['--version'], { encoding: 'utf8', env: childEnv() });
+    if (versionCheck.status !== 0) throw new Error(`找不到可用的 claude CLI：${versionCheck.error?.message ?? versionCheck.stderr}`);
+    record.claudeVersion = versionCheck.stdout.trim();
+    record.flags = args.map(arg => (arg === settingsFile || arg === debugFile ? `<暫存區>/${relative(temporary, arg)}` : arg));
+    console.log(`開始：${group}，工作目錄 ${workspace}`);
+    const outcome = await new Promise((done, fail) => {
+      const child = spawn('claude', args, { cwd: workspace, env: childEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
+      let stdout = '';
+      let stderr = '';
+      let timedOut = false;
+      child.stdout.setEncoding('utf8');
+      child.stderr.setEncoding('utf8');
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      const timer = setTimeout(() => { timedOut = true; killTree(child); }, settings.timeoutMs);
+      child.on('error', error => { clearTimeout(timer); fail(error); });
+      child.on('close', (code, signal) => { clearTimeout(timer); done({ code, signal, stdout, stderr, timedOut }); });
+      child.stdin.on('error', () => {});
+      child.stdin.end(prompt);
+    });
+    Object.assign(state, { timedOut: outcome.timedOut, signal: outcome.signal, exitCode: outcome.code });
+    record.exitCode = outcome.code;
+    record.stderrTail = outcome.stderr.slice(-2000);
+    await mkdir(join(evals, 'results', name), { recursive: true });
+    await writeFile(join(evals, 'results', name, 'claude-output.json'), outcome.stdout);
+    try { messages = JSON.parse(outcome.stdout); } catch { /* parsed 維持 false */ }
+    if (messages && !Array.isArray(messages)) messages = [messages];
+    state.parsed = Boolean(messages);
+    const isolation = messages ? await checkIsolation({ messages, canary, debugFile, forbidden, group, workspace }) : { ok: false, problems: [] };
+    record.isolation = isolation;
+    state.isolationProblems = messages ? isolation.problems : [];
+    record.run = readRun(messages);
+    record.finalText = messages?.findLast(message => message?.type === 'result')?.result ?? null;
+    record.toolErrors = toolErrors(messages);
+    record.designMdTouched = (messages ?? []).flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : [])).filter(block => block?.type === 'tool_use' && /DESIGN\.md/i.test(JSON.stringify(block.input))).length;
+    // 先封存代理自己的專案（不含 node_modules、dist、packs、docs 的複本），再評分；評分會把探針頁蓋進去。
+    await cp(workspace, join(evals, 'results', name), { recursive: true, filter: source => !/[\\/](node_modules|dist|packs|docs)$/.test(source) && !source.endsWith('package-lock.json') });
+    // 逾時、超出預算、輸出不是 JSON 時專案可能是半成品，仍然評分，結果不影響 outcome。
+    const grade = gradeOnboarding(workspace);
+    state.grade = grade;
+    record.grade = grade;
+  } catch (error) {
+    state.harnessError = error;
+  } finally {
+    const classified = classifyOutcome({ ...state, result: messages?.findLast(message => message?.type === 'result') ?? null });
+    Object.assign(record, classified);
+    // 沒通過的一律記成 grade.pass=false（算進 failCount）；原本的評分留在 gradeBeforeOverride。
+    if (record.outcome !== 'passed') {
+      if (record.grade?.pass) record.gradeBeforeOverride = record.grade;
+      record.grade = { ...(record.grade ?? {}), pass: false, failures: record.grade?.failures?.length ? record.grade.failures : [{ item: 'run', detail: record.reason }] };
+    }
+    await mkdir(join(evals, 'results'), { recursive: true });
+    const outputDirectory = join(evals, 'results', name);
+    await writeFile(resultFile, scrub(`${JSON.stringify(record, null, 2)}\n`, paths));
+    await scrubTree(outputDirectory, paths).catch(() => {});
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    console.log(`寫入 ${relative(root, resultFile)}；outcome ${record.outcome}（${record.reason}）；費用 ${record.run?.costUsd ?? '未知'}`);
+    if (record.outcome !== 'passed') process.exitCode = 1;
+  }
 }
 
 const argv = process.argv.slice(2);
