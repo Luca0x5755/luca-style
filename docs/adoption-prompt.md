@@ -19,7 +19,7 @@
 【先讀取與盤點】
 1. 讀取目標專案的 AGENTS.md、工程規範、前端入口與建置設定，確認框架、React 版本、路由、現有元件庫及樣式方案。
 2. 從設計來源讀取：
-   - docs/consumer-guide.md：封裝、公開 API、主題與資產接入方式。
+   - docs/consumer-guide.md：安裝、公開 API、主題與資產接入方式。
    - docs/05_frontend_spec.md：色彩、響應式字級、間距、外形與載入動畫的正式規範。
    - docs/03_architecture_design.md：設計系統的責任與覆寫邊界。
    - examples/consumer/src/main.tsx：公開介面的最小使用範例。
@@ -30,7 +30,7 @@
 【實作】
 5. 保留目標專案的業務流程、資料合約、權限、路由與既有可用功能；以設計系統更新呈現和互動。業務頁面使用本專案的實際資料與文案。
 6. 依技術棧接入：
-   - 相容的 React 專案：依 consumer-guide 建置並封裝設計來源的 tokens 與 React 套件，安裝實際產出的同版 tarball。先確認 React peer dependency 相容；有版本衝突時先提出可行處理方式。使用公開 exports，避免直接引用來源 repo 的 packages/*/src。
+   - 相容的 React 專案：依 consumer-guide〈安裝〉用 npm 安裝同版的 @luca-style/tokens 與 @luca-style/react。先確認 React peer dependency 相容；有版本衝突時先提出可行處理方式。使用公開 exports，避免直接引用來源 repo 的 packages/*/src。
    - 其他框架：接入公開 tokens，依相同規範建立目標框架的元件；先盤點現有元件可沿用的行為與無障礙功能。字體、OFL 授權及載入動畫資產依目標專案的資產管線交付，記錄來源版本與同步方式。
    - 若無法讀取設計來源，先回報缺少的路徑或檔案，取得內容後再實作精確色票與規格。
 7. React 入口載入 tokens/css、react/fonts.css、react/css，以 ThemeProvider 設定選定套系。模式控制在 Provider 內透過 useTheme 實作；API 與完整接入細節依 consumer-guide。
@@ -65,12 +65,12 @@
 - 套用範圍：沿用先前的範圍；本次不新增頁面
 
 【先確認舊狀態】
-1. 讀取本專案記錄 Luca Style 套用狀態的文件，找出：採用的套系、當時的設計來源 commit、套件安裝方式（tarball、複製 tokens，或在其他框架自建元件）、局部覆寫與已完成頁面。找不到記錄時，從 package.json、入口檔與樣式推斷，並在最後補寫記錄。
+1. 讀取本專案記錄 Luca Style 套用狀態的文件，找出：採用的套系、當時的設計來源 commit、套件安裝方式（npm 套件、舊版的本機打包檔、複製 tokens，或在其他框架自建元件）、局部覆寫與已完成頁面。找不到記錄時，從 package.json、入口檔與樣式推斷，並在最後補寫記錄。
 2. 在設計來源執行 `git log --oneline <舊 commit>..HEAD -- packages apps docs/05_frontend_spec.md docs/03_architecture_design.md`，列出舊 commit 之後與本專案有關的變更。舊 commit 不明時，改以下列差異清單核對。
 
 【已知差異與處理】
 3. 設計稿來源：原本比對的舊設計檔已移除（git 歷史找得回）。改開元件庫設計檔 docs/mockup/luca-style-library.penpot，用 Penpot 開啟。它只含設計變數與 23 個母版，沒有頁面 frame；頁面的版面、狀態與命名以樣張網站為準。工具不可用時，明確記錄尚未重新做 mockup 比對。元件庫設計檔在 ADR 0009（docs/adr/0009-review-on-state-overview-pages-and-retire-the-design-file-after-a-trial.md）的試驗期間暫停更新，仍可照本步驟使用；它可能落後設計變數，第 8 步比對 mockup 遇到不一致時，以 packages/tokens/src/ 為準。
-4. tokens 與套件：仍是 0.1.0 時，依 docs/consumer-guide.md 重新建置、封裝並安裝 0.2.0 tarball（兩個套件版本須一致），再逐條處理〈0.2.0 升級說明〉：改寫 `accent` 寫法、刪掉整頁主題與防閃爍的自補程式、調整操作 Select 與 Checkbox 的測試。其他框架則比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔，同步自建 tokens。
+4. tokens 與套件：仍是 0.1.0 時，依 docs/consumer-guide.md〈安裝〉把兩個套件升到 0.2.0（版本須一致），再逐條處理〈0.2.0 升級說明〉：改寫 `accent` 寫法、刪掉整頁主題與防閃爍的自補程式、調整操作 Select 與 Checkbox 的測試。其他框架則比對設計來源 `packages/tokens/src/` 的 DTCG 分層檔，同步自建 tokens。
 5. 文件連結：專案文件中凡是指向舊設計檔、「唯一設計檔」或「左右兩側並排」的敘述，改為元件庫設計檔 `docs/mockup/luca-style-library.penpot` 的路徑。
 6. 若專案在第 1 步記錄的 commit 之前就有自訂覆寫（強調色、密度、資料色），確認它們沒有被新的套系預設取代；覆寫值不變。
 

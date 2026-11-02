@@ -36,7 +36,7 @@ import '@luca-style/react/css';
   </ThemeProvider>;
 ```
 
-封裝、安裝、公開 API、字體授權與設計變數同步見[使用端接入文件](docs/consumer-guide.md)。
+安裝、公開 API、字體授權與設計變數同步見[使用端接入文件](docs/consumer-guide.md)。
 
 ## 公開套件與文件導覽
 

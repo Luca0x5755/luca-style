@@ -32,7 +32,7 @@ function App() {
   const [fruit, setFruit] = useState('apple');
   const [agreed, setAgreed] = useState(false);
   const [name, setName] = useState('');
-  return <ThemeProvider persist={false}>
+  return <ThemeProvider suite="professional" target="document">
     <Navigation items={items} currentPath={path} renderLink={props => <RouterLink {...props}/>}/>
     <main>
       <h1>{path === '/' ? '首頁' : '其他頁'}</h1>

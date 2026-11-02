@@ -4,26 +4,17 @@
 
 本文件對應[架構 §3.1、§3.3–3.4](03_architecture_design.md)、[前端 §5.1、§5.4–5.5](05_frontend_spec.md)。完整最小範例在 [examples/consumer](../examples/consumer/src/main.tsx)，只引用公開輸出。
 
-## 建置、封裝與安裝
+## 安裝
 
-需要 Node.js 22.12 以上與 npm 11。先於此 repo：
-
-```sh
-npm ci
-npm run build
-npm pack ./packages/tokens --pack-destination .
-npm pack ./packages/react --pack-destination .
-```
-
-把兩份 `.tgz` 移到使用端可存取位置。在獨立 React 專案執行（路徑依環境替換）：
+需要 Node.js 22.12 以上與 npm 11。在使用端的 React 專案執行一個指令：
 
 ```sh
-npm install /path/to/luca-style-tokens-0.2.0.tgz /path/to/luca-style-react-0.2.0.tgz react@^19 react-dom@^19
+npm install @luca-style/tokens @luca-style/react react react-dom
 ```
 
-兩個套件版本須一致；React 為 peer dependency，範圍是 `^18.0.0 || ^19.0.0`（見〈React 18〉）。沒有公開 npm 發布要求。不可引用 `packages/*/src`；`dist` 是產物，不提交手改。
+兩個套件版本須一致；React 為 peer dependency，範圍是 `^18.0.0 || ^19.0.0`（見〈React 18〉）。不可引用 `packages/*/src`；`dist` 是產物，不提交手改。
 
-使用 Vite + TypeScript 時可複製 `examples/consumer` 到 repo 外，執行上述安裝、`npm install`、`npm run build`。範例的 `vite/client` 型別支援 CSS 和 `?url` 授權資產。其他 bundler 須提供對等 CSS、JSON、字體及文字資產載入。
+使用 Vite + TypeScript 時可複製 `examples/consumer` 到 repo 外，先 `npm install`，再執行上面的安裝指令，最後 `npm run build`。範例的 `vite/client` 型別支援 CSS 和 `?url` 授權資產。其他 bundler 須提供對等 CSS、JSON、字體及文字資產載入。
 
 ```tsx
 import '@luca-style/tokens/css';
@@ -44,7 +35,7 @@ Provider 下透過 `useTheme()` 取得 `mode`、`resolvedMode`、`setMode`。呼
 
 - `persist={false}`：完全不讀寫 localStorage，選擇只留在本次頁面。
 - `target="document"`：主題屬性與強調色變數套在 `<html>`，整頁底色跟著明暗變化；卸載時移除。
-- 防閃爍：把 `themeInitScript({suite})` 的回傳字串放進 `<head>` 的行內 `<script>`（例如 Vite 的 `transformIndexHtml`，參考 `apps/showcase/vite.config.ts`），React 掛載前就依已存偏好設定 `<html>`。`suite` 要與 `ThemeProvider` 相同，未傳為 `vibrant`；不一致時掛載瞬間會換一次套系。首屏腳本會讀 localStorage，不要與 `persist={false}` 一起用；它要搭配 `target="document"`，否則 `<html>` 上的屬性停在首屏值，不隨後續切換更新。
+- 防閃爍：把 `themeInitScript({suite})` 的回傳字串放進 `<head>` 的行內 `<script>`（Vite 的寫法見〈整頁主題與防閃爍〉，Next 見〈與 Next 並用（App Router）〉），React 掛載前就依已存偏好設定 `<html>`。`suite` 要與 `ThemeProvider` 相同，未傳為 `vibrant`；不一致時掛載瞬間會換一次套系。首屏腳本會讀 localStorage，不要與 `persist={false}` 一起用；它要搭配 `target="document"`，否則 `<html>` 上的屬性停在首屏值，不隨後續切換更新。
 
 `accent={{light, dark?, secondary?, soft?:{light?, dark?}}}` 覆寫專案強調色（`AccentInput`）；只有日間主色 `light` 必填。暗黑主色、柔和底色沒給時由 ThemeProvider 推算（同色相，通過文字對比 4.5:1）；點綴色沒給時沿用該模式的主色，有給則兩種模式都用同一值。滑過 `--accent-hover`、按下 `--accent-pressed` 與焦點框外圈 `--focus-ring` 一律由主色推算（OKLCH 明度位移，色相不變）。推算函式 `deriveAccent` 由 `@luca-style/tokens/accent` 匯出，建置與設計檔匯入用的是同一份。有給的顏色原樣使用、不做對比檢查：主按鈕文字在日間固定為白色，太淺的日間主色會讓按鈕文字看不清，請自行確認對比。Showcase 日間覆寫使用暖銅色與淺暖底，暗黑使用亮珊瑚色與深暖底。覆寫不改 success／warning／error。業務資料另定 `--data-positive` 等專案變數，使用文字、符號或圖例；不要引用 `--success`／`--error` 代表漲跌。
 
@@ -201,7 +192,7 @@ npm install tailwind-merge@3
 
 `tailwind-merge` 要用 3.x，2.6 只支援 Tailwind v3。乾淨專案驗證的版本是 `tailwindcss` 4.3.3 與 `tailwind-merge` 3.7.0。
 
-`vite.config.js` 加上 Tailwind 的 Vite 外掛：
+`vite.config.js` 加上 Tailwind 的 Vite 外掛（下面是併進現有設定的片段，不是完整檔案）：
 
 ```js
 import tailwindcss from '@tailwindcss/vite';
@@ -231,9 +222,20 @@ CSS 入口要照這個寫法，不要再從 JavaScript 匯入 Luca 的 CSS：
 
 ## React 18
 
-`@luca-style/react` 的 peer 範圍是 `react`、`react-dom` `^18.0.0 || ^19.0.0`。乾淨專案驗證的版本是 React 18.3.1、`@types/react` 18.3.31：用一般 `npm install` 安裝打包檔，`tsc --noEmit` 與 `vite build` 通過，並在 dev server 上操作全部公開元件（Button、Select、Checkbox、TextField、ContentState、`useTheme`，以及經 `forwardRef` 連結的 `Navigation` `renderLink` 與 `Button` `render`），console 沒有 error 或 warning。
+`@luca-style/react` 的 peer 範圍是 `react`、`react-dom` `^18.0.0 || ^19.0.0`。乾淨專案驗證的版本是 React 18.3.1、`@types/react` 18.3.31：用一般 `npm install` 安裝兩個套件，`tsc --noEmit` 與 `vite build` 通過，並在 dev server 上操作全部公開元件（Button、Select、Checkbox、TextField、ContentState、`useTheme`，以及經 `forwardRef` 連結的 `Navigation` `renderLink` 與 `Button` `render`），console 沒有 error 或 warning。
 
 React 18 的 `ref` 不是一般 prop，所以 `renderLink` 與 `Button` 的 `render` 收到的 `ref` 要交給 `forwardRef` 包好的連結元件；直接傳給沒有 `forwardRef` 的函式元件，React 18 會警告「Function components cannot be given refs」。React 19 可以把 `ref` 當一般 prop。18.0 到 18.2 沒有逐版驗證，只驗證 18.3.1。
+
+乾淨專案釘住的版本，以及入口 `ThemeProvider` 的那一行（`suite` 和 `vite.config.js` 的 `themeInitScript({suite: 'professional'})` 相同）：
+
+```sh
+npm install react@18.3.1 react-dom@18.3.1
+npm install -D @types/react@18.3.31 @types/react-dom@18.3.7
+```
+
+```tsx
+return <ThemeProvider suite="professional" target="document">
+```
 
 ## Vite 的 `'use client'` 警告
 
@@ -243,10 +245,16 @@ React 18 的 `ref` 不是一般 prop，所以 `renderLink` 與 `Button` 的 `ren
 [MODULE_LEVEL_DIRECTIVE] The semantics of the module level directive "use client" in "node_modules/@luca-style/react/dist/theme.js" may not be preserved when bundling.
 ```
 
-要靜音時，在 `vite.config.js` 過濾這一種警告：
+要靜音時，在 `vite.config.js` 過濾這一種警告。下面是乾淨專案的完整 `vite.config.js`：首屏腳本外掛（見〈整頁主題與防閃爍〉）加上靜音設定；只要靜音就只取 `build` 區塊：
 
 ```js
+import {themeInitScript} from '@luca-style/react';
+
 export default {
+  plugins: [{
+    name: 'luca-theme-init',
+    transformIndexHtml: () => [{tag: 'script', children: themeInitScript({suite: 'professional'}), injectTo: 'head-prepend'}],
+  }],
   build: {
     rolldownOptions: {
       onwarn(warning, warn) {
@@ -258,7 +266,7 @@ export default {
 };
 ```
 
-`npm run test:consumer` 會檢查 `vite build` 的輸出，除了這一種、而且只限 `@luca-style/react`、`@base-ui/react`、`@base-ui/utils` 的檔案，其他警告都算失敗。
+`npm run test:consumer` 會檢查 `vite build` 的輸出，除了這一種、而且只限 `@luca-style/react`、`@base-ui/react`、`@base-ui/utils` 的檔案，其他警告都算失敗。`npm run test:clean-projects` 的 React 18 專案用上面這份設定建置，輸出不得有任何警告。
 
 ## 與 Next 並用（App Router）
 
@@ -267,13 +275,14 @@ export default {
 `app/layout.tsx`（伺服器元件）：
 
 ```tsx
+import type {ReactNode} from 'react';
 import {themeInitScript} from '@luca-style/react';
 import '@luca-style/tokens/css';
 import '@luca-style/react/fonts.css';
 import '@luca-style/react/css';
 import {Providers} from './providers';
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({children}: {children: ReactNode}) {
   return <html lang="zh-Hant" suppressHydrationWarning>
     <head><script dangerouslySetInnerHTML={{__html: themeInitScript({suite: 'professional'})}}/></head>
     <body><Providers>{children}</Providers></body>
@@ -285,9 +294,10 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
 
 ```tsx
 'use client';
+import type {ReactNode} from 'react';
 import {ThemeProvider} from '@luca-style/react';
 
-export function Providers({children}: {children: React.ReactNode}) {
+export function Providers({children}: {children: ReactNode}) {
   return <ThemeProvider suite="professional" target="document">{children}</ThemeProvider>;
 }
 ```
@@ -297,6 +307,62 @@ export function Providers({children}: {children: React.ReactNode}) {
 - `Navigation` 的 `renderLink` 是函式，只能在 `'use client'` 檔裡傳：`renderLink={props => <Link {...props}/>}`（`Link` 來自 `next/link`）。`Button` 用 `render={<Link href="…"/>}`。點擊走客戶端導覽，不整頁重載，目前頁面仍帶 `aria-current="page"`。
 - Luca CSS 從 `layout.tsx` 匯入，Next 會把它輸出成 `<head>` 裡阻擋渲染的 stylesheet，所以第一幀就有正確底色。改成延遲載入（例如 `media="print"` 載入後再切換）會讓首屏先閃一下。
 - `Checkbox` 的方框在伺服器輸出時還沒有 `aria-labelledby`，Base UI 在 layout effect 補上。這是既有行為；乾淨專案的 `next start` 與 `next dev` 都沒有 hydration 警告。
+
+## 在 jsdom 測試 Select
+
+jsdom（Vitest、Jest）裡，`Select` 不是原生 `<select>`：`fireEvent.change` 對它靜默無效，`onChange` 不會被呼叫，也不報錯。要先點欄位開啟選單，再對選項先送 `pointerDown`，再 `click`；少了 `pointerDown`，選項不會被選取。下面放進你的 `test(..., async () => {...})`，`expect` 來自你的測試框架：
+
+```tsx
+import {fireEvent, render, screen} from '@testing-library/react';
+import {Select, ThemeProvider} from '@luca-style/react';
+
+const picked: string[] = [];
+render(<ThemeProvider><Select label="水果" onChange={event => picked.push(event.target.value)}>
+  <option value="apple">蘋果</option>
+  <option value="pear">梨子</option>
+</Select></ThemeProvider>);
+const trigger = screen.getByRole('combobox');
+
+// 無效：不會呼叫 onChange
+fireEvent.change(trigger, {target: {value: 'pear'}});
+expect(picked).toEqual([]);
+
+// 有效：開啟選單，選項先 pointerDown 再 click
+fireEvent.click(trigger);
+const option = await screen.findByRole('option', {name: '梨子'});
+fireEvent.pointerDown(option);
+fireEvent.click(option);
+expect(picked).toEqual(['pear']);
+```
+
+這段程式碼由 `tests/consumer-guide.spec.ts` 在 jsdom 裡原樣執行。
+
+## 第三方 portal
+
+`ThemeProvider` 預設 `target="self"`，主題屬性（`data-luca-theme`、`data-suite`、`data-mode`）寫在它自己的外層 `div`。第三方元件（對話框、提示、選單）若把彈出層 portal 到 `document.body`，彈出層在那個 `div` 之外，拿不到主題，落回 `:root` 的預設主題（vibrant 日間）。Luca 自己的 `Select` 選單不受影響，它會 portal 回主題容器。改用 `target="document"`，屬性寫在 `<html>`，body 底下的彈出層也在主題之下：
+
+```tsx
+import {render} from '@testing-library/react';
+import {createPortal} from 'react-dom';
+import {ThemeProvider} from '@luca-style/react';
+
+function ThirdPartyPopup() {
+  return createPortal(<p id="popup">彈出層</p>, document.body);
+}
+
+render(<ThemeProvider suite="professional" target="document"><ThirdPartyPopup/></ThemeProvider>);
+expect(document.getElementById('popup')!.closest('[data-luca-theme]')).toBe(document.documentElement);
+```
+
+`target="self"` 時，同一個 `closest('[data-luca-theme]')` 回傳 `null`；`tests/consumer-guide.spec.ts` 兩種都執行。
+
+## 在 luca-style 檢出內建置
+
+這一節只給在 luca-style 檢出內執行 `npm run build` 的人（維護者與貢獻者）；使用端不需要。Windows 上建置後，`docs/design-tokens.md` 可能只有換行符差異、內容沒變，不要提交：
+
+```sh
+git checkout -- docs/design-tokens.md
+```
 
 ## 獨立消費端驗證
 
@@ -310,7 +376,7 @@ npm run test:consumer
 
 ## 0.2.0 升級說明
 
-從 0.1.0 升級時，依〈建置、封裝與安裝〉重新封裝並安裝兩個 0.2.0 tarball（兩個套件版本須一致）。`@luca-style/react` 新增執行期依賴 `@base-ui/react` ^1.9，隨 tarball 一起安裝；`react-dom` 19 列為 peer。沒給 `accent`、沒覆寫 `density`／`shape` 的專案，密度與外形與 0.1.0 相同；中性色 8 個角色改為冷藍灰（見〈中性色改為冷藍灰〉），所有元件的焦點框改為雙圈、主按鈕滑過改用推算色（見〈專案強調色〉），Checkbox 的方框改為依主題自繪、不再用瀏覽器的 `accent-color`（見〈其餘共用元件改用 Base UI〉）。
+從 0.1.0 升級時，依〈安裝〉把兩個套件升到 0.2.0（版本須一致）。`@luca-style/react` 新增執行期依賴 `@base-ui/react` ^1.9，隨套件一起安裝；`react-dom` 列為 peer（範圍見〈React 18〉）。沒給 `accent`、沒覆寫 `density`／`shape` 的專案，密度與外形與 0.1.0 相同；中性色 8 個角色改為冷藍灰（見〈中性色改為冷藍灰〉），所有元件的焦點框改為雙圈、主按鈕滑過改用推算色（見〈專案強調色〉），Checkbox 的方框改為依主題自繪、不再用瀏覽器的 `accent-color`（見〈其餘共用元件改用 Base UI〉）。
 
 摘要：
 
@@ -361,6 +427,39 @@ npm run test:consumer
 - 把 `resolvedMode` 同步到 `<html>` 的 `useLayoutEffect`／`useEffect`（例如 `document.documentElement.dataset.mode = resolvedMode`）。改用 `<ThemeProvider target="document">`。
 - 只為了讓整頁底色跟上主題而加的 `html { background:... }` 規則：`target="document"` 後 `<html>` 本身帶主題屬性，套件 CSS 會給它底色。若希望外部 CSS 到達前也有正確底色，可保留以 `html[data-mode="dark"]` 為條件的行內保底樣式。
 
+同步 effect 刪掉後，原本依賴它寫入時機的程式（例如讀 `<html>` 屬性的腳本）要改成監看 `data-mode`，`onModeChange` 是專案自己的函式：
+
+```js
+const observer = new MutationObserver(() => onModeChange(document.documentElement.dataset.mode));
+observer.observe(document.documentElement, {attributes: true, attributeFilter: ['data-mode']});
+```
+
+不用時呼叫 `observer.disconnect()`。
+
+舊的手寫首屏腳本可能還多寫了 `data-theme` 和 `style.colorScheme`；`themeInitScript` 與 `ThemeProvider` 都不寫這兩項。下面是舊腳本常見的寫法，不要照抄：
+
+```js
+// 不要照抄：舊腳本多寫的兩項
+const root = document.documentElement;
+root.setAttribute('data-theme', mode);
+root.style.colorScheme = mode;
+```
+
+專案的 CSS 或第三方元件若靠 `[data-theme]` 或 `color-scheme`，在上面的 `onModeChange` 裡自己寫入。
+
+Vite 專案把首屏腳本放進 `<head>`，並傳入和 `ThemeProvider` 相同的 `suite`；沒傳會得到 `vibrant`，professional 專案首屏會先換一次套系。下面是併進現有 `vite.config.js` 的片段，完整檔案見〈Vite 的 'use client' 警告〉：
+
+```js
+import {themeInitScript} from '@luca-style/react';
+
+export default {
+  plugins: [{
+    name: 'luca-theme-init',
+    transformIndexHtml: () => [{tag: 'script', children: themeInitScript({suite: 'professional'}), injectTo: 'head-prepend'}],
+  }],
+};
+```
+
 注意事項：
 
 - `suite="professional"` 的專案要把同一個套系傳給 `themeInitScript({suite:'professional'})`；沒傳時腳本以 `vibrant` 設定，React 掛載瞬間會閃一下套系。
@@ -394,7 +493,7 @@ npm run test:consumer
 
 ### Select 改為自訂選單
 
-`Select` 改由 Base UI 的 Select 實作，選單外觀跟著風格套系、明暗模式與元件外形。`@luca-style/react` 新增依賴 `@base-ui/react` ^1.9，`react-dom` 19 列為 peer。
+`Select` 改由 Base UI 的 Select 實作，選單外觀跟著風格套系、明暗模式與元件外形。`@luca-style/react` 新增依賴 `@base-ui/react` ^1.9，`react-dom` 列為 peer。
 
 DOM 改變：欄位是 `role="combobox"` 的 `<button>`（仍帶 `.luca-input`，另加 `.luca-select-trigger`），選單是 `role="listbox"`，選項是 `role="option"`。選單 portal 到 `ThemeProvider` 的外層容器；`target="document"` 時 portal 到 `<body>`。沒有 `ThemeProvider` 時也 portal 到 `<body>`，這時選單拿不到主題變數。
 
