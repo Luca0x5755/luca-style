@@ -1,6 +1,7 @@
 /* 單行時高度由 min-height 決定（PR-STYLE-55），上下內距取最小階，文字換行時才撐高（PR-STYLE-56）；元件自帶 border-box，不依賴使用端的全域重設。
-   長字串可在任意處斷開；為了不讓 flex 列把短標籤擠到斷字，按鈕不收縮，改以 max-width 限制在容器內。 */
-.luca-button { box-sizing:border-box; overflow-wrap:anywhere; flex-shrink:0; max-width:100%; display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-1) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
+   長字串可在任意處斷開；為了不讓 flex 列把短標籤擠到斷字，按鈕不收縮，改以 max-width 限制在容器內。
+   渲染成連結時（PR-STYLE-58）拿掉連結底線，外觀與按鈕相同。 */
+.luca-button { box-sizing:border-box; text-decoration:none; overflow-wrap:anywhere; flex-shrink:0; max-width:100%; display:inline-flex; align-items:center; justify-content:center; gap:var(--space-3); min-height:var(--control-height); padding:var(--space-1) var(--space-6); border:var(--border-width) solid var(--border); border-radius:var(--radius-control); background:var(--accent); color:var(--accent-ink); font:500 1rem/1.5 var(--font-body); cursor:pointer; }
 /* 滑過、按下用推算出的強調色角色（PR-STYLE-45），不再用 brightness 濾鏡。 */
 /* 會收到專案 className 的元素，狀態選擇器都包進 :where()，特異度維持 (0,1,0)，專案的 class 才能生效（PR-ADOPT-05）。:focus-visible 例外，見檔尾。 */
 .luca-button-primary:where(:not(:disabled):hover) { background:var(--accent-hover); }
@@ -55,10 +56,11 @@
 [data-luca-theme][data-suite="professional"][data-mode="dark"] { --loading-animation:url('../loading/square-dark.gif'); --loading-static:url('../loading/square-dark.png'); }
 @media (prefers-reduced-motion: reduce) { .luca-loading-animation { background-image:var(--loading-static,url('../loading/tide-light.png')); } }
 .luca-navigation { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-4); padding:var(--space-4) var(--space-6); background:var(--surface); border-bottom:var(--border-width) solid var(--border); }
-.luca-navigation .luca-brand { margin-right:auto; color:var(--text); text-decoration:none; font:600 1.125rem/1.5 var(--font-body); }
+/* 導覽連結以 class 選取，特異度 (0,1,0)：專案經 renderLink 傳入的 class 才能生效（PR-STYLE-57、PR-ADOPT-05）。焦點框見檔尾，刻意不降。 */
+.luca-brand { margin-right:auto; color:var(--text); text-decoration:none; font:600 1.125rem/1.5 var(--font-body); }
 .luca-navigation-list { display:flex; flex-wrap:wrap; gap:var(--space-4); margin:0; padding:0; list-style:none; }
-.luca-navigation a { color:var(--muted); font-size:.875rem; text-decoration:underline; text-underline-offset:4px; }
-.luca-navigation a[aria-current=page] { color:var(--accent); font-weight:600; }
+.luca-navigation-link { color:var(--muted); font-size:.875rem; text-decoration:underline; text-underline-offset:4px; }
+.luca-navigation-link:where([aria-current=page]) { color:var(--accent); font-weight:600; }
 .luca-metric { min-width:0; padding:var(--card-padding); border:var(--border-width) solid var(--border); border-left-width:var(--metric-border-left); border-radius:var(--radius-card); background:var(--surface); }
 .luca-metric-highlight { background:var(--metric-background); box-shadow:var(--metric-shadow); }
 .luca-metric h2 { margin:var(--space-2) 0; font:600 1.125rem/1.5 var(--font-body); }
@@ -73,4 +75,4 @@
 .luca-table th,.luca-table td { padding:var(--table-cell-padding-block) var(--table-cell-padding-inline); border-bottom:1px solid var(--border); vertical-align:top; overflow-wrap:anywhere; }
 /* 所有元件共用的雙圈焦點框（PR-STYLE-46）。不包 :where()：不帶狀態的 class（如 outline-none）不該拿掉焦點框，要改用 focus-visible: 前綴（PR-ADOPT-05 的例外）。 */
 /* 外圈 2px focus-ring 用 outline（強制色彩模式下仍可見），內圈 2px 表面色以 box-shadow 填滿 outline-offset 的空隙。 */
-.luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox-box:focus-visible, .luca-navigation a:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }
+.luca-button:focus-visible, .luca-input:focus-visible, .luca-checkbox-box:focus-visible, .luca-navigation a:focus-visible, .luca-navigation-link:focus-visible, .luca-brand:focus-visible, .luca-table-region:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:0 0 0 2px var(--surface); }

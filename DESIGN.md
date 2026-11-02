@@ -91,13 +91,13 @@ export const App = () => (
 
 | 元件 | 用途 | 重點 props |
 | --- | --- | --- |
-| `Button` | 按鈕 | `variant`（`primary`、`secondary`）、`loading` |
+| `Button` | 按鈕；傳 `render` 時渲染成連結（型別 `ButtonLinkProps`），外觀相同、保留連結語意，不接受 `disabled`、`loading`、`type` | `variant`（`primary`、`secondary`）、`loading`、`render` |
 | `TextField` | 文字欄位 | `label`、`helper`、`error` |
 | `Select` | 自訂下拉選單，選項仍以 `<option>` 描述 | `label`、`value`、`onChange`（收到的 `event.target.value` 是選到的值） |
 | `Checkbox` | 核取方塊 | `label`、`checked`、`onChange` |
 | `StatusMessage` | 操作結果訊息 | `tone`（`success`、`warning`、`error`） |
 | `ContentState` | 載入、空白、錯誤狀態 | `state`、`title`、`description`、`onRetry` |
-| `Navigation` | 主要導覽 | `items`、`currentPath`、`brand`、`brandHref`、`label` |
+| `Navigation` | 主要導覽；傳 `renderLink` 時選單與品牌連結都用專案的連結元件，點擊不整頁重載，目前頁面仍有 `aria-current` | `items`、`currentPath`、`brand`、`brandHref`、`label`、`renderLink`（收到 `NavigationLinkProps`） |
 | `MetricCard` | 指標卡 | `label`、`value`、`detail`、`eyebrow`、`highlight` |
 | `DataTable` | 資料表 | `caption`、`columns`、`rows`、`rowKey` |
 
@@ -126,6 +126,26 @@ export function Panel() {
         columns={[{ key: 'name', heading: '名稱', render: row => row.name }, { key: 'amount', heading: '金額', render: row => row.amount }]}
       />
     </section>
+  );
+}
+```
+
+接專案的路由：`Navigation` 的 `renderLink` 收到 `<a>` 的屬性（含 `href`、`className`、`ref`），全部展開到專案的連結元件上，Luca 的樣式與 `aria-current` 才會留著。它只收函式。`Button` 的 `render` 可傳元素或函式，渲染成連結時沒有按鈕的 `type`、停用與載入狀態，按 Space 也不會觸發，與一般連結相同。`Button` 以多載區分兩種寫法，包裝元件要同時轉傳 `ButtonProps` 與 `ButtonLinkProps` 時，以有沒有 `render` 分兩個分支呼叫。
+
+```tsx
+import type { ReactElement, ReactNode } from 'react';
+import { Button, Navigation, type NavigationLinkProps } from '@luca-style/react';
+
+// 換成專案路由的連結元件，例如 next/link 的 Link；React Router 的 Link 收 to，寫成 ({ href, ...props }) => <Link to={href} {...props} />。
+declare function Link(props: { href: string; className?: string; children?: ReactNode }): ReactElement;
+const renderLink = (props: NavigationLinkProps) => <Link {...props} />;
+
+export function Header({ pathname }: { pathname: string }) {
+  return (
+    <>
+      <Navigation currentPath={pathname} renderLink={renderLink} items={[{ label: '專案', href: '/projects' }, { label: '設定', href: '/settings' }]} />
+      <Button render={<Link href="/projects/new" />}>新增專案</Button>
+    </>
   );
 }
 ```

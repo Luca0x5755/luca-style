@@ -4,7 +4,7 @@ import '@luca-style/tokens/css';
 import '../../../packages/react/src/styles.css';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, Checkbox, ContentState, DataTable, MetricCard, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
+import { Button, Checkbox, ContentState, DataTable, MetricCard, Navigation, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type NavigationLinkProps, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
 
 const params = new URLSearchParams(window.location.search);
 const persist = params.get('persist') !== '0';
@@ -101,11 +101,31 @@ function FlexRowSamples() {
   </>;
 }
 
+// 連結樣本（PR-STYLE-57、58）：Button 以元素與函式兩種 render 渲染成連結；點擊次數記在 output，用來確認 Enter 會觸發、Space 不會。
+// 導覽用的假路由：與 Next、React Router 的連結元件相同，攔下點擊、用 history.pushState 換網址，不整頁重載；並加上專案自己的 class。
+function LinkSamples() {
+  const [clicks, setClicks] = useState(0);
+  const [path, setPath] = useState(window.location.pathname);
+  const count = () => setClicks(value => value + 1);
+  const renderLink = ({href, onClick, className, ...props}:NavigationLinkProps) => <a {...props} href={href} className={`${className ?? ''} project-link`.trim()} onClick={event => {
+    onClick?.(event);
+    event.preventDefault();
+    window.history.pushState(null, '', href);
+    setPath(href);
+  }}/>;
+  return <section aria-label="連結樣本">
+    <Navigation label="路由導覽" brand="路由品牌" brandHref="/" currentPath={path} renderLink={renderLink} items={[{label:'第一頁', href:'/first'}, {label:'第二頁', href:'/second'}]}/>
+    <Button render={<a href="#element-link" onClick={count}/>}>元素連結</Button>
+    <Button variant="secondary" href="#function-link" onClick={count} render={props => <a {...props}/>}>函式連結</Button>
+    <output aria-label="連結點擊次數">{clicks}</output>
+  </section>;
+}
+
 function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/><LinkSamples/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
   </>;
 }
 

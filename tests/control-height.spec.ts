@@ -42,16 +42,18 @@ test.describe('control height in the test harness', () => {
         await page.goto(query(combination));
       });
 
-      test(`single-line Button, Select and TextField are ${height}px tall`, async ({ page }) => {
+      test(`single-line Button, link Button, Select and TextField are ${height}px tall`, async ({ page }) => {
         const samples = page.getByRole('region', { name:'元件樣本' });
         const controls = {
           '主要按鈕':samples.getByRole('button', { name:'主要按鈕' }),
           '次要按鈕':samples.getByRole('button', { name:'次要按鈕' }),
           'Select':samples.getByLabel('樣本選單'),
           'TextField':samples.getByLabel('樣本欄位'),
+          // Button 渲染成連結時（PR-STYLE-58）高度也相同。
+          '連結按鈕':page.getByRole('region', { name:'連結樣本' }).getByRole('link', { name:'元素連結' }),
         };
         const measured = Object.fromEntries(await Promise.all(Object.entries(controls).map(async ([control, element]) => [control, await heightOf(element)])));
-        expect(measured).toEqual({ '主要按鈕':height, '次要按鈕':height, 'Select':height, 'TextField':height });
+        expect(measured).toEqual({ '主要按鈕':height, '次要按鈕':height, 'Select':height, 'TextField':height, '連結按鈕':height });
       });
 
       test('a Button with long text grows and keeps its text inside', async ({ page }) => {

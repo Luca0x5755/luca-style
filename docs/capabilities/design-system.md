@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～56`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）、`PR-REVIEW-xx`（狀態總覽頁）與 `PR-ADOPT-xx`（接入與發佈）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～58`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）、`PR-REVIEW-xx`（狀態總覽頁）與 `PR-ADOPT-xx`（接入與發佈）。
 - 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
@@ -140,10 +140,15 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 
 PR-STYLE-55 — 文字單行時，Button、Select、TextField 的實際高度等於 `control-height`，涵蓋兩種風格套系、三種資訊密度、兩種元件外形。
 PR-STYLE-56 — 文字換行時，上述元件會長高，內容不被裁切。TextField 的輸入框是單行，長值不換行，在輸入框內橫向捲動；它的長標籤會換行，整個欄位長高，輸入框仍是 `control-height`；專案加大字級時輸入框會長高。
+PR-STYLE-57 — `Navigation` 可以用專案提供的連結元件（`renderLink`），點擊不整頁重載，目前頁面仍有 `aria-current`。選單連結與品牌連結都走同一個連結元件，專案加上的 class 會生效。
+PR-STYLE-58 — `Button` 可以透過公開型別（`ButtonLinkProps` 的 `render`）渲染成連結，外觀與同 variant 的按鈕相同、沒有底線，Tab 能聚焦、Enter 會觸發；它保留連結語意，按 Space 不觸發，也沒有按鈕的 `type`。既有的 `ButtonProps` 形狀不變。
 
 - 兩條承諾由 `tests/control-height.spec.ts` 在瀏覽器裡量實際尺寸（在 `npm test` 內），測試載具沒有全域 `box-sizing` 重設，所以也涵蓋沒有重設的使用端。
 - 依 PR-STYLE-56，Select 的長值不再是單行省略號，改為換行；展開選單的長選項也會長高，單行選項維持 40px。
 - 長字串（含不可斷的英文）在 Button、Select、欄位標籤與說明文字內任意處斷開，不撐寬容器。Button 在 flex 列中不收縮、寬度以容器為上限，所以工具列裡的短標籤不會被擠到斷字。
+- PR-STYLE-57、58 由 `tests/component-links.spec.ts` 在測試載具驗證，載具用 `history.pushState` 的假路由代替 Next、React Router 的連結元件；連結 Button 的焦點框與單行高度分別在 `tests/focus-ring.spec.ts`、`tests/control-height.spec.ts`；型別相容（`interface X extends ButtonProps`、`ButtonProps['onClick']`、`ComponentProps<typeof Button>` 等於 `ButtonProps`）在 `tests/components-props.spec.ts`，由 `npm run typecheck` 檢查。
+- 連結 Button 不經過 Base UI 的 `Button`：Base UI 文件說 `<a>` 不該放進它的 `render`，會加上按鈕的 `type` 與鍵盤行為。改用 Base UI 的 `useRender` 渲染，仍屬 ADR 0006。
+- 導覽連結的樣式以 `.luca-navigation-link`、`.luca-brand` 選取，特異度 (0,1,0)，專案經 `renderLink` 傳的 class 能生效（PR-ADOPT-05）；`npm run test:clean-projects` 的傳入 class 檢查涵蓋導覽連結與連結 Button。焦點框選擇器不變。
 
 ### Penpot 元件庫設計檔（ADR 0008）
 

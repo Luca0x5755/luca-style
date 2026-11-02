@@ -176,6 +176,9 @@ const passedClasses = outlineRemovers => [
   {id: 'checkbox-indeterminate', property: 'backgroundColor', expected: roleColor('error', .4)},
   {id: 'checkbox-invalid', property: 'borderTopColor', expected: roleColor('warning')},
   {id: 'checkbox-disabled', state: 'disabled', property: 'opacity', expected: '1'},
+  // Button 渲染成連結、導覽經 renderLink 接專案連結時，專案的 class 也要生效（PR-STYLE-57、58）。
+  {id: 'button-link', property: 'backgroundColor', expected: roleColor('success', .4)},
+  ...['nav-link-plain', 'nav-link-current', 'nav-link-brand'].map(id => ({id, property: 'color', expected: roleColor('success')})),
   // focus-visible: 前綴要能生效。
   ...['button', 'input', 'select', 'checkbox'].map(name => ({id: `${name}-focus`, state: 'focus', property: 'outlineColor', expected: roleColor('warning')})),
   // 例外：不帶狀態的拿掉外框 class 不會拿掉焦點框（PR-STYLE-46）。
@@ -332,6 +335,15 @@ async function whereControl(project) {
   return {name: '按鈕滑過的 :where() 還原', file: stylesPath, content: styles.replace(whereHover, '.luca-button-primary:not(:disabled):hover'), check: 'classes', mention: 'button-hover'};
 }
 
+// 導覽連結的選擇器改回 .luca-navigation a（特異度 0,1,1）時，專案經 renderLink 傳的 class 要贏不了而變紅（PR-STYLE-57）。
+async function navigationControl(project) {
+  const stylesPath = join(project, 'node_modules/@luca-style/react/dist/styles.css');
+  const styles = await readFile(stylesPath, 'utf8');
+  const navigationLink = '.luca-navigation-link {';
+  assert.ok(styles.includes(navigationLink), `styles.css 沒有 ${navigationLink}，反向控制要改的文字不存在`);
+  return {name: '導覽連結改回 .luca-navigation a', file: stylesPath, content: styles.replace(navigationLink, '.luca-navigation a {'), check: 'classes', mention: 'nav-link-plain'};
+}
+
 async function verifyTailwindV3({project, browser, roles, tokens, build}) {
   const expectations = passedClasses(['outline-none']);
   const check = {
@@ -356,6 +368,7 @@ async function verifyTailwindV3({project, browser, roles, tokens, build}) {
     {name: 'Luca 排在 tailwindcss/base 之前', file: entryPath, content: `${[...luca, ...others].join('\n')}\n`, check: 'preflight', mention: 'luca-button'},
     {name: 'Luca 排在 tailwindcss/utilities 之後', file: entryPath, content: `${[...others, ...luca].join('\n')}\n`, check: 'classes', mention: 'button-merged'},
     await whereControl(project),
+    await navigationControl(project),
   ]});
 }
 
@@ -399,6 +412,7 @@ async function verifyTailwindV4({project, browser, roles, tokens, build}) {
     // preflight 不分層也蓋不掉 Luca（它的選擇器特異度比 Luca 的 class 低），所以用排在 preflight 之前的圖層證明 preflight 檢查會紅。
     {name: 'Luca 放進排在 preflight 之前的 theme 圖層', file: entryPath, content: entry(entryLines.map(line => isLuca(line) ? line.replace(/;$/, ' layer(theme);') : line)), check: 'preflight', mention: 'luca-button'},
     await whereControl(project),
+    await navigationControl(project),
   ]});
 }
 
