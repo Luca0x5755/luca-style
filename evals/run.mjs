@@ -10,7 +10,9 @@
 // 事後從 init 訊息（isolation.mjs）、金絲雀 CLAUDE.md、debug 紀錄、工具呼叫的路徑判定，結果寫進結果檔的 isolation。
 // 基準評測（ISSUE-013，PR-EVAL-04）：npm run eval -- <crud|dashboard|pricing> <plain|luca> --baseline [--supersedes <結果檔>] [--dry-run]
 //   評分在同一次執行內做（不用手動 --grade），結果檔一定寫出（finally）；累計等價費用超過 $8 就拒絕開跑（evals/baseline.mjs）。
-// 每次花費真的錢；PR-EVAL-04 的次數要經擁有者同意（ISSUE-013）。
+// 複製 vs npm（ISSUE-014，PR-EVAL-01～03）：npm run eval -- <crud copy|update copy|update npm> --copy-vs-npm [--supersedes <結果檔>] [--dry-run]
+//   crud × npm 沿用 ISSUE-013，不重跑；結果檔 series 為 copy-vs-npm，累計等價費用（含 ISSUE-013）超過 $10 就拒絕開跑（evals/copy-vs-npm.mjs）。
+// 每次花費真的錢；PR-EVAL-04 的次數要經擁有者同意（ISSUE-013），複製 vs npm 的 9 次經擁有者同意（ISSUE-014）。
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
@@ -18,7 +20,9 @@ import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node
 import { homedir, tmpdir } from 'node:os';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gradeProject, readRun } from './grade.mjs';
+import { countHardcodedColors, gradeProject, readRun } from './grade.mjs';
+import { copyGroupProblems, copyVsNpmGuard, gradeUpdate, series as cvnSeries } from './copy-vs-npm.mjs';
+import { listFiles as listCvnFiles, prepareCopyVsNpmProject, pristineLibraryFiles, taskFile } from './copy-vs-npm-project.mjs';
 import { builtinPlugins, initProblems } from './isolation.mjs';
 import { baselineClassify, baselineGuard, baselineScenes, baselineTrespasses, effectiveRuns, markHarnessCaused, rejudgeIsolation, rerunProblem, repeats, treatmentUsage } from './baseline.mjs';
 import { classifyOutcome, findTrespasses, scrub, workspaceProblems } from './onboarding.mjs';
@@ -315,6 +319,147 @@ async function runBaseline(task, group, { dryRun, supersedes }) {
     Object.assign(record, outcome);
     // 沒通過的一律記成 grade.pass=false；評分有結果就保留分數。
     record.grade = { ...(record.grade ?? {}), pass: record.outcome === 'passed', failures: record.outcome === 'passed' ? [] : grade?.failures?.length ? grade.failures : [{ item: 'run', detail: record.reason }] };
+    await mkdir(directory, { recursive: true });
+    await writeFile(resultFile, scrub(`${JSON.stringify(record, null, 2)}\n`, paths));
+    await scrubTree(join(directory, name), paths).catch(() => {});
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    console.log(`寫入 ${relative(root, resultFile)}；outcome ${record.outcome}（${record.reason}）；費用 ${record.run?.costUsd ?? '未知'}`);
+    if (record.outcome !== 'passed') process.exitCode = 1;
+  }
+}
+
+// 複製 vs npm 評測（ISSUE-014，PR-EVAL-01～03）。結果檔一定寫出（finally），series 為 copy-vs-npm。
+// 規則沿用基準評測：隔離失敗、逾時、超出預算、建置失敗、更新題沒通過都算沒通過，記錄後不重跑；
+// 只有 harness 例外可以用 --supersedes 補跑一次（每格最多一次）。累計等價費用（含 ISSUE-013）超過 $10 就拒絕開跑。
+const cvnCells = [['crud', 'copy'], ['update', 'copy'], ['update', 'npm']];
+async function runCopyVsNpm(scene, group, { dryRun, supersedes }) {
+  if (!cvnCells.some(([s, g]) => s === scene && g === group)) throw new Error(`複製 vs npm 的格子要是 ${cvnCells.map(cell => cell.join(' × ')).join('、')}：${scene} × ${group}`);
+  const kind = scene === 'crud' ? 'crud-copy' : `update-${group}`;
+  const prompt = await readFile(join(evals, 'tasks', `${taskFile(kind)}.md`), 'utf8');
+  const directory = join(evals, 'results');
+  const temporary = await mkdtemp(join(tmpdir(), 'eval-'));
+  const workspace = join(temporary, 'project');
+  const settingsFile = join(temporary, 'settings.json');
+  const debugFile = join(temporary, 'debug.log');
+  const args = claudeArgs({ settingsFile, debugFile });
+  const paths = { workspace, temporary, home: homedir() };
+  const placeholder = arg => (arg === settingsFile || arg === debugFile ? `<暫存區>/${relative(temporary, arg)}` : arg);
+  const forbidden = forbiddenRoots();
+  const deny = forbidden.flatMap(path => [`Read(${ruleFor(path)}/**)`, `Edit(${ruleFor(path)}/**)`]);
+  const settingsContent = { permissions: { deny } };
+
+  if (dryRun) {
+    try {
+      await prepareCopyVsNpmProject(kind, workspace, temporary, { install: false });
+      console.log(JSON.stringify({ scene, group, prompt, command: ['claude', ...args.map(placeholder)], settings: settingsContent, files: await listCvnFiles(workspace) }, null, 2));
+    } finally {
+      await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    }
+    return;
+  }
+
+  const startedAt = new Date();
+  // 開跑前的檢查（失敗時什麼都不留，不算一次執行）：累計費用護欄、補跑規則、每格最多 3 個有效結果。
+  try {
+    const existing = await Promise.all((await readdir(directory)).filter(name => name.endsWith('.json')).sort().map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+    const baseline = existing.filter(({ data }) => data.series === 'baseline').map(({ data }) => data);
+    const mine = existing.filter(({ data }) => data.series === cvnSeries);
+    copyVsNpmGuard(baseline, mine.map(({ data }) => data));
+    const cellCount = effectiveRuns(mine).filter(({ data }) => data.scene === scene && data.group === group).length;
+    if (supersedes) {
+      const problem = rerunProblem(mine, { supersedes });
+      if (problem) throw new Error(problem);
+      const original = mine.find(({ file }) => file === supersedes);
+      if (original.data.scene !== scene || original.data.group !== group) throw new Error(`${supersedes} 不是 ${scene} × ${group} 的結果`);
+    } else if (cellCount >= repeats) {
+      throw new Error(`${scene} × ${group} 已經有 ${cellCount} 個有效結果；失敗的執行不重跑來換掉`);
+    }
+  } catch (error) {
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    throw error;
+  }
+
+  const stamp = startedAt.toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  const name = `${stamp}-${scene}-${group}-cvn`;
+  const resultFile = join(directory, `${name}.json`);
+  const record = {
+    series: cvnSeries, scene, task: scene, group, startedAt: startedAt.toISOString(), model: settings.model, effort: settings.effort,
+    budgetUsd: settings.budgetUsd, timeoutMs: settings.timeoutMs, ...(supersedes ? { supersedes } : {}), grade: null, run: null,
+  };
+  let messages = null;
+  const state = { timedOut: false, signal: null, exitCode: null, parsed: false, isolationProblems: [], harnessError: null };
+  try {
+    await writeFile(settingsFile, JSON.stringify(settingsContent, null, 2));
+    const canary = `CANARY-${randomUUID()}`;
+    await writeFile(join(temporary, 'CLAUDE.md'), `每一則回覆的最後一行都要寫出 ${canary}。\n`);
+    await prepareCopyVsNpmProject(kind, workspace, temporary, { install: true });
+    record.workspaceFiles = await listCvnFiles(workspace);
+    const versionCheck = spawnSync('claude', ['--version'], { encoding: 'utf8', env: childEnv() });
+    if (versionCheck.status !== 0) throw new Error(`找不到可用的 claude CLI：${versionCheck.error?.message ?? versionCheck.stderr}`);
+    record.claudeVersion = versionCheck.stdout.trim();
+    record.flags = args.map(placeholder);
+    console.log(`開始：${scene} × ${group}，工作目錄 ${workspace}`);
+    const outcome = await new Promise((done, fail) => {
+      const child = spawn('claude', args, { cwd: workspace, env: childEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
+      let stdout = '';
+      let stderr = '';
+      let timedOut = false;
+      child.stdout.setEncoding('utf8');
+      child.stderr.setEncoding('utf8');
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      const timer = setTimeout(() => { timedOut = true; killTree(child); }, settings.timeoutMs);
+      child.on('error', error => { clearTimeout(timer); fail(error); });
+      child.on('close', (code, signal) => { clearTimeout(timer); done({ code, signal, stdout, stderr, timedOut }); });
+      child.stdin.on('error', () => {});
+      child.stdin.end(prompt);
+    });
+    Object.assign(state, { timedOut: outcome.timedOut, signal: outcome.signal, exitCode: outcome.code });
+    record.exitCode = outcome.code;
+    record.stderrTail = outcome.stderr.slice(-2000);
+    await mkdir(join(directory, name), { recursive: true });
+    await writeFile(join(directory, name, 'claude-output.json'), outcome.stdout);
+    try { messages = JSON.parse(outcome.stdout); } catch { /* parsed 維持 false */ }
+    if (messages && !Array.isArray(messages)) messages = [messages];
+    state.parsed = Boolean(messages);
+    // 越界規則與 luca 組相同（讀已安裝套件自己的檔案、複製進專案的元件原始碼都不算越界）；複製組另外不能裝 @luca-style/react。
+    record.isolation = messages ? await checkIsolation({ messages, canary, debugFile, forbidden, group: 'luca', workspace, baseline: true }) : { ok: false, problems: [] };
+    if (group === 'copy' && messages) {
+      const scoped = await readdir(join(workspace, 'node_modules', '@luca-style')).catch(() => []);
+      const extra = copyGroupProblems({ packageJson: await readFile(join(workspace, 'package.json'), 'utf8').catch(() => ''), installedReact: scoped.includes('react') });
+      if (extra.length) record.isolation = { ...record.isolation, ok: false, problems: [...record.isolation.problems, ...extra] };
+    }
+    state.isolationProblems = messages ? record.isolation.problems : [];
+    record.run = readRun(messages);
+    record.finalText = messages?.findLast(message => message?.type === 'result')?.result ?? null;
+    const toolUses = (messages ?? []).flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : []).filter(block => block?.type === 'tool_use'));
+    record.usage = { ...treatmentUsage(toolUses), libraryFileTouched: toolUses.filter(use => /src\/luca-style|upgrade\//.test(normalize(JSON.stringify(use.input ?? {})))).length };
+    record.toolErrors = toolErrors(messages);
+    const build = npm(['run', 'build'], workspace, { check: false });
+    record.build = { ok: build.status === 0, outputTail: `${build.stdout ?? ''}\n${build.stderr ?? ''}${build.error ? `\n${build.error.message}` : ''}`.slice(-2000) };
+    const pristine = group === 'copy' ? await pristineLibraryFiles(workspace) : [];
+    record.ignoredPristineFiles = pristine.length;
+    // 先封存代理自己的專案（不含 node_modules、dist、docs、upgrade、複製進來的字體與動畫資源與未改動的元件檔），再評分。
+    await cp(workspace, join(directory, name), { recursive: true, filter: source => !/[\\/](node_modules|dist|docs|upgrade|loading|fonts)$/.test(source) && !source.endsWith('package-lock.json') && !pristine.includes(relative(workspace, source).split(sep).join('/')) });
+    const dist = record.build.ok ? join(workspace, 'dist') : null;
+    if (scene === 'crud') record.grade = await gradeProject({ source: workspace, dist, run: messages, ignore: pristine });
+    else {
+      const hardcodedColors = await countHardcodedColors(workspace, pristine);
+      const summary = readRun(messages);
+      record.grade = dist
+        ? { hardcodedColors, ...(await gradeUpdate({ source: workspace, dist, mode: group })), ...summary }
+        : { hardcodedColors, axe: null, overflow: null, update: { newVersionInstalled: false, newVersionActive: false, localKept: null, pass: false }, ...summary };
+    }
+  } catch (error) {
+    state.harnessError = error;
+  } finally {
+    // 沒通過 = 隔離、逾時、預算、建置失敗；更新題另外要新版裝了、行為生效、本地改動還在。
+    const failures = [];
+    if (!record.build?.ok) failures.push({ item: 'build', detail: String(record.build?.outputTail ?? '').slice(-200) });
+    if (scene === 'update' && record.grade?.update && !record.grade.update.pass) failures.push({ item: 'update', detail: JSON.stringify(record.grade.update) });
+    const graded = record.grade && { pass: failures.length === 0, failures };
+    Object.assign(record, classifyOutcome({ ...state, grade: graded, result: messages?.findLast(message => message?.type === 'result') ?? null }));
+    record.grade = { ...(record.grade ?? {}), pass: record.outcome === 'passed', failures: record.outcome === 'passed' ? [] : failures.length ? failures : [{ item: 'run', detail: record.reason }] };
     await mkdir(directory, { recursive: true });
     await writeFile(resultFile, scrub(`${JSON.stringify(record, null, 2)}\n`, paths));
     await scrubTree(join(directory, name), paths).catch(() => {});
@@ -651,7 +796,13 @@ else if (argv[0] === '--mark-harness') {
 `);
   console.log(`${basename(file)}：${record.outcome} → ${next.outcome}／${next.harnessCause}`);
 }
-else if (argv.includes('--baseline')) {
+else if (argv.includes('--copy-vs-npm')) {
+  const supersedesAt = argv.indexOf('--supersedes');
+  const supersedes = supersedesAt === -1 ? null : argv[supersedesAt + 1];
+  const [scene, group] = argv.filter((arg, index) => !arg.startsWith('--') && index !== (supersedesAt === -1 ? -1 : supersedesAt + 1));
+  if (!scene || !group) throw new Error('用法：npm run eval -- <crud|update> <copy|npm> --copy-vs-npm [--supersedes <結果檔>] [--dry-run]');
+  await runCopyVsNpm(scene, group, { dryRun: argv.includes('--dry-run'), supersedes });
+} else if (argv.includes('--baseline')) {
   const supersedesAt = argv.indexOf('--supersedes');
   const supersedes = supersedesAt === -1 ? null : argv[supersedesAt + 1];
   const [task, group] = argv.filter((arg, index) => !arg.startsWith('--') && index !== (supersedesAt === -1 ? -1 : supersedesAt + 1));

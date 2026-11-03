@@ -5,3 +5,5 @@ export type OnboardingRun = { outcome: string; guide: { sha: string; sha256: str
 export const cliThreshold: number;
 export function onboardingSummary(runs: OnboardingRun[], version?: string): { version: string; guideSha: string; runs: OnboardingRun[]; failCount: number; cliNeeded: boolean; costUsd: number };
 export function buildBaselineReport(directory: string, options?: { allowPartial?: boolean }): Promise<{ records: import('./baseline.mjs').BaselineRecord[]; summary: import('./baseline.mjs').BaselineSummary; text: string }>;
+export function buildCopyVsNpmReport(directory: string): Promise<{ records: import('./copy-vs-npm.mjs').CopyVsNpmRecord[]; verdict: import('./copy-vs-npm.mjs').Verdict; text: string }>;
+export function isTrialResult(data: { task?: string; series?: string }): boolean;

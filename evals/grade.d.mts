@@ -12,4 +12,5 @@ export type Grade = {
 export const states: readonly ['loading', 'empty', 'error', 'success'];
 export const widths: readonly [1280, 834, 390];
 export function readRun(output: unknown): RunSummary;
-export function gradeProject(options: { source: string; dist: string | null; run?: unknown; port?: number }): Promise<Grade>;
+export function gradeProject(options: { source: string; dist: string | null; run?: unknown; port?: number; ignore?: string[] }): Promise<Grade>;
+export function serve(dist: string, port: number): Promise<import('node:http').Server>;

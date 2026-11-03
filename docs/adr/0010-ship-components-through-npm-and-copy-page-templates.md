@@ -1,4 +1,4 @@
-Status: Proposed
+Status: Accepted
 
 # Ship components through npm and copy page templates into projects
 

@@ -14,7 +14,7 @@ export const states = ['loading', 'empty', 'error', 'success'];
 const scannedExtensions = /\.(?:[cm]?[jt]sx?|css|html)$/;
 
 // 只掃專案自己的原始碼：根目錄的 index.html 與 src/ 底下的檔案。
-async function sourceFiles(source) {
+async function sourceFiles(source, ignore = []) {
   const files = [];
   if ((await stat(join(source, 'index.html')).catch(() => null))?.isFile()) files.push(join(source, 'index.html'));
   try {
@@ -22,7 +22,8 @@ async function sourceFiles(source) {
       if (entry.isFile() && scannedExtensions.test(entry.name)) files.push(join(entry.parentPath, entry.name));
     }
   } catch { /* 沒有 src/ */ }
-  return files.sort();
+  const skipped = new Set(ignore);
+  return files.filter(file => !skipped.has(relative(source, file).split(sep).join('/'))).sort();
 }
 
 // CSS 具名色（CSS Color 4 的 148 個，去掉 transparent、currentColor 這類關鍵字）。
@@ -50,9 +51,10 @@ function maskExempt(text) {
     .replace(/(['"]?)--[\w-]+\1\s*:\s*(?:[^;,}()\n]|\((?:[^()]|\([^()]*\))*\))+/g, blank);
 }
 
-export async function countHardcodedColors(source) {
+// ignore：不掃的相對路徑（複製組複製進來、未改動的元件原始碼不算代理寫的）。
+export async function countHardcodedColors(source, ignore = []) {
   const items = [];
-  for (const file of await sourceFiles(source)) {
+  for (const file of await sourceFiles(source, ignore)) {
     const text = maskExempt(await readFile(file, 'utf8'));
     const lineStarts = [0, ...[...text.matchAll(/\n/g)].map(match => match.index + 1)];
     const lineOf = index => lineStarts.findLastIndex(start => start <= index) + 1;
@@ -65,7 +67,7 @@ export async function countHardcodedColors(source) {
 
 // 靜態伺服器：送出建置輸出，找不到的路徑回 index.html（單頁應用的路由）。
 const contentTypes = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf' };
-async function serve(dist, port) {
+export async function serve(dist, port) {
   const root = resolve(dist);
   // 被評分的頁面是代理寫的，請求內容不可信：任何錯誤（例如百分號編碼錯誤）都回 404，不讓行程崩掉。
   const server = createServer(async (request, response) => {
@@ -134,8 +136,8 @@ function missingFrom(observations) {
   return states.filter(state => missing.includes(state));
 }
 
-export async function gradeProject({ source, dist, run, port = defaultPort }) {
-  const hardcodedColors = await countHardcodedColors(source);
+export async function gradeProject({ source, dist, run, port = defaultPort, ignore = [] }) {
+  const hardcodedColors = await countHardcodedColors(source, ignore);
   const summary = readRun(run);
   if (!dist || !(await stat(join(dist, 'index.html')).catch(() => null))) {
     return { hardcodedColors, axe: null, overflow: null, missingStates: { count: states.length, states: [...states] }, pageErrors: [], ...summary };

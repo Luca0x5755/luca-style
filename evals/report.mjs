@@ -5,6 +5,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baselineSummary, renderBaseline } from './baseline.mjs';
+import { copyVsNpmVerdict, renderCopyVsNpm, series as copyVsNpmSeries } from './copy-vs-npm.mjs';
 
 // 基準 = 3 個場景 × 2 組 × 3 次（ISSUE-013）。
 const scenes = 3;
@@ -171,13 +172,26 @@ export async function buildBaselineReport(directory, { allowPartial = false } = 
   return { records, summary, text: renderBaseline(records, summary) };
 }
 
+// 複製 vs npm（ISSUE-014，PR-EVAL-01～03）：讀 series 為 copy-vs-npm 的結果檔，加上 ISSUE-013 的 crud × luca（對應 crud × npm），
+// 回傳結論（evals/results/copy-vs-npm.json 的內容）與報告文字。資料不完整時 complete=false、copyBetter=null。
+export async function buildCopyVsNpmReport(directory) {
+  const names = (await readdir(directory)).filter(name => name.endsWith('.json')).sort();
+  const all = await Promise.all(names.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+  const records = all.filter(({ data }) => data.series === copyVsNpmSeries || (data.series === 'baseline' && data.scene === 'crud' && data.group === 'luca'));
+  const verdict = copyVsNpmVerdict(records);
+  return { records, verdict, text: renderCopyVsNpm(records, verdict) };
+}
+
+// 舊報告（試跑）只收沒有 series 的試跑結果：baseline 與 copy-vs-npm 系列的檔、以及沒有 series 的結論檔（有 copyBetter 欄位）都不收。
+export const isTrialResult = data => data.task !== 'onboarding' && data.series !== 'baseline' && data.series !== copyVsNpmSeries && !('copyBetter' in data);
+
 // 直接執行時才寫檔；被測試匯入時不動檔案。
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const directory = fileURLToPath(new URL('./results/', import.meta.url));
   const files = (await readdir(directory)).filter(name => name.endsWith('.json')).sort();
   const all = await Promise.all(files.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
   // 接入實測（ISSUE-012）的結果另出報告，不混進評測試跑的表。
-  const results = all.filter(({ data }) => data.task !== 'onboarding' && data.series !== 'baseline');
+  const results = all.filter(({ data }) => isTrialResult(data));
   const onboarding = all.filter(({ data }) => data.task === 'onboarding');
   const estimate = estimateBaseline(results.map(({ data }) => ({ group: data.group, costUsd: data.run?.costUsd ?? null, budgetUsd: data.budgetUsd })));
   await writeFile(join(directory, 'report.md'), render(results, estimate));
@@ -186,6 +200,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const baseline = await buildBaselineReport(directory, { allowPartial: true });
     await writeFile(join(directory, 'baseline-report.md'), baseline.text);
     console.log(`寫入 ${join(directory, 'baseline-report.md')}：${baseline.summary.count}/18${baseline.summary.complete ? '' : '（INCOMPLETE）'}，費用 ${baseline.summary.costUsd.toFixed(2)}`);
+  }
+  if (all.some(({ data }) => data.series === copyVsNpmSeries)) {
+    const cvn = await buildCopyVsNpmReport(directory);
+    await writeFile(join(directory, 'copy-vs-npm.json'), `${JSON.stringify(cvn.verdict, null, 2)}
+`);
+    await writeFile(join(directory, 'copy-vs-npm-report.md'), cvn.text);
+    console.log(`寫入 ${join(directory, 'copy-vs-npm.json')}：complete ${cvn.verdict.complete}，copyBetter ${cvn.verdict.copyBetter}；費用 ${cvn.verdict.costUsd.toFixed(2)}`);
   }
   if (onboarding.length) {
     const summary = onboardingSummary(onboarding.map(({ data }) => data));

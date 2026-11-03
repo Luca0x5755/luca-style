@@ -363,13 +363,11 @@ test('new baseline result files, their claude output and archived workspaces car
   }
 });
 
-test('PR-EVAL-04 lives in the design-system capability and the delivery table; PR-EVAL-01 to 03 stay in the spec for ISSUE-014', async () => {
+test('PR-EVAL-01 to 04 live in the design-system capability and the delivery table', async () => {
   const capability = lf(await readFile(join(root, 'docs/capabilities/design-system.md'), 'utf8'));
   const delivery = lf(await readFile(join(root, 'docs/delivery-verification.md'), 'utf8'));
-  const spec = lf(await readFile(join(root, 'docs/issues/ISSUE-001-npm-publish-readiness.md'), 'utf8'));
-  expect(capability).toMatch(/^PR-EVAL-04 — /m);
-  expect(capability).not.toMatch(/^PR-EVAL-0[123] — /m);
-  expect(delivery).toMatch(/^\| PR-EVAL-04 \| /m);
-  for (const id of ['PR-EVAL-01', 'PR-EVAL-02', 'PR-EVAL-03']) expect(spec).toContain(`\`${id}\``);
-  expect(spec).not.toContain('`PR-EVAL-04`');
+  for (const id of ['PR-EVAL-01', 'PR-EVAL-02', 'PR-EVAL-03', 'PR-EVAL-04']) {
+    expect(capability, id).toMatch(new RegExp(`^${id} — `, 'm'));
+    expect(delivery, id).toMatch(new RegExp(`^\\| ${id} \\| `, 'm'));
+  }
 });

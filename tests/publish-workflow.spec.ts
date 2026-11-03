@@ -172,3 +172,9 @@ test('the other workflows still exist', () => {
   expect(load('pages.yml')).toContain('name: Deploy Pages');
   expect(readFileSync(new URL('../.github/workflows/issues-check.yml', import.meta.url), 'utf8')).toContain('issues-check:');
 });
+
+// 閘門的條件（complete 與 copyBetter）寫在 publish.yml 的檔頭說明裡，行為由 tests/publish-gate.spec.ts 驗證。
+test('publish.yml header states the gate needs a complete verdict and copyBetter false', () => {
+  const raw = readFileSync(new URL('../.github/workflows/publish.yml', import.meta.url), 'utf8');
+  expect(raw).toMatch(/complete 為 true 且 copyBetter 為 false/);
+});
