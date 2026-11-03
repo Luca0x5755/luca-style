@@ -188,6 +188,9 @@ PR-RELEASE-03 — `npm run test:registry -- <版本>` 在乾淨專案從 npm reg
 PR-RELEASE-04 — 發佈前，main 上兩個套件的版本都是 0.3.0（`package-lock.json` 同步），`.changeset/` 只剩 `config.json`，各套件目錄的 `CHANGELOG.md` 含 0.3.0 的內容（來自 `first-npm-release.md`）；版本已套用後再執行 `npx changeset version` 不改動任何檔案（它以 exit 1 結束並說沒有待處理的 changeset），所以 `publish.yml` 與 `publish-dry-run.yml` 的這個步驟只在 `.changeset/` 還有 changeset 時執行。
 PR-RELEASE-05 — 發佈清單（`docs/releasing.md`）依序寫明：合併版本提交、從 main 觸發 `publish.yml` 選 `next` 並在 `npm-publish` 環境核准、以 `npm run test:registry -- <版本>` 驗證 `next` 上的版本、使用端驗證、對兩個套件執行 `npm dist-tag add` 把 `latest` 指到該版本、推送指向發佈 commit 的 annotated tag `v<版本>`（並說明怎麼從 Actions 執行紀錄找到 SHA）；環境核准、`npm dist-tag add`、推 tag 與 `npm deprecate` 標為只有擁有者能做。
 PR-RELEASE-06 — 發佈清單寫明發錯時的處理：不 unpublish；發新版本修正，並對壞版本執行 `npm deprecate @luca-style/<套件>@<版本> "<原因>"`。
+PR-RELEASE-07 — npm 上 `@luca-style/tokens` 與 `@luca-style/react` 都有 0.3.0，`latest` 與 `next` 都指向 0.3.0，且 PR-RELEASE-03 對 0.3.0 通過。
+PR-RELEASE-08 — origin 上有 annotated tag `v0.3.0`，指向發佈 0.3.0 時 `publish.yml` 檢出的 commit。
+PR-RELEASE-09 — automated_trading PR #54 不再引用 `vendor/` 的 tarball，改引用 npm 上的 `@luca-style/*@0.3.0`，該專案 web-frontend 的全部檢查通過。
 
 ### 評測承諾
 
