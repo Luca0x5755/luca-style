@@ -182,6 +182,8 @@ PR-ADOPT-02 — React 18（18.3.1）乾淨專案不改套件程式碼，一般 `
 PR-ADOPT-09 — 導入 changesets（`@changesets/cli` 釘住精確版本，鎖定檔含 integrity），`@luca-style/tokens` 與 `@luca-style/react` 在 `.changeset/config.json` 以 `fixed` 綁成同一組，版本一致；第一個 changeset 兩個套件都升次版號到 0.3.0，並附不相容變更的升級說明（0.x 期間不相容變更升次版號）。`tests/changesets.spec.ts` 檢查設定、changeset 的 front matter、在暫存複本套用後兩個版本都恰為 0.3.0，以及升級說明逐項涵蓋。
 PR-ADOPT-10 — CI 能對 0.3.0 跑完發佈的試跑：`.github/workflows/publish-dry-run.yml` 套用 changeset 後，對兩個套件各跑一次 `npm publish --dry-run --provenance`，不使用機密也不指定環境。工作流程設定好來源證明（`id-token: write`），權杖只以 CI 機密 `NPM_TOKEN` 的名稱出現在 `publish.yml`，repo 內沒有權杖的值；`@luca-style` 組織與權杖由擁有者建立。分叉的 PR 拿不到 id-token，試跑跳過；Dependabot 的 PR 同樣拿不到，接受跳過。`tests/publish-workflow.spec.ts` 檢查這些結構。限制：`--provenance` 在同 repo PR 的 OIDC 下是否成功，要等 CI 實跑才知道，離線測不到。
 PR-ADOPT-11 — 沒有 `PR-EVAL-03` 的結論和擁有者的確認，發佈流程不會真的發佈：真正發佈只在 `.github/workflows/publish.yml`，只能由 `workflow_dispatch` 手動觸發。job 在 checkout 之後、任何發佈步驟之前先跑 `node scripts/check-publish-gate.mjs evals/results/copy-vs-npm.json`，該檔不存在、不是 JSON 物件、`complete` 不是布林 `true`（評測資料不完整）、`copyBetter` 缺少或不是布林 `false`（含資料不完整時的 `null`）都以非 0 結束，閘門步驟不能被 `if`、`|| true` 等跳過。確認由 GitHub 環境 `npm-publish` 的必要審核者提供。限制：必要審核者要擁有者在 GitHub 設定，repo 內設定不了也測不到；`tests/publish-gate.spec.ts` 用假的結論檔驗證各種失敗情況，`tests/publish-workflow.spec.ts` 檢查接線。
+PR-RELEASE-01 — `publish.yml` 手動觸發時可選 dist-tag，只接受 `next` 或 `latest`，預設 `next`；兩個套件都以所選 tag 發佈。
+PR-RELEASE-02 — `publish.yml` 只發佈 main 上已提交的版本：套用 changeset 會改動任何檔案時，發佈失敗，不發佈任何套件。
 
 ### 評測承諾
 

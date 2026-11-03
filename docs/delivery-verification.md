@@ -55,6 +55,8 @@ npm run test:clean-projects
 | PR-EVAL-02 | `eval-copy-vs-npm.spec` 的 `gradeUpdate`：新版已裝、行為生效、本地改動還在三個旗標各自獨立翻轉，只在頁面寫死 `aria-disabled` 而沒裝新版時判失敗；`eval-copy-vs-npm-project.spec`：npm 組起始專案有包裝層、`upgrade/` 的 tgz 是 0.2.1 且有補丁，真的 `npm install` 後通過；複製組整份覆蓋會丟本地改動、合併則兩者都在。 |
 | PR-EVAL-03 | `eval-copy-vs-npm.spec` 的判定函式：改善 19% 不算、20% 算、npm 為 0 不可能改善、axe／溢出／遺失本地改動只有非零變零才算、任一項變差就不算較好、費用時間不影響、平手與改善不足是 inconclusive 且 `copyBetter` 為 false、失敗的執行算進中位數與失敗清單、補跑規則；`eval-copy-vs-npm-report.spec`：報告揭露關鍵句、平手報告不含「copy is better」、資料不完整時 `complete` 為 false 且 `copyBetter` 為 null、發佈閘門實跑（完整且 false 通過，其他失敗）、舊報告忽略這個系列與結論檔；ADR 0010 的狀態與結論檔一致。 |
 | PR-EVAL-04 | `eval-baseline.spec`：三份題目含評分器依賴的四態契約與逐字相同的限制區塊，sha256 釘死；兩組的題目位元組、指令、旗標與 settings 相同，plain 的 README 中性、luca 只多一段，luca 的工作區多指南與套件內附的 DESIGN.md、llms.txt；每個場景的手做探針專案經評分器乾跑，合理分化的 empty 與 error 不判缺漏、error 重複 empty 判缺漏；累計費用護欄（含被取代的檔）、補跑規則（只限 harness 例外、每格一次）、結果分類（隔離失敗、逾時、超出預算、建置失敗都算沒通過）、越界判定雙向（luca 讀已安裝套件檔案不算越界）、每格剛好 3 次的彙整與中位數、未滿時 `INCOMPLETE n/18`；已提交的 `baseline-report.md` 必須 18/18 並與結果檔重新產生的內容相同，結果檔沒有家目錄路徑。真正的 18 次實測結果在 `evals/results/`，不在 CI 重跑（花真的錢）。 |
+| PR-RELEASE-01 | `publish-workflow.spec`：`workflow_dispatch` 只有一個 `choice` input，選項恰為 `next`、`latest`，預設 `next`；兩個 `npm publish` 步驟都帶 `--tag ${{ inputs.<名稱> }}`，沒有寫死的 tag。離線只測文字結構，GitHub 介面的下拉與 npm 的實際 tag 要等第一次發佈才看得到。 |
+| PR-RELEASE-02 | `publish-workflow.spec`：`test -z "$(git status --porcelain)"` 步驟位於 `npx changeset version` 之後、第一個 `npm publish` 之前，沒有 `if`、`continue-on-error`、`||`、`;`。離線測不到 runner 上的實際工作樹；建置產物在 `.gitignore` 內，不會觸發檢查。 |
 
 ## 五頁矩陣與操作
 

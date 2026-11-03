@@ -178,3 +178,56 @@ test('publish.yml header states the gate needs a complete verdict and copyBetter
   const raw = readFileSync(new URL('../.github/workflows/publish.yml', import.meta.url), 'utf8');
   expect(raw).toMatch(/complete 為 true 且 copyBetter 為 false/);
 });
+
+// ---- dist-tag 與只發佈已提交的版本（PR-RELEASE-01、PR-RELEASE-02） ----
+
+// workflow_dispatch.inputs 底下每個 input 一段文字（input 名稱在六格縮排）。
+const dispatchInputs = (yml: string) => {
+  const inputs = topBlock(yml, 'on').split(/^ {4}inputs:\s*\n/m)[1] ?? '';
+  const out: Record<string, string> = {};
+  for (const part of inputs.split(/^(?= {6}[\w-]+:\s*$)/m).filter((s) => s.trim())) {
+    out[part.match(/^ {6}([\w-]+):/)![1]] = part;
+  }
+  return out;
+};
+const optionsOf = (block: string) => {
+  const inline = block.match(/^\s+options:\s*\[(.*)\]\s*$/m)?.[1];
+  if (inline !== undefined) return inline.split(',').map((s) => s.trim());
+  const list = block.split(/^ {8}options:\s*\n/m)[1] ?? '';
+  return [...list.matchAll(/^ {10}- (\S+)\s*$/gm)].map((m) => m[1]);
+};
+
+test('PR-RELEASE-01: manual run offers one choice input, next or latest, defaulting to next', () => {
+  const inputs = dispatchInputs(publish);
+  expect(Object.keys(inputs)).toHaveLength(1);
+  const block = Object.values(inputs)[0];
+  expect(block).toMatch(/^\s+type:\s*choice\s*$/m);
+  expect(optionsOf(block)).toEqual(['next', 'latest']);
+  expect(block).toMatch(/^\s+default:\s*next\s*$/m);
+});
+
+test('PR-RELEASE-01: both npm publish steps pass the chosen tag and never a hardcoded one', () => {
+  const name = Object.keys(dispatchInputs(publish))[0];
+  const publishes = steps(job(publish, 'publish')).map(runOf).filter(isPublish);
+  expect(publishes).toHaveLength(2);
+  for (const cmd of publishes) {
+    expect(cmd).toContain(`--tag \${{ inputs.${name} }}`);
+    expect(cmd).not.toMatch(/--tag (next|latest)\b/);
+  }
+});
+
+test('PR-RELEASE-02: the job fails on any working-tree change after changeset version and before the first publish', () => {
+  const list = steps(job(publish, 'publish'));
+  const check = list.filter((s) => runOf(s) === 'test -z "$(git status --porcelain)"');
+  expect(check).toHaveLength(1);
+  const step = check[0];
+  expect(step).not.toMatch(/^\s+if:/m);
+  expect(step).not.toContain('continue-on-error');
+  expect(step).not.toMatch(/\|\||set \+e|;/);
+  const at = list.indexOf(step);
+  const version = list.findIndex((s) => runOf(s) === 'npx changeset version');
+  const firstPublish = list.findIndex((s) => isPublish(runOf(s)));
+  expect(version).toBeGreaterThanOrEqual(0);
+  expect(at).toBeGreaterThan(version);
+  expect(firstPublish).toBeGreaterThan(at);
+});
