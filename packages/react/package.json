@@ -2,6 +2,11 @@
   "name": "@luca-style/react",
   "version": "0.3.0",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luca0x5755/luca-style.git",
+    "directory": "packages/react"
+  },
   "type": "module",
   "files": [
     "dist",
