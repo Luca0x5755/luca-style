@@ -1,0 +1,58 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: hidden; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); font-size: var(--type-body-size); line-height: var(--type-body-line-height); }
+.page { max-width: 1280px; margin: 0 auto; padding: var(--space-6) var(--space-4); }
+.page > header { margin-bottom: var(--space-6); }
+h1 { margin: 0; font-size: var(--type-title-size); font-weight: var(--type-title-weight); line-height: var(--type-title-line-height); }
+h2 { margin: 0 0 var(--space-3); font-size: var(--type-section-size); font-weight: var(--type-section-weight); line-height: var(--type-section-line-height); }
+h3 { margin: var(--space-4) 0 var(--space-2); font-size: var(--type-card-size); font-weight: var(--type-card-weight); }
+p { margin: 0 0 var(--space-2); }
+.muted { color: var(--muted); font-size: var(--type-secondary-size); }
+.stack { display: grid; gap: var(--space-6); min-width: 0; }
+.metrics { display: grid; gap: var(--space-4); grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.metrics > * { min-width: 0; }
+.grid { display: grid; gap: var(--space-6); grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
+.panel { background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius-card); padding: var(--card-padding); min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: space-between; align-items: flex-end; }
+.panel-head h2 { margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-bottom: var(--space-3); }
+.controls > * { min-width: 0; flex: 1 1 14rem; max-width: 20rem; }
+.chart { margin: var(--space-4) 0 0; }
+.chart figcaption { font-size: var(--type-secondary-size); margin-bottom: var(--space-2); }
+.chart svg { width: 100%; height: 140px; display: block; background: var(--surface-subtle); border-radius: var(--radius-control); }
+.axis { stroke: var(--control-border); stroke-width: 1; }
+.line-a { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.line-b { fill: none; stroke: var(--warning); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.data-details { margin-top: var(--space-4); }
+.data-details summary { cursor: pointer; font-weight: 500; padding: var(--space-2) 0; }
+.scroll { overflow: auto; max-width: 100%; max-height: 22rem; }
+.scroll:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.scroll table { width: 100%; border-collapse: collapse; }
+.scroll th, .scroll td { text-align: left; }
+.st { font-weight: 600; white-space: nowrap; }
+.st-ok { color: var(--success); }
+.st-degraded { color: var(--warning); }
+.st-down { color: var(--error); }
+.alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.alert { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; align-items: center; border: var(--border-width) solid var(--border); border-left: 4px solid var(--control-border); border-radius: var(--radius-control); padding: var(--space-3); min-width: 0; }
+.alert-body { min-width: 0; flex: 1 1 12rem; overflow-wrap: anywhere; }
+.alert-body p { margin: 0 0 var(--space-1); }
+.alert-title { font-weight: 600; }
+.sev-critical { border-left-color: var(--error); }
+.sev-critical .sev { color: var(--error); }
+.sev-warning { border-left-color: var(--warning); }
+.sev-warning .sev { color: var(--warning); }
+.empty { text-align: center; padding-block: var(--space-12); display: grid; justify-items: center; gap: var(--space-3); }
+.add-form { display: grid; gap: var(--space-4); width: 100%; max-width: 28rem; text-align: left; }
+.row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 1100px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .page { padding: var(--space-4) var(--space-3); }
+  .metrics { grid-template-columns: minmax(0, 1fr); }
+  .controls > * { max-width: none; }
+}

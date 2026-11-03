@@ -4,6 +4,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { baselineSummary, renderBaseline } from './baseline.mjs';
 
 // 基準 = 3 個場景 × 2 組 × 3 次（ISSUE-013）。
 const scenes = 3;
@@ -160,17 +161,32 @@ export function renderOnboarding(files, summary, limits) {
   ].join('\n');
 }
 
+// 基準評測（ISSUE-013，PR-EVAL-04）：讀目錄裡 series 為 baseline 的結果檔，回傳報告文字與彙整。
+// allowPartial：進行中時輸出標題為 INCOMPLETE n/18 的報告；已提交的報告必須是完整的 18/18（tests/eval-baseline.spec.ts）。
+export async function buildBaselineReport(directory, { allowPartial = false } = {}) {
+  const names = (await readdir(directory)).filter(name => name.endsWith('.json')).sort();
+  const all = await Promise.all(names.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+  const records = all.filter(({ data }) => data.series === 'baseline');
+  const summary = baselineSummary(records, { allowPartial });
+  return { records, summary, text: renderBaseline(records, summary) };
+}
+
 // 直接執行時才寫檔；被測試匯入時不動檔案。
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const directory = fileURLToPath(new URL('./results/', import.meta.url));
   const files = (await readdir(directory)).filter(name => name.endsWith('.json')).sort();
   const all = await Promise.all(files.map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
   // 接入實測（ISSUE-012）的結果另出報告，不混進評測試跑的表。
-  const results = all.filter(({ data }) => data.task !== 'onboarding');
+  const results = all.filter(({ data }) => data.task !== 'onboarding' && data.series !== 'baseline');
   const onboarding = all.filter(({ data }) => data.task === 'onboarding');
   const estimate = estimateBaseline(results.map(({ data }) => ({ group: data.group, costUsd: data.run?.costUsd ?? null, budgetUsd: data.budgetUsd })));
   await writeFile(join(directory, 'report.md'), render(results, estimate));
   console.log(`寫入 ${join(directory, 'report.md')}：預估 ${usd(estimate.estimateUsd)}，上限 ${usd(estimate.ceilingUsd)}`);
+  if (all.some(({ data }) => data.series === 'baseline')) {
+    const baseline = await buildBaselineReport(directory, { allowPartial: true });
+    await writeFile(join(directory, 'baseline-report.md'), baseline.text);
+    console.log(`寫入 ${join(directory, 'baseline-report.md')}：${baseline.summary.count}/18${baseline.summary.complete ? '' : '（INCOMPLETE）'}，費用 ${baseline.summary.costUsd.toFixed(2)}`);
+  }
   if (onboarding.length) {
     const summary = onboardingSummary(onboarding.map(({ data }) => data));
     const selected = onboarding.filter(({ data }) => data.guide.sha256 === summary.version);

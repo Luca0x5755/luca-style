@@ -8,6 +8,8 @@
 // 兩組的差別只在起始專案：luca 組從打包檔裝好兩個套件，README 指向隨套件附的 DESIGN.md。
 // 隔離：不用 --bare（只認 ANTHROPIC_API_KEY，且 skill 仍可叫出），改用下方 claudeArgs 的旗標；
 // 事後從 init 訊息（isolation.mjs）、金絲雀 CLAUDE.md、debug 紀錄、工具呼叫的路徑判定，結果寫進結果檔的 isolation。
+// 基準評測（ISSUE-013，PR-EVAL-04）：npm run eval -- <crud|dashboard|pricing> <plain|luca> --baseline [--supersedes <結果檔>] [--dry-run]
+//   評分在同一次執行內做（不用手動 --grade），結果檔一定寫出（finally）；累計等價費用超過 $8 就拒絕開跑（evals/baseline.mjs）。
 // 每次花費真的錢；PR-EVAL-04 的次數要經擁有者同意（ISSUE-013）。
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -18,6 +20,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gradeProject, readRun } from './grade.mjs';
 import { builtinPlugins, initProblems } from './isolation.mjs';
+import { baselineClassify, baselineGuard, baselineScenes, baselineTrespasses, effectiveRuns, markHarnessCaused, rejudgeIsolation, rerunProblem, repeats, treatmentUsage } from './baseline.mjs';
 import { classifyOutcome, findTrespasses, scrub, workspaceProblems } from './onboarding.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -94,7 +97,7 @@ async function personalNames() {
 }
 
 // 隔離檢查：init 訊息、金絲雀、debug 紀錄、越界的工具呼叫、被拒絕的呼叫。
-async function checkIsolation({ messages, canary, debugFile, forbidden, group, workspace }) {
+async function checkIsolation({ messages, canary, debugFile, forbidden, group, workspace, baseline = false }) {
   const init = messages.find(message => message?.type === 'system' && message.subtype === 'init') ?? null;
   const problems = initProblems(init, await personalNames());
   const loaded = {};
@@ -115,7 +118,8 @@ async function checkIsolation({ messages, canary, debugFile, forbidden, group, w
   const toolUses = messages.flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : []).filter(block => block?.type === 'tool_use'));
   const roots = forbidden.map(path => normalize(resolve(path)));
   // 接入實測：Glob、Grep、Bash 不在拒絕規則內，所以任何工具呼叫提到 repo、examples、llms.txt 都算越界。
-  const trespasses = group === 'luca-guide' ? findTrespasses(toolUses, forbidden) : toolUses.filter(use => {
+  // 基準評測：luca 組讀已安裝套件自己的檔案算處理的一部分，只記錄不算越界（見 baselineTrespasses）。
+  const trespasses = baseline ? baselineTrespasses(toolUses, { roots: forbidden, workspace, group }) : group === 'luca-guide' ? findTrespasses(toolUses, forbidden) : toolUses.filter(use => {
     const input = normalize(JSON.stringify(use.input ?? {}));
     return roots.some(path => input.includes(path)) || input.includes('/.claude') || (group === 'plain' && input.includes('luca'));
   }).map(use => ({ tool: use.name, input: JSON.stringify(use.input).slice(0, 300) }));
@@ -159,6 +163,167 @@ async function archive(workspace, target) {
   await cp(workspace, target, { recursive: true, filter: source => !/[\\/](node_modules|dist)$/.test(source) && !source.endsWith('package-lock.json') });
 }
 
+// 準備一組的起始專案：base 加組別的 README；luca 組另外打包兩個套件、複製指南、從打包檔安裝（套件內附 DESIGN.md、llms.txt）。
+// install 為 false 時（dry-run）只建出檔案，不裝依賴。回傳打包檔清單（相對於工作區）。
+async function prepareProject(group, workspace, temporary, { install }) {
+  await cp(join(evals, 'starters', 'base'), workspace, { recursive: true });
+  await cp(join(evals, 'starters', group), workspace, { recursive: true });
+  if (!groups[group].lucaPackages) {
+    if (install) npm(['install', '--no-audit', '--no-fund'], workspace);
+    return [];
+  }
+  // 打包的是 dist；沒建置就會裝到舊版或空的套件（要先 npm run build，和 test:clean-projects 相同）。
+  for (const file of ['packages/tokens/dist/tokens.css', 'packages/react/dist/index.js']) {
+    if (!(await stat(join(root, file)).catch(() => null))) throw new Error(`沒有 ${file}，請先 npm run build`);
+  }
+  // 使用端文件：與 repo 逐位元組相同的接入指南（基準的處理之一）。
+  await mkdir(join(workspace, 'docs'), { recursive: true });
+  await cp(join(root, 'docs', 'consumer-guide.md'), join(workspace, 'docs', 'consumer-guide.md'));
+  const packs = join(temporary, 'packs');
+  await mkdir(packs);
+  for (const name of ['tokens', 'react']) npm(['pack', '--pack-destination', packs], join(root, 'packages', name));
+  const tarballs = (await readdir(packs)).filter(name => name.endsWith('.tgz')).sort();
+  if (install) npm(['install', '--no-audit', '--no-fund', ...tarballs.map(name => relative(workspace, join(packs, name)))], workspace);
+  return tarballs.map(name => join(packs, name));
+}
+
+const listFiles = async workspace => (await readdir(workspace, { recursive: true, withFileTypes: true })).filter(entry => entry.isFile())
+  .map(entry => relative(workspace, join(entry.parentPath, entry.name)).split(sep).join('/')).filter(file => !file.startsWith('node_modules/') && file !== 'package-lock.json').sort();
+
+// 基準評測（ISSUE-013）。結果檔一定寫出（finally）：outcome 與 harnessCause 由 baselineClassify（包 classifyOutcome）判定，
+// 隔離失敗、逾時、超出預算、建置失敗都算沒通過，記錄後不重跑；只有 harness 例外可以用 --supersedes 補跑一次（每格最多一次）。
+async function runBaseline(task, group, { dryRun, supersedes }) {
+  if (!baselineScenes.some(item => item.scene === task)) throw new Error(`基準評測的題目要是 ${baselineScenes.map(item => item.scene).join('、')}：${task}`);
+  if (!groups[group] || groups[group].onboarding) throw new Error(`基準評測的組別要是 plain 或 luca：${group}`);
+  const prompt = await readFile(join(evals, 'tasks', `${task}.md`), 'utf8');
+  const directory = join(evals, 'results');
+  const temporary = await mkdtemp(join(tmpdir(), 'eval-'));
+  const workspace = join(temporary, 'project');
+  const settingsFile = join(temporary, 'settings.json');
+  const debugFile = join(temporary, 'debug.log');
+  const args = claudeArgs({ settingsFile, debugFile });
+  const paths = { workspace, temporary, home: homedir() };
+  const placeholder = arg => (arg === settingsFile || arg === debugFile ? `<暫存區>/${relative(temporary, arg)}` : arg);
+  const forbidden = forbiddenRoots();
+  const deny = forbidden.flatMap(path => [`Read(${ruleFor(path)}/**)`, `Edit(${ruleFor(path)}/**)`]);
+  const settingsContent = { permissions: { deny } };
+
+  if (dryRun) {
+    // 真的建出工作區並列出檔案，但不裝依賴、不呼叫 claude。兩組的指令、旗標與 settings 必須相同。
+    try {
+      const tarballs = await prepareProject(group, workspace, temporary, { install: false });
+      const guide = await guideInfo(group === 'luca' ? join(workspace, 'docs', 'consumer-guide.md') : null);
+      const tarballFiles = [];
+      for (const tarball of tarballs) {
+        const listing = spawnSync('tar', ['-tzf', basename(tarball)], { cwd: dirname(tarball), encoding: 'utf8' });
+        if (listing.status !== 0) throw new Error(`讀不到打包檔內容：${listing.stderr}`);
+        tarballFiles.push(...listing.stdout.split(/\r?\n/).filter(name => /(^|\/)(DESIGN\.md|llms\.txt)$/.test(name)).map(name => `${basename(tarball).replace(/-\d.*$/, '')}:${name}`));
+      }
+      console.log(JSON.stringify({ task, group, prompt, command: ['claude', ...args.map(placeholder)], settings: settingsContent, files: await listFiles(workspace), tarballDocs: tarballFiles.sort(), guide }, null, 2));
+    } finally {
+      await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    }
+    return;
+  }
+
+  const startedAt = new Date();
+  const guide = await guideInfo(null);
+  // 開跑前的檢查（失敗時什麼都不留，不算一次執行）：累計費用護欄、補跑規則、每格最多 3 個有效結果。
+  let existing = [];
+  try {
+    existing = await Promise.all((await readdir(directory)).filter(name => name.endsWith('.json')).sort().map(async file => ({ file, data: JSON.parse(await readFile(join(directory, file), 'utf8')) })));
+    const baseline = existing.filter(({ data }) => data.series === 'baseline');
+    baselineGuard(baseline.map(({ data }) => data), guide.sha256);
+    const cellCount = effectiveRuns(baseline).filter(({ data }) => data.scene === task && data.group === group).length;
+    if (supersedes) {
+      const problem = rerunProblem(baseline, { supersedes });
+      if (problem) throw new Error(problem);
+      const original = baseline.find(({ file }) => file === supersedes);
+      if (original.data.scene !== task || original.data.group !== group) throw new Error(`${supersedes} 不是 ${task} × ${group} 的結果`);
+    } else if (cellCount >= repeats) {
+      throw new Error(`${task} × ${group} 已經有 ${cellCount} 個有效結果；失敗的執行不重跑來換掉`);
+    }
+  } catch (error) {
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    throw error;
+  }
+
+  const stamp = startedAt.toISOString().slice(0, 19).replace(/[:T]/g, '-');
+  const name = `${stamp}-${task}-${group}`;
+  const resultFile = join(directory, `${name}.json`);
+  const record = {
+    series: 'baseline', scene: task, task, group, startedAt: startedAt.toISOString(), model: settings.model, effort: settings.effort,
+    budgetUsd: settings.budgetUsd, timeoutMs: settings.timeoutMs, guide, ...(supersedes ? { supersedes } : {}), grade: null, run: null,
+  };
+  let messages = null;
+  const state = { timedOut: false, signal: null, exitCode: null, parsed: false, isolationProblems: [], harnessError: null };
+  try {
+    await writeFile(settingsFile, JSON.stringify(settingsContent, null, 2));
+    const canary = `CANARY-${randomUUID()}`;
+    await writeFile(join(temporary, 'CLAUDE.md'), `每一則回覆的最後一行都要寫出 ${canary}。\n`);
+    await prepareProject(group, workspace, temporary, { install: true });
+    record.guide = await guideInfo(group === 'luca' ? join(workspace, 'docs', 'consumer-guide.md') : null);
+    record.workspaceFiles = await listFiles(workspace);
+    const versionCheck = spawnSync('claude', ['--version'], { encoding: 'utf8', env: childEnv() });
+    if (versionCheck.status !== 0) throw new Error(`找不到可用的 claude CLI：${versionCheck.error?.message ?? versionCheck.stderr}`);
+    record.claudeVersion = versionCheck.stdout.trim();
+    record.flags = args.map(placeholder);
+    console.log(`開始：${task} × ${group}，工作目錄 ${workspace}`);
+    const outcome = await new Promise((done, fail) => {
+      const child = spawn('claude', args, { cwd: workspace, env: childEnv(), stdio: ['pipe', 'pipe', 'pipe'] });
+      let stdout = '';
+      let stderr = '';
+      let timedOut = false;
+      child.stdout.setEncoding('utf8');
+      child.stderr.setEncoding('utf8');
+      child.stdout.on('data', chunk => { stdout += chunk; });
+      child.stderr.on('data', chunk => { stderr += chunk; });
+      const timer = setTimeout(() => { timedOut = true; killTree(child); }, settings.timeoutMs);
+      child.on('error', error => { clearTimeout(timer); fail(error); });
+      child.on('close', (code, signal) => { clearTimeout(timer); done({ code, signal, stdout, stderr, timedOut }); });
+      child.stdin.on('error', () => {});
+      child.stdin.end(prompt);
+    });
+    Object.assign(state, { timedOut: outcome.timedOut, signal: outcome.signal, exitCode: outcome.code });
+    record.exitCode = outcome.code;
+    record.stderrTail = outcome.stderr.slice(-2000);
+    await mkdir(join(directory, name), { recursive: true });
+    await writeFile(join(directory, name, 'claude-output.json'), outcome.stdout);
+    try { messages = JSON.parse(outcome.stdout); } catch { /* parsed 維持 false */ }
+    if (messages && !Array.isArray(messages)) messages = [messages];
+    state.parsed = Boolean(messages);
+    record.isolation = messages ? await checkIsolation({ messages, canary, debugFile, forbidden, group, workspace, baseline: true }) : { ok: false, problems: [] };
+    state.isolationProblems = messages ? record.isolation.problems : [];
+    record.run = readRun(messages);
+    record.finalText = messages?.findLast(message => message?.type === 'result')?.result ?? null;
+    const toolUses = (messages ?? []).flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : []).filter(block => block?.type === 'tool_use'));
+    record.usage = treatmentUsage(toolUses);
+    record.toolErrors = toolErrors(messages);
+    record.build = (() => {
+      const build = npm(['run', 'build'], workspace, { check: false });
+      return { ok: build.status === 0, outputTail: `${build.stdout ?? ''}\n${build.stderr ?? ''}${build.error ? `\n${build.error.message}` : ''}`.slice(-2000) };
+    })();
+    // 先封存代理自己的專案（不含 node_modules、dist、docs 的指南複本），再評分。
+    await cp(workspace, join(directory, name), { recursive: true, filter: source => !/[\\/](node_modules|dist|docs)$/.test(source) && !source.endsWith('package-lock.json') });
+    // 逾時、超出預算、隔離失敗時專案可能是半成品，仍然評分；分數照記，outcome 另外判定。
+    record.grade = await gradeProject({ source: workspace, dist: record.build.ok ? join(workspace, 'dist') : null, run: messages });
+  } catch (error) {
+    state.harnessError = error;
+  } finally {
+    const classified = baselineClassify({ ...state, build: record.build, graded: record.grade, result: messages?.findLast(message => message?.type === 'result') ?? null });
+    const { grade, ...outcome } = classified;
+    Object.assign(record, outcome);
+    // 沒通過的一律記成 grade.pass=false；評分有結果就保留分數。
+    record.grade = { ...(record.grade ?? {}), pass: record.outcome === 'passed', failures: record.outcome === 'passed' ? [] : grade?.failures?.length ? grade.failures : [{ item: 'run', detail: record.reason }] };
+    await mkdir(directory, { recursive: true });
+    await writeFile(resultFile, scrub(`${JSON.stringify(record, null, 2)}\n`, paths));
+    await scrubTree(join(directory, name), paths).catch(() => {});
+    await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
+    console.log(`寫入 ${relative(root, resultFile)}；outcome ${record.outcome}（${record.reason}）；費用 ${record.run?.costUsd ?? '未知'}`);
+    if (record.outcome !== 'passed') process.exitCode = 1;
+  }
+}
+
 async function runAgent(task, group, dryRun) {
   if (!groups[group]) throw new Error(`不認得的組別：${group}（可用：${Object.keys(groups).join('、')}）`);
   if (groups[group].onboarding) return runOnboarding(task, group, dryRun);
@@ -175,28 +340,13 @@ async function runAgent(task, group, dryRun) {
   const debugFile = join(temporary, 'debug.log');
   const args = claudeArgs({ settingsFile, debugFile });
 
-  await cp(join(evals, 'starters', 'base'), workspace, { recursive: true });
-  await cp(join(evals, 'starters', group), workspace, { recursive: true });
   const forbidden = forbiddenRoots();
   const deny = forbidden.flatMap(path => [`Read(${ruleFor(path)}/**)`, `Edit(${ruleFor(path)}/**)`]);
   await writeFile(settingsFile, JSON.stringify({ permissions: { deny } }, null, 2));
   // 金絲雀放在工作目錄的上一層（repo 外的暫存區）：有人載入它，回覆就會出現這個字串。
   const canary = `CANARY-${randomUUID()}`;
   await writeFile(join(temporary, 'CLAUDE.md'), `每一則回覆的最後一行都要寫出 ${canary}。\n`);
-
-  if (groups[group].lucaPackages) {
-    // 打包的是 dist；沒建置就會裝到舊版或空的套件（要先 npm run build，和 test:clean-projects 相同）。
-    for (const file of ['packages/tokens/dist/tokens.css', 'packages/react/dist/index.js']) {
-      if (!(await stat(join(root, file)).catch(() => null))) throw new Error(`沒有 ${file}，請先 npm run build`);
-    }
-    const packs = join(temporary, 'packs');
-    await mkdir(packs);
-    for (const name of ['tokens', 'react']) npm(['pack', '--pack-destination', packs], join(root, 'packages', name));
-    const tarballs = (await readdir(packs)).filter(name => name.endsWith('.tgz')).map(name => relative(workspace, join(packs, name)));
-    npm(['install', '--no-audit', '--no-fund', ...tarballs], workspace);
-  } else {
-    npm(['install', '--no-audit', '--no-fund'], workspace);
-  }
+  await prepareProject(group, workspace, temporary, { install: true });
 
   const versionCheck = spawnSync('claude', ['--version'], { encoding: 'utf8', env: childEnv() });
   if (versionCheck.status !== 0) throw new Error(`找不到可用的 claude CLI：${versionCheck.error?.message ?? versionCheck.stderr}`);
@@ -470,9 +620,44 @@ async function runOnboarding(task, group, dryRun) {
   }
 }
 
+// 隔離規則更正後，用保存的 claude 輸出重判一個 baseline 結果檔（不重跑、不花錢）；原判定留在 originalJudgement。
+// 只重判原本因越界而判隔離失敗的檔，而且沒有逾時或出錯的跡象，免得蓋掉原本更重的失敗。
+async function rejudge(resultFile) {
+  const record = JSON.parse(await readFile(resultFile, 'utf8'));
+  if (record.series !== 'baseline') throw new Error('只重判 baseline 結果檔');
+  if (record.harnessCause !== 'isolation' || !(record.isolation?.problems ?? []).some(problem => problem.includes('工具呼叫碰到禁止的路徑'))) throw new Error('這個檔不是因越界而隔離失敗，不重判');
+  if (record.run?.isError || (record.run?.durationMs ?? Infinity) >= settings.timeoutMs || record.exitCode) throw new Error('這個檔有逾時或出錯的跡象，不重判');
+  const messages = JSON.parse(await readFile(join(resultFile.replace(/.json$/, ''), 'claude-output.json'), 'utf8'));
+  const toolUses = (Array.isArray(messages) ? messages : [messages]).flatMap(message => (message?.type === 'assistant' ? message.message?.content ?? [] : []).filter(block => block?.type === 'tool_use'));
+  const next = rejudgeIsolation(record, toolUses, { roots: forbiddenRoots(), workspace: '<workspace>' });
+  next.grade = { ...next.grade, pass: next.outcome === 'passed', failures: next.outcome === 'passed' ? [] : next.grade?.failures ?? [] };
+  next.rejudgedAt = new Date().toISOString();
+  await writeFile(resultFile, scrub(`${JSON.stringify(next, null, 2)}
+`, { workspace: null, temporary: null, home: homedir() }));
+  console.log(`${basename(resultFile)}：${record.outcome} → ${next.outcome}（${next.reason}）`);
+}
+
 const argv = process.argv.slice(2);
 if (argv[0] === '--grade') await grade(resolve(argv[1]));
-else {
+else if (argv[0] === '--rejudge') await rejudge(resolve(argv[1]));
+else if (argv[0] === '--mark-harness') {
+  // 事後確認某次失敗是 harness 造成：npm run eval -- --mark-harness <結果檔> <原因>；原判定留在 originalJudgement。
+  const file = resolve(argv[1]);
+  const record = JSON.parse(await readFile(file, 'utf8'));
+  if (record.series !== 'baseline' || !argv[2]) throw new Error('用法：--mark-harness <baseline 結果檔> <原因>');
+  const next = markHarnessCaused(record, argv[2]);
+  next.grade = { ...next.grade, pass: false };
+  await writeFile(file, `${JSON.stringify(next, null, 2)}
+`);
+  console.log(`${basename(file)}：${record.outcome} → ${next.outcome}／${next.harnessCause}`);
+}
+else if (argv.includes('--baseline')) {
+  const supersedesAt = argv.indexOf('--supersedes');
+  const supersedes = supersedesAt === -1 ? null : argv[supersedesAt + 1];
+  const [task, group] = argv.filter((arg, index) => !arg.startsWith('--') && index !== (supersedesAt === -1 ? -1 : supersedesAt + 1));
+  if (!task || !group) throw new Error('用法：npm run eval -- <crud|dashboard|pricing> <plain|luca> --baseline [--supersedes <結果檔>] [--dry-run]');
+  await runBaseline(task, group, { dryRun: argv.includes('--dry-run'), supersedes });
+} else {
   const [task, group] = argv.filter(arg => !arg.startsWith('--'));
   if (!task || !group) throw new Error('用法：npm run eval -- <題目> <組別> [--dry-run]，或 npm run eval -- --grade <結果檔>');
   await runAgent(task, group, argv.includes('--dry-run'));

@@ -1,0 +1,121 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4); flex-wrap: wrap;
+}
+.page-title {
+  margin: 0;
+  font-size: var(--type-title-size);
+  font-weight: var(--type-title-weight);
+  line-height: var(--type-title-line-height);
+}
+
+.panel {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--card-padding);
+  min-width: 0;
+}
+.notice { margin-top: var(--space-2); }
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.toolbar > * { min-width: 0; }
+.count, .no-match { color: var(--muted); margin: 0 0 var(--space-3); font-size: var(--type-secondary-size); }
+.no-match { padding: var(--space-6) 0; text-align: center; }
+
+.orders { width: 100%; border-collapse: collapse; }
+.orders th, .orders td {
+  text-align: left;
+  padding: var(--table-cell-padding-block) var(--table-cell-padding-inline);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.orders thead th { color: var(--muted); font-weight: 600; font-size: var(--type-secondary-size); }
+.orders tbody th { font-weight: 500; }
+.orders .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.row-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.badge {
+  display: inline-block;
+  padding: 2px var(--space-3);
+  border-radius: 999px;
+  font-size: var(--type-secondary-size);
+  font-weight: 500;
+  color: var(--text);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.badge-pending { background: color-mix(in srgb, var(--warning) 16%, var(--surface)); border-color: var(--warning); }
+.badge-paid { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-color: var(--accent); }
+.badge-shipped { background: color-mix(in srgb, var(--success) 16%, var(--surface)); border-color: var(--success); }
+.badge-cancelled { background: var(--surface-subtle); border-color: var(--control-border); }
+
+.modal {
+  width: min(480px, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100vh - 2 * var(--space-4));
+  overflow-y: auto;
+  padding: var(--card-padding);
+  background: var(--surface);
+  color: var(--text);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-card);
+}
+.modal::backdrop { background: rgb(0 0 0 / 0.5); }
+.modal-title { margin: 0 0 var(--space-4); font-size: var(--type-section-size); font-weight: var(--type-section-weight); line-height: var(--type-section-line-height); }
+.form { display: flex; flex-direction: column; gap: var(--space-4); }
+.modal-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .toolbar { grid-template-columns: minmax(0, 1fr); }
+
+  .orders, .orders tbody, .orders tr, .orders td, .orders tbody th { display: block; width: 100%; }
+  .orders thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .orders tr {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+  }
+  .orders td, .orders tbody th {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: var(--space-3); border-bottom: 0; padding: var(--space-2) 0;
+    text-align: right;
+  }
+  .orders td::before, .orders tbody th::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: var(--type-secondary-size);
+    text-align: left;
+    flex: none;
+  }
+  .orders .num { text-align: right; }
+}

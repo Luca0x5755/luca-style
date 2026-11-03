@@ -51,6 +51,7 @@ npm run test:clean-projects
 | PR-ADOPT-03 | `test:clean-projects`：18 個色彩角色 × 17 個 Tailwind 色彩工具 × 實色與 `/40` × 四種主題，比對計算值與 `tokens.json`；反向控制刪掉或弄壞 preset 的角色時變紅。 |
 | PR-ADOPT-06 | `eval-onboarding.spec` 檢查起始專案沒有 Luca 接線、`--dry-run` 建出的工作區只有指南與兩個打包檔、越界判定、結果分類（逾時與超出預算算沒通過）、路徑去識別、1/3 與 2/3 沒通過的 CLI 結論；`test:clean-projects onboarding-grade` 的自我檢查：沒接線的起始專案沒通過、加上範例接線通過、四種破壞各自在指定項目以該項名稱變紅。真正的 3 次實測結果在 `evals/results/`，報告 `onboarding-report.md`，不在 CI 重跑（花真的錢）。 |
 | PR-ADOPT-05 | `test:clean-projects` 的 v3 部分：傳入 class 的一般、互動、資料與焦點狀態；基準頁與 Tailwind 頁逐元素比對；反向控制把 Luca CSS 放錯順序時變紅。v4 待 ISSUE-003。 |
+| PR-EVAL-04 | `eval-baseline.spec`：三份題目含評分器依賴的四態契約與逐字相同的限制區塊，sha256 釘死；兩組的題目位元組、指令、旗標與 settings 相同，plain 的 README 中性、luca 只多一段，luca 的工作區多指南與套件內附的 DESIGN.md、llms.txt；每個場景的手做探針專案經評分器乾跑，合理分化的 empty 與 error 不判缺漏、error 重複 empty 判缺漏；累計費用護欄（含被取代的檔）、補跑規則（只限 harness 例外、每格一次）、結果分類（隔離失敗、逾時、超出預算、建置失敗都算沒通過）、越界判定雙向（luca 讀已安裝套件檔案不算越界）、每格剛好 3 次的彙整與中位數、未滿時 `INCOMPLETE n/18`；已提交的 `baseline-report.md` 必須 18/18 並與結果檔重新產生的內容相同，結果檔沒有家目錄路徑。真正的 18 次實測結果在 `evals/results/`，不在 CI 重跑（花真的錢）。 |
 
 ## 五頁矩陣與操作
 

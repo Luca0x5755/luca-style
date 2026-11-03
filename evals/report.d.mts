@@ -4,3 +4,4 @@ export function estimateBaseline(runs: TrialRun[]): { perRunUsd: Record<string, 
 export type OnboardingRun = { outcome: string; guide: { sha: string; sha256: string }; grade: { pass: boolean; failures: { item: string; detail: string }[] } | null; run: { costUsd: number | null; durationMs: number | null } | null; manual?: { stuckAt?: string; guideChange?: string } };
 export const cliThreshold: number;
 export function onboardingSummary(runs: OnboardingRun[], version?: string): { version: string; guideSha: string; runs: OnboardingRun[]; failCount: number; cliNeeded: boolean; costUsd: number };
+export function buildBaselineReport(directory: string, options?: { allowPartial?: boolean }): Promise<{ records: import('./baseline.mjs').BaselineRecord[]; summary: import('./baseline.mjs').BaselineSummary; text: string }>;

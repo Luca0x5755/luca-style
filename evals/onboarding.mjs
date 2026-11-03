@@ -51,7 +51,9 @@ const escapeRegex = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function variants(path) {
   const slash = path.replace(/\\/g, '/');
   const msys = slash.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`);
-  return [path.replace(/\\/g, '\\\\'), path, slash, msys];
+  // Claude Code 的專案紀錄目錄用路徑的「slug」命名（非英數字都換成 -，例如 C--Users-名稱-AppData-…），輸出裡會出現。
+  const slug = path.replace(/[^A-Za-z0-9]/g, '-');
+  return [path.replace(/\\/g, '\\\\'), path, slash, msys, slug];
 }
 export function scrub(text, { workspace, temporary, home }) {
   let result = text;

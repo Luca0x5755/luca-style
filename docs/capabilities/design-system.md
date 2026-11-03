@@ -183,6 +183,10 @@ PR-ADOPT-09 — 導入 changesets（`@changesets/cli` 釘住精確版本，鎖�
 PR-ADOPT-10 — CI 能對 0.3.0 跑完發佈的試跑：`.github/workflows/publish-dry-run.yml` 套用 changeset 後，對兩個套件各跑一次 `npm publish --dry-run --provenance`，不使用機密也不指定環境。工作流程設定好來源證明（`id-token: write`），權杖只以 CI 機密 `NPM_TOKEN` 的名稱出現在 `publish.yml`，repo 內沒有權杖的值；`@luca-style` 組織與權杖由擁有者建立。分叉的 PR 拿不到 id-token，試跑跳過；Dependabot 的 PR 同樣拿不到，接受跳過。`tests/publish-workflow.spec.ts` 檢查這些結構。限制：`--provenance` 在同 repo PR 的 OIDC 下是否成功，要等 CI 實跑才知道，離線測不到。
 PR-ADOPT-11 — 沒有 `PR-EVAL-03` 的結論和擁有者的確認，發佈流程不會真的發佈：真正發佈只在 `.github/workflows/publish.yml`，只能由 `workflow_dispatch` 手動觸發。job 在 checkout 之後、任何發佈步驟之前先跑 `node scripts/check-publish-gate.mjs evals/results/copy-vs-npm.json`，該檔不存在、不是 JSON 物件、`copyBetter` 缺少或不是布林 `false` 都以非 0 結束，閘門步驟不能被 `if`、`|| true` 等跳過。確認由 GitHub 環境 `npm-publish` 的必要審核者提供。限制：必要審核者要擁有者在 GitHub 設定，repo 內設定不了也測不到；`tests/publish-gate.spec.ts` 用假的結論檔驗證三種失敗情況，`tests/publish-workflow.spec.ts` 檢查接線。
 
+### 評測承諾
+
+PR-EVAL-04 — 基準評測比較「無工具」和「裝 Luca Style 並附文件」，涵蓋後台與 CRUD、資料儀表板與監控、行銷與定價頁。題目和結果留在 repo，供 P2 用同一批題目比較。實測報告為 `evals/results/baseline-report.md`（由 `node evals/report.mjs` 從 `series` 為 `baseline` 的結果檔產生），題目是 `evals/tasks/crud.md`、`dashboard.md`、`pricing.md`，定案後不改（`tests/eval-baseline.spec.ts` 釘住 sha256）。限制：luca 組的文件優勢（README、接入指南、套件內附的 DESIGN.md 與 llms.txt）就是被量的處理；狀態缺漏、axe、溢出只在同一個場景內比較；失敗的執行都算進結果，只有 harness 例外可補跑一次並保留原紀錄。
+
 ### 狀態總覽頁承諾
 
 開工前審稿用的狀態總覽頁，規格見[前端 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)，目前納入 `/templates/product`。ADR 0009 維持 `Proposed`：總覽頁做好不代表試驗有結果，要等後台範本試驗有結果才改狀態。
