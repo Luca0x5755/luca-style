@@ -11,6 +11,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run test:consumer
+npm run test:clean-projects
 ```
 
 `test:consumer` 涵蓋 repo 外安裝、公開輸出、typecheck、production build、主題／模式／強調色／狀態、字體與授權。字體自託管與 OFL 隨建置交付，Noto Sans TC 原始字體約 11.94 MB；目前沒有子集化，不宣稱初次載入已最佳化。
@@ -45,6 +46,15 @@ npm run test:consumer
 | PR-STYLE-22 | readme.spec：clone／`npm ci`／`npm run dev`、連到使用端接入文件、程式碼片段 ≤10 行且逐字來自 examples/consumer、相對連結皆存在且被 git 追蹤。 |
 | PR-STYLE-23 | `npm run screenshots` 產生 `docs/images/` 四張；`npm run verify:screenshots` 驗證穩定；readme.spec 檢查 README 引用四張且檔案存在。不屬於 `npm test`。 |
 | PR-STYLE-24 | 前端 §5.2 路由表下方註明路徑相對於 base path；架構 §3.1 的 Pages 部署由 deploy-workflow.spec 檢查包含必要用語。 |
+| PR-ADOPT-01 | `test:clean-projects` 的 next 專案：`next build` 通過（伺服器元件的 layout 匯入 `themeInitScript`）；`next start` 對三種明暗情境檢查首屏屬性、首幀底色與 `<head>` 內阻擋渲染的 Luca CSS；`next start`、`next dev` 的 console 沒有 hydration 錯誤；`next/link` 經 `renderLink` 與 `Button render` 導覽不重載、`aria-current` 正確。反向控制涵蓋沒傳 suite、腳本移出 `<head>`、CSS 延遲載入、拿掉 `suppressHydrationWarning`、元件輸出不一致、`renderLink` 改回 `<a>`、拿掉 `'use client'`。 |
+| PR-ADOPT-02 | `test:clean-projects` 的 react-18 專案：peer 放寬時一般 `npm install` 成功，`tsc`、`vite build` 通過，dev server 上操作全部公開元件且 console 沒有 error 或 warning；反向控制：連結元件沒有 `forwardRef` 時出現 ref 警告。`test:consumer` 檢查 `vite build` 只有文件寫明的 `'use client'` 警告。 |
+| PR-ADOPT-03 | `test:clean-projects`：18 個色彩角色 × 17 個 Tailwind 色彩工具 × 實色與 `/40` × 四種主題，比對計算值與 `tokens.json`；反向控制刪掉或弄壞 preset 的角色時變紅。 |
+| PR-ADOPT-06 | `eval-onboarding.spec` 檢查起始專案沒有 Luca 接線、`--dry-run` 建出的工作區只有指南與兩個打包檔、越界判定、結果分類（逾時與超出預算算沒通過）、路徑去識別、1/3 與 2/3 沒通過的 CLI 結論；`test:clean-projects onboarding-grade` 的自我檢查：沒接線的起始專案沒通過、加上範例接線通過、四種破壞各自在指定項目以該項名稱變紅。真正的 3 次實測結果在 `evals/results/`，報告 `onboarding-report.md`，不在 CI 重跑（花真的錢）。 |
+| PR-ADOPT-05 | `test:clean-projects` 的 v3 部分：傳入 class 的一般、互動、資料與焦點狀態；基準頁與 Tailwind 頁逐元素比對；反向控制把 Luca CSS 放錯順序時變紅。v4 待 ISSUE-003。 |
+| PR-EVAL-01 | `eval-copy-vs-npm-project.spec`：複製組的起始專案與 `packages/react/src` 逐位元組相同、不宣告 `@luca-style/react`、文件在專案根目錄，真的安裝並建置（型別檢查含複製的原始碼）；沒改過的元件檔不計寫死顏色，改過的照掃。`eval-copy-vs-npm.spec`：沿用的 npm 組釘住三個檔名與指南 sha、少一個或多一個有效結果時 `complete` 為 false、複製組不能裝 `@luca-style/react`、費用護欄（剛好 $10 可、超過拒絕、單次上限 $5）。實測結果由 `eval-copy-vs-npm-report.spec` 對照 repo 內的結果檔。 |
+| PR-EVAL-02 | `eval-copy-vs-npm.spec` 的 `gradeUpdate`：新版已裝、行為生效、本地改動還在三個旗標各自獨立翻轉，只在頁面寫死 `aria-disabled` 而沒裝新版時判失敗；`eval-copy-vs-npm-project.spec`：npm 組起始專案有包裝層、`upgrade/` 的 tgz 是 0.2.1 且有補丁，真的 `npm install` 後通過；複製組整份覆蓋會丟本地改動、合併則兩者都在。 |
+| PR-EVAL-03 | `eval-copy-vs-npm.spec` 的判定函式：改善 19% 不算、20% 算、npm 為 0 不可能改善、axe／溢出／遺失本地改動只有非零變零才算、任一項變差就不算較好、費用時間不影響、平手與改善不足是 inconclusive 且 `copyBetter` 為 false、失敗的執行算進中位數與失敗清單、補跑規則；`eval-copy-vs-npm-report.spec`：報告揭露關鍵句、平手報告不含「copy is better」、資料不完整時 `complete` 為 false 且 `copyBetter` 為 null、發佈閘門實跑（完整且 false 通過，其他失敗）、舊報告忽略這個系列與結論檔；ADR 0010 的狀態與結論檔一致。 |
+| PR-EVAL-04 | `eval-baseline.spec`：三份題目含評分器依賴的四態契約與逐字相同的限制區塊，sha256 釘死；兩組的題目位元組、指令、旗標與 settings 相同，plain 的 README 中性、luca 只多一段，luca 的工作區多指南與套件內附的 DESIGN.md、llms.txt；每個場景的手做探針專案經評分器乾跑，合理分化的 empty 與 error 不判缺漏、error 重複 empty 判缺漏；累計費用護欄（含被取代的檔）、補跑規則（只限 harness 例外、每格一次）、結果分類（隔離失敗、逾時、超出預算、建置失敗都算沒通過）、越界判定雙向（luca 讀已安裝套件檔案不算越界）、每格剛好 3 次的彙整與中位數、未滿時 `INCOMPLETE n/18`；已提交的 `baseline-report.md` 必須 18/18 並與結果檔重新產生的內容相同，結果檔沒有家目錄路徑。真正的 18 次實測結果在 `evals/results/`，不在 CI 重跑（花真的錢）。 |
 
 ## 五頁矩陣與操作
 

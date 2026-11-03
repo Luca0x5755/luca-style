@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -107,4 +108,93 @@ function packedFiles(directory: string) {
 test('the packed @luca-style/react tarball contains DESIGN.md and llms.txt, and @luca-style/tokens contains the spec document', () => {
   expect(packedFiles('react')).toEqual(expect.arrayContaining(['DESIGN.md', 'llms.txt']));
   expect(packedFiles('tokens')).toEqual(expect.arrayContaining(['design-tokens.md']));
+});
+
+// ISSUE-008／PR-ADOPT-08：DESIGN.md 開頭的 front matter 由 DTCG 原始檔產生，front matter 之後的正文是手寫的。
+const frontMatterOf = (text: string) => text.match(/^---\n[\s\S]*?\n---\n/)?.[0] ?? '';
+
+// 以暫存目錄的 DESIGN.md 副本執行產生器；輸出目錄也在暫存，不動 dist 與已提交的檔案。
+function regenerate(designMd: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'luca-design-md-'));
+  try {
+    const target = join(dir, 'DESIGN.md');
+    writeFileSync(target, designMd);
+    const result = spawnSync(process.execPath, ['build.mjs', '--source', 'src', '--out', join(dir, 'dist'), '--design-md', target], { cwd: join(root, 'packages/tokens'), encoding: 'utf8' });
+    return { status: result.status, stderr: result.stderr, text: readFileSync(target, 'utf8') };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('regenerating DESIGN.md from the DTCG source leaves its front matter unchanged', () => {
+  const committed = read('DESIGN.md');
+  const result = regenerate(committed);
+  expect(result.stderr).toBe('');
+  expect(result.status).toBe(0);
+  expect(frontMatterOf(committed), 'DESIGN.md 沒有 front matter').not.toBe('');
+  expect(frontMatterOf(result.text)).toBe(frontMatterOf(committed));
+});
+
+test('regenerating replaces only the front matter: hand-written prose survives byte for byte and a second run changes nothing', () => {
+  const prose = '\n# 手寫標題\n\n手寫說明，含 `--accent` 與 | 表格。\n\n## 元件\n\n最後一行沒有額外換行。\n';
+  const stale = `---\nversion: alpha\nname: 過期\ncolors:\n  primary: "#000000"\n---\n${prose}`;
+  const first = regenerate(stale);
+  expect(first.status, first.stderr).toBe(0);
+  expect(first.text.slice(frontMatterOf(first.text).length)).toBe(prose);
+  expect(frontMatterOf(first.text)).toBe(frontMatterOf(read('DESIGN.md')));
+  expect(regenerate(first.text).text).toBe(first.text);
+  // Windows 的 CRLF 檔案：輸出仍是 LF，與 LF 輸入的結果相同。
+  const crlf = regenerate(stale.replace(/\n/g, '\r\n'));
+  expect(crlf.text).toBe(first.text);
+  expect(crlf.text).not.toContain('\r');
+});
+
+test('front matter colors, typography, radii and spacing match the vibrant light values in the built tokens', () => {
+  const front = frontMatterOf(read('DESIGN.md'));
+  const data = JSON.parse(readFileSync(join(root, 'packages/tokens/dist/tokens.json'), 'utf8')).vibrant.light as Record<string, string>;
+  const typography = JSON.parse(readFileSync(join(root, 'packages/tokens/dist/typography.json'), 'utf8')) as Record<string, Record<string, string | number>>;
+  // 兩層縮排的 key: value 行，依所屬區塊取出。
+  const section = (name: string) => Object.fromEntries([...front.matchAll(new RegExp(`^${name}:\n((?:  .*\n)+)`, 'gm'))].flatMap(match => [...match[1].matchAll(/^  ([a-z0-9-]+): "?([^"\n]+)"?$/gm)].map(entry => [entry[1], entry[2]])));
+  const colors = section('colors');
+  for (const name of ['bg', 'surface', 'text', 'border', 'success', 'warning', 'error', 'accent', 'accent-hover', 'focus-ring']) expect(colors[name], `colors.${name}`).toBe(data[name]);
+  expect(colors.primary).toBe(data.accent);
+  expect(Object.values(colors).every(value => /^#[0-9A-Fa-f]{6}$/.test(value)), '每個顏色都是色碼，沒有 var() 參照').toBe(true);
+  expect(section('rounded')).toEqual({ card: data['radius-card'], control: data['radius-control'] });
+  expect(section('spacing')['space-4']).toBe(data['space-4']);
+  expect(front).toContain(`    fontSize: "${typography.hero.desktop}"`);
+  expect(front).toContain(`    fontWeight: ${typography.hero.weight}`);
+});
+
+test('DESIGN.md prose says the front matter holds only the vibrant light values and points to the spec document for the rest', () => {
+  const prose = read('DESIGN.md').slice(frontMatterOf(read('DESIGN.md')).length);
+  expect(prose).toMatch(/front matter[^\n]*只是 `vibrant` 套系日間模式的代表值/);
+  expect(prose).toMatch(/其他套系與暗黑模式的值只看\[設計變數規格\]\(https:\/\/github\.com\/Luca0x5755\/luca-style\/blob\/main\/docs\/design-tokens\.md\)/);
+});
+
+// 以釘住版本的 @google/design.md 檢查；用 node 直接執行入口檔，不依賴 npx 的行為。
+function lintDesignMd(text: string) {
+  const dir = mkdtempSync(join(tmpdir(), 'luca-design-lint-'));
+  try {
+    const file = join(dir, 'DESIGN.md');
+    writeFileSync(file, text);
+    const result = spawnSync(process.execPath, [join(root, 'node_modules/@google/design.md/dist/index.js'), 'lint', file], { encoding: 'utf8' });
+    const report = JSON.parse(result.stdout) as { findings: { severity: string; rule?: string; message: string }[]; summary: { errors: number; warnings: number } };
+    return { status: result.status, report };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('DESIGN.md passes the Google DESIGN.md lint with no errors and no warnings', () => {
+  const { status, report } = lintDesignMd(read('DESIGN.md'));
+  expect(report.findings.filter(finding => finding.severity !== 'info')).toEqual([]);
+  expect(report.summary.errors).toBe(0);
+  expect(status).toBe(0);
+});
+
+test('the lint fails on a DESIGN.md whose component token references a color that does not exist', () => {
+  const broken = read('DESIGN.md').replace(/^---\n/, '---\ncomponents:\n  button-primary:\n    backgroundColor: "{colors.nope}"\n');
+  const { status, report } = lintDesignMd(broken);
+  expect(report.findings.map(finding => finding.rule)).toContain('broken-ref');
+  expect(status).not.toBe(0);
 });

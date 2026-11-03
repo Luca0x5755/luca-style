@@ -8,7 +8,7 @@
 
 - 專案介紹、截圖、快速開始、開發與驗證指令：[README](../../README.md)；線上樣張 `https://luca0x5755.github.io/luca-style/`。
 - 套件安裝、公開 API、主題覆寫、字體授權與設計變數同步：[使用端接入](../consumer-guide.md)；跨專案執行步驟見[套用提示詞](../adoption-prompt.md)。
-- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～54`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）與 `PR-REVIEW-xx`（狀態總覽頁）。
+- 視覺、路由、頁面四態與元件要求：見下方「規格章節」；需求追溯使用 `PR-STYLE-01～60`、`PR-FILE-xx`（元件庫設計檔；編號沿用，已移除的編號不再使用）、`PR-REVIEW-xx`（狀態總覽頁）與 `PR-ADOPT-xx`（接入與發佈）。
 - 開工前審稿用的狀態總覽頁：[前端規格 §5.3.7](../05_frontend_spec.md#537-狀態總覽頁能力設計系統-開發環境-devstate-overview)。
 - 驗收案例、矩陣與限制：[交付驗證](../delivery-verification.md)。
 
@@ -136,6 +136,23 @@ PR-STYLE-44 — 以 0.2.0 發布。`docs/consumer-guide.md` 有升級說明，�
 - `npm run verify:screenshots` 檢查四張 README 截圖的四角等於該組合的 `bg`（PR-STYLE-52）。
 - 載入動畫 GIF 只有一位元透明，中性色改值後已在新底色上檢視：邊緣是硬邊、沒有舊底色的色邊，未重新輸出。
 
+### 元件 API 與高度承諾
+
+PR-STYLE-55 — 文字單行時，Button、Select、TextField 的實際高度等於 `control-height`，涵蓋兩種風格套系、三種資訊密度、兩種元件外形。
+PR-STYLE-56 — 文字換行時，上述元件會長高，內容不被裁切。TextField 的輸入框是單行，長值不換行，在輸入框內橫向捲動；它的長標籤會換行，整個欄位長高，輸入框仍是 `control-height`；專案加大字級時輸入框會長高。
+PR-STYLE-57 — `Navigation` 可以用專案提供的連結元件（`renderLink`），點擊不整頁重載，目前頁面仍有 `aria-current`。選單連結與品牌連結都走同一個連結元件，專案加上的 class 會生效。
+PR-STYLE-58 — `Button` 可以透過公開型別（`ButtonLinkProps` 的 `render`）渲染成連結，外觀與同 variant 的按鈕相同、沒有底線，Tab 能聚焦、Enter 會觸發；它保留連結語意，按 Space 不觸發，也沒有按鈕的 `type`。既有的 `ButtonProps` 形狀不變。
+PR-STYLE-59 — `StatusMessage` 和 `ContentState` 寫死的文字可以替換，沒提供時維持現有文字：`StatusMessage` 的 `label` 取代語氣前綴（成功、警告、錯誤），`ContentState` 的 `title`、`description`、`retryLabel` 取代標題、說明與「重試」。`StatusMessage` 的前綴只能替換、不能拿掉，否則語氣只剩顏色表達；`label`、`retryLabel` 給空字串時退回預設文字，避免沒有前綴或沒有名稱的按鈕。分隔符號「 · 」不開放替換。
+PR-STYLE-60 — `Checkbox` 可以隱藏標籤（`hideLabel`），輔助科技仍讀得到名稱：名稱仍由 `label` 提供，不必另給 `aria-label`；方框尺寸與單行列高不變，點擊與 Space 照常切換，說明與錯誤文字照常顯示，axe 沒有 serious 或 critical 違規。
+
+- PR-STYLE-55、56 由 `tests/control-height.spec.ts` 在瀏覽器裡量實際尺寸（在 `npm test` 內），測試載具沒有全域 `box-sizing` 重設，所以也涵蓋沒有重設的使用端。
+- 依 PR-STYLE-56，Select 的長值不再是單行省略號，改為換行；展開選單的長選項也會長高，單行選項維持 40px。
+- 長字串（含不可斷的英文）在 Button、Select、欄位標籤與說明文字內任意處斷開，不撐寬容器。Button 在 flex 列中不收縮、寬度以容器為上限，所以工具列裡的短標籤不會被擠到斷字。
+- PR-STYLE-57、58 由 `tests/component-links.spec.ts` 在測試載具驗證，載具用 `history.pushState` 的假路由代替 Next、React Router 的連結元件；連結 Button 的焦點框與單行高度分別在 `tests/focus-ring.spec.ts`、`tests/control-height.spec.ts`；型別相容（`interface X extends ButtonProps`、`ButtonProps['onClick']`、`ComponentProps<typeof Button>` 等於 `ButtonProps`）在 `tests/components-props.spec.ts`，由 `npm run typecheck` 檢查。
+- 連結 Button 不經過 Base UI 的 `Button`：Base UI 文件說 `<a>` 不該放進它的 `render`，會加上按鈕的 `type` 與鍵盤行為。改用 Base UI 的 `useRender` 渲染，仍屬 ADR 0006。
+- 導覽連結的樣式以 `.luca-navigation-link`、`.luca-brand` 選取，特異度 (0,1,0)，專案經 `renderLink` 傳的 class 能生效（PR-ADOPT-05）；`npm run test:clean-projects` 的傳入 class 檢查涵蓋導覽連結與連結 Button。焦點框選擇器不變。
+- PR-STYLE-59、60 由 `tests/component-text.spec.ts` 在測試載具驗證，axe 只掃該樣本區，並以標籤為空字串的隱藏標籤 Checkbox 當反向控制；型別在 `tests/components-props.spec.ts`。隱藏的標籤文字用視覺隱藏寫法（1×1、clip），測試斷言它不是 `display:none` 或 `visibility:hidden`。隱藏文字不收專案的 class，所以乾淨專案不需新增傳入 class 樣本。
+
 ### Penpot 元件庫設計檔（ADR 0008）
 
 設計稿工具是自架 Penpot（ADR 0008）。自架說明見[Penpot 自架說明](../penpot-self-hosting.md)；Penpot 長時間編輯的穩定度沒有驗證。
@@ -149,6 +166,29 @@ PR-FILE-29 — `docs/` 下有 Penpot 自架說明，列出所用 Penpot 版本�
 PR-FILE-30 — `docs/consumer-guide.md` 與 `docs/adoption-prompt.md` 的設計稿起點指向 Penpot 版元件庫設計檔。
 PR-FILE-32 — 腳本由元件庫設計檔的 `.penpot` 產生正規化文字 dump（排序固定、不含時間戳與隨機 id 等易變欄位）並提交進 repo；同一份匯出檔連續產生兩次的 dump 位元組相同；dump 與 `.penpot` 不一致時檢查回報非零結束碼並列出差異。
 PR-FILE-33 — `elevation-enabled` 在 Penpot 以 shadow token 表示：開為原陰影值，關為零偏移、零模糊、透明度 0 的陰影；建置輸出的 token JSON 含此 token，離線測試比對其值與 DTCG 來源。
+
+### 接入與發佈承諾
+
+接法見[使用端接入](../consumer-guide.md#與-tailwind-v3-並用)、[Tailwind v4 的接法](../consumer-guide.md#與-tailwind-v4-並用)、[Next 的接法](../consumer-guide.md#與-next-並用app-router)與 [React 18](../consumer-guide.md#react-18)，路線見 ADR 0010。`npm run test:clean-projects` 從打包檔安裝到 repo 外的 Tailwind v3、v4、Next 與 React 18 乾淨專案，用瀏覽器檢查，每項檢查都附反向控制。
+
+PR-ADOPT-03 — Tailwind v3 乾淨專案不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法。
+PR-ADOPT-04 — Tailwind v4 乾淨專案只匯入 Luca 的 CSS 設定檔、不寫色彩對應，就能用所有色彩角色的 class，包括 `border-success/40` 這類透明度寫法；執行期改專案強調色或切換明暗後，顏色跟著改變。
+PR-ADOPT-05 — Tailwind v3 與 v4 依文件載入 CSS 後，專案傳給元件的 class 能生效，Luca 元件樣式也不被 preflight 蓋掉。例外：不帶狀態的 class 不會蓋掉 `:focus-visible` 的焦點框，要改焦點樣式用 `focus-visible:` 前綴；v4 的 `outline-none` 與 `outline-hidden` 都算不帶狀態的 class。
+PR-ADOPT-06 — 全新的代理只靠 `docs/consumer-guide.md`，用一個指令安裝，其餘照貼，就能在乾淨專案跑通。實測 3 次（`npm run eval -- onboarding luca-guide`），每次記錄通過與否、卡在哪裡、費用和時間，存在 `evals/results/`；報告 `evals/results/onboarding-report.md` 標明指南版本，並依門檻寫明要不要補 CLI：3 次中有 2 次以上沒通過就補。「需要人介入」的定義是代理結束後，乾淨專案檢查沒有通過；逾時、超出預算、輸出不是 JSON、隔離失敗都算沒通過。限制：只測 Tailwind v3 的乾淨專案；通過只證明代理接的線（套件、preset、CSS 入口順序、字體）在評分者的探針頁上有效，不證明代理自己的頁面能用；還沒發佈，所以題目把 npm 安裝指令改成打包檔，其餘不給提示。
+PR-ADOPT-07 — `docs/consumer-guide.md` 補上 P0 回報的 7 項錯漏，每項都有可貼上的程式碼，其中 jsdom 與 portal 的程式碼由 `tests/consumer-guide.spec.ts` 原樣執行：(1) 同步 effect 刪除後，依賴該時機的程式改用 `new MutationObserver(` 監看 `data-mode`；(2) 手寫腳本可能還寫了 `data-theme` 和 `style.colorScheme`，`themeInitScript` 都不寫；(3) 參考範例與文件中每個 `themeInitScript(` 呼叫都傳入 `suite`，否則 professional 專案會閃一下；(4) 補 jsdom 的測試改法，`fireEvent.change` 對 Select 靜默無效，選項要先送 `pointerDown`；(5) 與 Tailwind 並用時的 CSS 載入順序（v3、v4 的 CSS 入口與乾淨專案逐字相同）；(6) 第三方 portal 在 `target="self"` 會拿到 `:root` 預設主題，改用 `target="document"`；(7) Windows 上建置後，`docs/design-tokens.md` 可能只有換行符差異，用 `git checkout -- docs/design-tokens.md` 還原。文件每段設定都和 `examples/` 的乾淨專案逐字比對。
+PR-ADOPT-08 — `DESIGN.md` 開頭的 front matter（顏色、字體、圓角、間距）由 `packages/tokens` 的 DTCG 原始檔經 `npm run generate` 產生，只含 `vibrant` 套系日間模式的代表值，正文說明其他套系與暗黑模式只看設計變數規格。重新產生後 git 沒有差異，原始檔改了卻沒重新產生時 `tests/agent-docs.spec.ts` 失敗；正文是手寫的，重新產生不會改動。`DESIGN.md` 通過 Google DESIGN.md 規格（alpha）的 lint，工具為 `@google/design.md` 0.4.0，釘住版本；規格改版時升級工具並重新確認。
+PR-ADOPT-01 — Next（App Router）乾淨專案可以建置：伺服器元件的 layout 能從套件入口匯入並呼叫 `themeInitScript`，`Navigation` 的 `renderLink` 與 `Button` 的 `render` 可傳 `next/link`，點擊不整頁重載，目前頁面仍有 `aria-current`。`next start` 的首屏，`<html>` 的套系與明暗從第一筆記錄起就正確，Luca CSS 以 `<head>` 裡阻擋渲染的 stylesheet 載入，第一幀的底色等於該套系與明暗的 `bg`，所以不會閃一下日間模式。`next start` 與 `next dev` 的 console 沒有 hydration 錯誤。
+PR-ADOPT-02 — React 18（18.3.1）乾淨專案不改套件程式碼，一般 `npm install` 即可安裝，公開元件都能建置和操作，所以 peer 是 `^18.0.0 || ^19.0.0`。18.0 到 18.2 沒有逐版驗證。
+PR-ADOPT-09 — 導入 changesets（`@changesets/cli` 釘住精確版本，鎖定檔含 integrity），`@luca-style/tokens` 與 `@luca-style/react` 在 `.changeset/config.json` 以 `fixed` 綁成同一組，版本一致；第一個 changeset 兩個套件都升次版號到 0.3.0，並附不相容變更的升級說明（0.x 期間不相容變更升次版號）。`tests/changesets.spec.ts` 檢查設定、changeset 的 front matter、在暫存複本套用後兩個版本都恰為 0.3.0，以及升級說明逐項涵蓋。
+PR-ADOPT-10 — CI 能對 0.3.0 跑完發佈的試跑：`.github/workflows/publish-dry-run.yml` 套用 changeset 後，對兩個套件各跑一次 `npm publish --dry-run --provenance`，不使用機密也不指定環境。工作流程設定好來源證明（`id-token: write`），權杖只以 CI 機密 `NPM_TOKEN` 的名稱出現在 `publish.yml`，repo 內沒有權杖的值；`@luca-style` 組織與權杖由擁有者建立。分叉的 PR 拿不到 id-token，試跑跳過；Dependabot 的 PR 同樣拿不到，接受跳過。`tests/publish-workflow.spec.ts` 檢查這些結構。限制：`--provenance` 在同 repo PR 的 OIDC 下是否成功，要等 CI 實跑才知道，離線測不到。
+PR-ADOPT-11 — 沒有 `PR-EVAL-03` 的結論和擁有者的確認，發佈流程不會真的發佈：真正發佈只在 `.github/workflows/publish.yml`，只能由 `workflow_dispatch` 手動觸發。job 在 checkout 之後、任何發佈步驟之前先跑 `node scripts/check-publish-gate.mjs evals/results/copy-vs-npm.json`，該檔不存在、不是 JSON 物件、`complete` 不是布林 `true`（評測資料不完整）、`copyBetter` 缺少或不是布林 `false`（含資料不完整時的 `null`）都以非 0 結束，閘門步驟不能被 `if`、`|| true` 等跳過。確認由 GitHub 環境 `npm-publish` 的必要審核者提供。限制：必要審核者要擁有者在 GitHub 設定，repo 內設定不了也測不到；`tests/publish-gate.spec.ts` 用假的結論檔驗證各種失敗情況，`tests/publish-workflow.spec.ts` 檢查接線。
+
+### 評測承諾
+
+PR-EVAL-01 — 用同一個任務比較複製原始碼和 npm 套件，每組 3 次，記錄寫死顏色數、axe 違規、水平溢出、四種狀態缺漏、費用和時間。任務是後台與 CRUD（`evals/tasks/crud.md`）。複製組把 `packages/react/src` 原樣複製進專案的 `src/luca-style/`（連同字體與載入動畫資源），只裝 `@luca-style/tokens` 與 `@base-ui/react`，不裝 `@luca-style/react`，題目文字與 npm 組逐字相同；npm 組沿用 ISSUE-013「裝 Luca Style 並附文件」的 3 次有效結果（指南版本 `64ec331`），釘在 `evals/copy-vs-npm.mjs` 的 `reusedNpmRuns`，不重跑。限制：兩組不是同一時間跑的；複製組沒有 `docs/consumer-guide.md`、npm 組有（偏差方向不確定），`llms.txt` 與 `DESIGN.md` 的位置不同；複製進來沒被改過的元件原始碼不計入寫死顏色。
+PR-EVAL-02 — 評測包含一題「把元件更新到新版」，兩組各 3 次，記錄新版是否真的裝上、新版行為是否生效、本地改動是否保留（`evals/tasks/update-copy.md`、`update-npm.md`）。新版是自己打包的，只改 `Button` 的一個行為（`loading` 時加 `aria-disabled`），只模擬真實升級。本地改動是每個按鈕的 `data-local-change`：複製組直接改複製進來的 `button.tsx`，npm 組用專案的 `src/local-button.tsx` 包裝公開 API。限制：這個題目結構上不對稱，npm 的包裝層不會被 `npm install` 動到，只有複製組的升級會覆蓋檔案，所以「遺失本地改動」只說明複製組在這題上會不會丟；評分檢查新版真的裝了（npm 組看套件版本 0.2.1，複製組看原始碼），只在頁面寫死屬性不會通過。
+PR-EVAL-03 — 報告依 ADR 0010 和規格的門檻逐項判定，寫明複製組是否較好，結論檔是 `evals/results/copy-vs-npm.json`（報告 `evals/results/copy-vs-npm-report.md`，由 `node evals/report.mjs` 產生）。寫死顏色數、狀態缺漏：中位數較好且改善至少 20%；axe 違規、水平溢出、更新時遺失本地改動：npm 的中位數非零且複製組為零；費用和時間只記錄。`copyBetter` 為 `true` 要同時沒有任何一項變差、且至少一項達到門檻；平手或改善不足是「inconclusive, so npm stays」，`copyBetter` 為 `false`。四格（含沿用的 npm 組）各剛好 3 個有效結果、沿用的檔與指南版本吻合時 `complete` 為 `true`；否則 `complete` 為 `false`、`copyBetter` 為 `null`，缺證據不等於 npm 較好。複製組較好時不改 ADR 0010 的狀態，把結論回報擁有者，首次發佈停止。限制：每格 3 次，樣本小，結論只決定是否重新討論 ADR 0010，不自動換路線。失敗的執行都算進結果，只有基礎建設失敗（harness 例外）可補跑一次並保留原紀錄；累計等價費用（含 ISSUE-013）超過 $10 就拒絕開跑。
+PR-EVAL-04 — 基準評測比較「無工具」和「裝 Luca Style 並附文件」，涵蓋後台與 CRUD、資料儀表板與監控、行銷與定價頁。題目和結果檔（頂層的結果 JSON 與報告）留在 repo，供 P2 用同一批題目比較；逐次執行的存檔（封存的工作區與 `claude-output.json`）不在樹裡，在標籤 `archive/eval-runs-2026-11-03`，之後新增的存檔由 `.gitignore` 擋掉。實測報告為 `evals/results/baseline-report.md`（由 `node evals/report.mjs` 從 `series` 為 `baseline` 的結果檔產生），題目是 `evals/tasks/crud.md`、`dashboard.md`、`pricing.md`，定案後不改（`tests/eval-baseline.spec.ts` 釘住 sha256）。限制：luca 組的文件優勢（README、接入指南、套件內附的 DESIGN.md 與 llms.txt）就是被量的處理；狀態缺漏、axe、溢出只在同一個場景內比較；失敗的執行都算進結果，只有 harness 例外可補跑一次並保留原紀錄。
 
 ### 狀態總覽頁承諾
 

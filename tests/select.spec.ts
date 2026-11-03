@@ -21,10 +21,11 @@ acceptsSelect({label:'分類', size:4});
 // @ts-expect-error 值只接受單一字串或數字，不再接受陣列
 acceptsSelect({label:'分類', value:['a', 'b']});
 
-test('@luca-style/react depends on @base-ui/react ^1.9 with react and react-dom 19 as peers', async () => {
+test('@luca-style/react depends on @base-ui/react ^1.9 with react and react-dom 18 or 19 as peers', async () => {
   const manifest = JSON.parse(await readFile(new URL('../packages/react/package.json', import.meta.url), 'utf8'));
   expect(manifest.dependencies['@base-ui/react']).toMatch(/^\^1\.(9|[1-9]\d)\./);
-  expect(manifest.peerDependencies).toEqual({ react:'^19.0.0', 'react-dom':'^19.0.0' });
+  // React 18 放寬由 test:clean-projects 的 react-18 專案驗證（PR-ADOPT-02）。
+  expect(manifest.peerDependencies).toEqual({ react:'^18.0.0 || ^19.0.0', 'react-dom':'^18.0.0 || ^19.0.0' });
 });
 
 test('clicking a Select opens a styled listbox and picking an option updates the field', async ({ page }) => {

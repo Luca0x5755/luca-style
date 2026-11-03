@@ -6,18 +6,20 @@ import { deriveAccent } from './accent.js';
 
 // 設計變數產生器：讀 DTCG 分層原始檔，經 Style Dictionary 產生與 0.1.0 相同結構的 css、data、typography。
 // 路徑以目前工作目錄解析；npm run build 在套件目錄執行，預設即為 src/ 與 dist/。
-// --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，公開輸出維持三份。
+// --doc <路徑>：另外寫一份給代理讀的設計變數規格文件（Markdown，PR-STYLE-28）；同樣不放進 --out，不是公開輸出。
 // --penpot <路徑>：另外寫一份 Penpot 可匯入的 token JSON（ISSUE-018）；同樣不放進 --out。
+// --design-md <路徑>：只改寫該檔開頭的 YAML front matter（Google DESIGN.md 規格的設計變數，ISSUE-008）；front matter 之後的手寫正文原樣保留。
 // --variables <路徑>：另外寫一份設計檔變數資料（variables.json；Penpot token JSON 與 npm run check:penpot 都以它為基準）；
-//   不放進 --out，因為 dist 會發布到 npm，且公開輸出只有三份。
+//   不放進 --out，因為 dist 會發布到 npm，而它不是公開輸出。
 const { values: args } = parseArgs({ options: {
-  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, variables: { type: 'string' }, penpot: { type: 'string' }, doc: { type: 'string' },
+  source: { type: 'string', default: 'src' }, out: { type: 'string', default: 'dist' }, variables: { type: 'string' }, penpot: { type: 'string' }, doc: { type: 'string' }, 'design-md': { type: 'string' },
 } });
 const source = resolve(args.source);
 const out = resolve(args.out);
 const designPath = args.variables && resolve(args.variables);
 const docPath = args.doc && resolve(args.doc);
 const penpotPath = args.penpot && resolve(args.penpot);
+const designMdPath = args['design-md'] && resolve(args['design-md']);
 
 // 套系與明暗的順序決定 CSS 區塊順序；第一個組合同時是 :root 的預設主題。
 const suites = ['vibrant', 'professional'];
@@ -393,9 +395,63 @@ const docText = [
   '',
 ].join('\n');
 
+// 第七步：Tailwind v3 preset（PR-ADOPT-03）。值引用 CSS 變數，才會跟著套系、明暗與專案強調色改變；
+// 不用通道變數，因為 ThemeProvider 在執行期只寫十六進位的強調色。<alpha-value> 讓 border-success/40 這類寫法有效。
+const colorRoles = [...new Set(themes.flatMap(({ allTokens }) => published(allTokens).filter(token => token.$type === 'color').map(nameOf)))];
+const tailwindColors = Object.fromEntries(colorRoles.map(name => [name, `color-mix(in srgb, var(--${name}) calc(<alpha-value> * 100%), transparent)`]));
+const tailwindPreset = `// 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改。\nmodule.exports = ${JSON.stringify({ theme: { extend: { colors: tailwindColors } } }, null, 2)};\n`;
+const tailwindPresetTypes = 'declare const preset: { theme: { extend: { colors: Record<string, string> } } };\nexport = preset;\n';
+// 第八步：Tailwind v4 的 CSS 設定檔（PR-ADOPT-04）。用 @theme inline，utility 直接寫 var(--角色)，
+// 才會跟著執行期的套系、明暗與專案強調色改變；/40 這類透明度由 Tailwind 自己包 color-mix。
+const tailwindTheme = [
+  '/* 由 npm run generate 自 packages/tokens/src 的 DTCG 原始檔產生，勿手改。Tailwind v4 的 CSS 設定檔。 */',
+  '@theme inline {',
+  declarations(colorRoles.map(name => [`color-${name}`, `var(--${name})`])),
+  '}',
+  '',
+].join('\n');
+
+// 第九步：DESIGN.md 的 front matter（Google DESIGN.md 規格，alpha；PR-ADOPT-08）。
+// 規格的 front matter 一個名稱只能有一個值，所以只放 vibrant／日間的代表值；其他套系與暗黑模式見 docs/design-tokens.md。
+// 值取自上面已解析（含推算）的 allTokens 與 typography，不另存手寫的值。
+const representative = themes.find(theme => theme.suite === suites[0] && theme.mode === modes[0]).allTokens;
+const yamlString = value => JSON.stringify(String(value));
+const yamlEntries = (entries, indent = '  ') => entries.map(([key, value]) => `${indent}${key}: ${yamlString(value)}`);
+const publishedOf = predicate => published(representative).filter(predicate);
+const designMdFrontMatter = [
+  '---',
+  'version: alpha',
+  'name: Luca Style',
+  'description: 由 packages/tokens 的 DTCG 原始檔產生，只含 vibrant 套系日間模式的代表值',
+  'colors:',
+  // 值是 var(--x) 的色彩（例如 metric-background）解成被參照變數的值，規格的 Color 只收實際色碼。
+  ...yamlEntries(publishedOf(token => token.$type === 'color').map(token => {
+    const reference = String(token.$value).match(/^var\(--([a-z0-9-]+)\)$/);
+    return [nameOf(token), reference ? valueIn(representative, reference[1]) : token.$value];
+  })),
+  // 規格建議有 primary；Luca 的主色角色是 accent，所以 primary 直接取它的值。
+  ...yamlEntries([['primary', valueIn(representative, 'accent')]]),
+  'typography:',
+  ...Object.entries(typography).flatMap(([role, fields]) => [
+    `  ${role}:`,
+    ...yamlEntries([['fontFamily', valueIn(representative, 'font-body')], ['fontSize', fields.desktop]], '    '),
+    `    fontWeight: ${fields.weight}`,
+    `    lineHeight: ${fields.lineHeight}`,
+  ]),
+  'rounded:',
+  ...yamlEntries(publishedOf(token => token.path[0].startsWith('radius-')).map(token => [nameOf(token).replace('radius-', ''), token.$value])),
+  'spacing:',
+  ...yamlEntries(publishedOf(token => /^space-\d+$/.test(nameOf(token))).map(token => [nameOf(token), token.$value])),
+  '---',
+  '',
+].join('\n');
+
 await mkdir(out, { recursive: true });
 await Promise.all([
   writeFile(join(out, 'css.d.ts'), 'export {};\n'),
+  writeFile(join(out, 'tailwind-preset.cjs'), tailwindPreset),
+  writeFile(join(out, 'tailwind-preset.d.cts'), tailwindPresetTypes),
+  writeFile(join(out, 'tailwind-theme.css'), tailwindTheme),
   writeFile(join(out, 'typography.json'), JSON.stringify(typography, null, 2) + '\n'),
   writeFile(join(out, 'tokens.json'), JSON.stringify(data, null, 2) + '\n'),
   writeFile(join(out, 'tokens.css'), css.join('\n') + '\n'),
@@ -403,6 +459,12 @@ await Promise.all([
 if (docPath) {
   await mkdir(dirname(docPath), { recursive: true });
   await writeFile(docPath, docText);
+}
+if (designMdPath) {
+  // 換行符先統一成 LF 再取代 front matter，輸出一律 LF，Windows 上重跑才不會每次都有差異。
+  const existing = (await readFile(designMdPath, 'utf8')).replace(/\r\n/g, '\n');
+  const body = existing.replace(/^---\n[\s\S]*?\n---\n/, '');
+  await writeFile(designMdPath, designMdFrontMatter + body);
 }
 if (designPath) {
   await mkdir(dirname(designPath), { recursive: true });

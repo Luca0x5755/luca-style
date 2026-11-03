@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>評分工具的反向範例</title>
+<style>
+  body { margin: 0; font: 16px/1.5 sans-serif; background: #fff; color: #111; }
+  /* 低對比文字（約 1.5:1）→ axe color-contrast（serious）。 */
+  .faint { color: #ccc; }
+  /* 固定 1000px 寬 → 834 與 390 水平溢出，1280 不溢出。 */
+  .wide { width: 1000px; height: 8px; background: #eee; }
+</style>
+</head>
+<body>
+<main>
+  <h1>訂單管理</h1>
+  <p class="faint">低對比的說明文字</p>
+  <!-- 沒有 alt 的圖片 → axe image-alt（critical）。 -->
+  <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="16" height="16">
+  <div class="wide"></div>
+  <section id="region"></section>
+</main>
+<script>
+  // 缺 error（沒有標記），empty 的內容和 success 相同。
+  const state = new URLSearchParams(location.search).get('state') ?? 'success';
+  const content = {
+    loading: '<p>載入中…</p>',
+    empty: '<table><caption>訂單</caption><tr><th scope="col">編號</th></tr><tr><td>A-1</td></tr></table>',
+    success: '<table><caption>訂單</caption><tr><th scope="col">編號</th></tr><tr><td>A-1</td></tr></table>',
+  }[state];
+  if (content) {
+    const region = document.getElementById('region');
+    region.dataset.evalState = state;
+    region.innerHTML = content;
+  }
+</script>
+</body>
+</html>

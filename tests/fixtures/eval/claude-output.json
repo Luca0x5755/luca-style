@@ -1,0 +1,5 @@
+[
+  {"type": "system", "subtype": "init", "model": "claude-sonnet-5-5", "tools": ["Read"], "skills": [], "plugins": [], "mcp_servers": []},
+  {"type": "assistant", "message": {"content": [{"type": "text", "text": "完成。"}]}},
+  {"type": "result", "subtype": "success", "is_error": false, "duration_ms": 456789, "num_turns": 42, "total_cost_usd": 1.234, "result": "完成。", "modelUsage": {"claude-sonnet-5-5": {"inputTokens": 10, "outputTokens": 20, "costUSD": 1.234}}}
+]

@@ -1,0 +1,444 @@
+{
+  "series": "baseline",
+  "scene": "crud",
+  "task": "crud",
+  "group": "plain",
+  "startedAt": "2026-11-03T03:32:38.442Z",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "budgetUsd": 5,
+  "timeoutMs": 2700000,
+  "guide": {
+    "sha": "64ec331",
+    "repoHead": "edb9b40",
+    "sha256": "01d08c9e63a7568591c1bbc744939b9061d002fd3e1eca8c5d658fdb57b077ac",
+    "dirty": false,
+    "byteEqual": null
+  },
+  "grade": {
+    "hardcodedColors": {
+      "count": 42,
+      "items": [
+        {
+          "file": "src/styles.css",
+          "line": 5,
+          "kind": "hex",
+          "text": "#f3f4f6"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 6,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 13,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 13,
+          "kind": "hex",
+          "text": "#d1d5db"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 16,
+          "kind": "hex",
+          "text": "#4b5563"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 23,
+          "kind": "hex",
+          "text": "#6b7280"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 24,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 24,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 26,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 27,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 28,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 30,
+          "kind": "hex",
+          "text": "#6b7280"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 31,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 31,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 33,
+          "kind": "hex",
+          "text": "#f3f4f6"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 34,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 34,
+          "kind": "hex",
+          "text": "#1d4ed8"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 34,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 35,
+          "kind": "hex",
+          "text": "#1e40af"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 37,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 37,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 38,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 38,
+          "kind": "hex",
+          "text": "#b91c1c"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 38,
+          "kind": "hex",
+          "text": "#fff"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 39,
+          "kind": "hex",
+          "text": "#991b1b"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 42,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 43,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 43,
+          "kind": "hex",
+          "text": "#f9fafb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 47,
+          "kind": "hex",
+          "text": "#fef3c7"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 47,
+          "kind": "hex",
+          "text": "#78350f"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 48,
+          "kind": "hex",
+          "text": "#dbeafe"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 48,
+          "kind": "hex",
+          "text": "#1e3a8a"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 49,
+          "kind": "hex",
+          "text": "#dcfce7"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 49,
+          "kind": "hex",
+          "text": "#14532d"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 50,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 50,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 52,
+          "kind": "hex",
+          "text": "#e5e7eb"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 56,
+          "kind": "hex",
+          "text": "#111827"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 64,
+          "kind": "hex",
+          "text": "#d1d5db"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 65,
+          "kind": "hex",
+          "text": "#f3f4f6"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 67,
+          "kind": "hex",
+          "text": "#374151"
+        },
+        {
+          "file": "src/styles.css",
+          "line": 57,
+          "kind": "function",
+          "text": "rgba("
+        }
+      ]
+    },
+    "axe": {
+      "serious": 0,
+      "critical": 0,
+      "items": []
+    },
+    "overflow": {
+      "390": 0,
+      "834": 0,
+      "1280": 0
+    },
+    "missingStates": {
+      "count": 0,
+      "states": []
+    },
+    "pageErrors": [],
+    "costUsd": 0.127112,
+    "durationMs": 49249,
+    "turns": 9,
+    "model": "claude-sonnet-5-5",
+    "isError": false,
+    "pass": true,
+    "failures": []
+  },
+  "run": {
+    "costUsd": 0.127112,
+    "durationMs": 49249,
+    "turns": 9,
+    "model": "claude-sonnet-5-5",
+    "isError": false
+  },
+  "workspaceFiles": [
+    "README.md",
+    "index.html",
+    "package.json",
+    "src/main.tsx",
+    "src/vite-env.d.ts",
+    "tsconfig.json"
+  ],
+  "claudeVersion": "2.1.317 (Claude Code)",
+  "flags": [
+    "-p",
+    "--output-format",
+    "json",
+    "--verbose",
+    "--model",
+    "claude-sonnet-5-5",
+    "--effort",
+    "medium",
+    "--max-budget-usd",
+    "5",
+    "--safe-mode",
+    "--setting-sources",
+    "",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--no-session-persistence",
+    "--restricted",
+    "--tools",
+    "Read,Write,Edit,Glob,Grep,Bash",
+    "--permission-mode",
+    "dontAsk",
+    "--permission-prompts",
+    "none",
+    "--allowedTools",
+    "Read",
+    "Write",
+    "Edit",
+    "Glob",
+    "Grep",
+    "Bash(npm install)",
+    "Bash(npm install *)",
+    "Bash(npm run build)",
+    "Bash(npx tsc)",
+    "Bash(npx tsc *)",
+    "--settings",
+    "<暫存區>/settings.json",
+    "--debug-file",
+    "<暫存區>/debug.log"
+  ],
+  "exitCode": 0,
+  "stderrTail": "",
+  "isolation": {
+    "ok": true,
+    "problems": [],
+    "init": {
+      "model": "claude-sonnet-5-5",
+      "tools": [
+        "Bash",
+        "Edit",
+        "Glob",
+        "Grep",
+        "Read",
+        "Write"
+      ],
+      "permissionMode": "dontAsk",
+      "skills": [],
+      "plugins": [
+        {
+          "name": "cc-plugin-agents-md",
+          "path": "builtin",
+          "source": "cc-plugin-agents-md@builtin"
+        },
+        {
+          "name": "cc-plugin-telemetry",
+          "path": "builtin",
+          "source": "cc-plugin-telemetry@builtin"
+        },
+        {
+          "name": "cc-plugin-privacy",
+          "path": "builtin",
+          "source": "cc-plugin-privacy@builtin"
+        },
+        {
+          "name": "cc-plugin-plugin-authoring",
+          "path": "builtin",
+          "source": "cc-plugin-plugin-authoring@builtin"
+        }
+      ],
+      "mcp_servers": [],
+      "slash_commands": [],
+      "agents": [
+        "claude",
+        "Explore",
+        "general-purpose",
+        "Plan"
+      ]
+    },
+    "builtinPlugins": [
+      "cc-plugin-agents-md",
+      "cc-plugin-telemetry",
+      "cc-plugin-privacy",
+      "cc-plugin-plugin-authoring"
+    ],
+    "canaryFound": false,
+    "userClaudeMdExists": false,
+    "debugLines": [
+      "2026-11-03T03:32:42.296Z [DEBUG] Loading skills from: managed=C:\\Program Files\\ClaudeCode\\.claude\\skills, user=<home>\\.claude\\skills, project=[]",
+      "2026-11-03T03:32:42.296Z [DEBUG] [reduced mode] Skipping skill dir discovery",
+      "2026-11-03T03:32:42.297Z [DEBUG] getSkills returning: 0 skill dir commands, 0 plugin skills, 31 bundled skills, 1 builtin plugin skills",
+      "2026-11-03T03:32:42.419Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:42.420Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:43.827Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:43.827Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.026Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.026Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.072Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.072Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.338Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off",
+      "2026-11-03T03:32:46.338Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off"
+    ],
+    "toolUses": 8,
+    "trespasses": [],
+    "permissionDenials": []
+  },
+  "finalText": "訂單管理頁面做好了,`npm run build` 成功,輸出在 `dist/`。我沒有啟動伺服器,所以沒在瀏覽器裡看過畫面,版面和各寬度是否左右捲動都沒實測。\n\n- **列表**:表格有編號、客戶、金額、狀態、建立日期和操作欄。可以用關鍵字搜尋客戶,也能依四種狀態篩選。資料放在記憶體,有 10 筆假資料。窄螢幕(760px 以下)會把表格改成卡片,避免左右捲動。\n- **新增與編輯**:用彈出視窗填表單。客戶必填,金額要大於 0,不合格時錯誤訊息會顯示在欄位下方。\n- **刪除**:按刪除會先跳出確認視窗。\n- **四種狀態**:`?state=loading`、`empty`、`error`、`success` 各有對應容器和 `data-eval-state`,沒有參數時是 `success`。\n  - `loading` 會一直維持載入中。\n  - `error` 有「重試」按鈕,但資料是假的,所以重試後仍會失敗,畫面會顯示已重試幾次。\n  - `empty` 用「新增訂單」建立第一筆後,列表會出現,容器的 `data-eval-state` 隨之變成 `success`。\n- **無障礙**:欄位都有標籤,錯誤訊息跟欄位關聯,彈出視窗用原生 `dialog`,文字顏色對比我是照足夠的標準選的,但沒用工具量過。\n\n程式在 `src/main.tsx`,樣式在 `src/styles.css`。",
+  "usage": {
+    "designMdTouched": 0,
+    "llmsTxtTouched": 0,
+    "packageFileReads": 0,
+    "consumerGuideTouched": 0
+  },
+  "toolErrors": [],
+  "build": {
+    "ok": true,
+    "outputTail": "\n> build\n> tsc --noEmit && vite build\n\n\u001b[36mvite v8.3.4 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n✓ 15 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.33 kB │ gzip:  0.25 kB\ndist/assets/index-CiEsE0Ar.css    3.13 kB │ gzip:  1.24 kB\ndist/assets/index-C1yGxDwt.js   227.45 kB │ gzip: 71.24 kB\n\n\u001b[32m✓ built in 145ms\u001b[39m\n\n"
+  },
+  "outcome": "passed",
+  "reason": "檢查全部通過"
+}

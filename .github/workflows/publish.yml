@@ -1,0 +1,40 @@
+# 真正發佈到 npm：只能手動觸發（workflow_dispatch）。
+# 三道關卡，任一不過就不發佈：
+#   1. 閘門步驟：evals/results/copy-vs-npm.json 必須存在，complete 為 true 且 copyBetter 為 false（PR-ADOPT-11 與 PR-EVAL-03）。
+#   2. 環境 npm-publish：擁有者要在 GitHub 的 Settings → Environments 設定必要審核者，核准後 job 才會開始。repo 內設定不了這件事。
+#   3. 權杖 NPM_TOKEN 只從 CI 機密讀取，只給發佈步驟；權杖與 @luca-style 組織由擁有者建立。
+# 來源證明需要 id-token: write。持有權杖的 job 以 npm ci --ignore-scripts 安裝，不執行依賴的安裝腳本。
+# 所有 action 皆固定到 commit SHA（行尾註解為對應的發行版本）。
+name: Publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: node scripts/check-publish-gate.mjs evals/results/copy-vs-npm.json
+      - run: npm ci --ignore-scripts
+      - run: npm audit signatures
+      - run: npm run build
+      # 套用還沒消耗的 changeset；版本已經套用過時沒有動作。
+      - run: npx changeset version
+      - run: npm publish --provenance --access public --workspace @luca-style/tokens
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish --provenance --access public --workspace @luca-style/react
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

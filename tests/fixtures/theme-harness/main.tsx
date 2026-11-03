@@ -4,7 +4,7 @@ import '@luca-style/tokens/css';
 import '../../../packages/react/src/styles.css';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Button, Checkbox, ContentState, DataTable, MetricCard, Select, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
+import { Button, Checkbox, ContentState, DataTable, MetricCard, Navigation, Select, StatusMessage, TextField, ThemeProvider, useTheme, type AccentInput, type Density, type NavigationLinkProps, type Shape, type StyleSuite, type ThemeTarget } from '@luca-style/react';
 
 const params = new URLSearchParams(window.location.search);
 const persist = params.get('persist') !== '0';
@@ -80,11 +80,78 @@ function ControlCompatibility() {
   </form>;
 }
 
+// 長文字樣本（PR-STYLE-56）：窄容器裡同時放中文與不可斷的英文字串；只有 samples=long 才渲染，不影響其他測試。
+const longText = '這是一段很長的文字用來確認操作元件會長高Supercalifragilisticexpialidocious_unbroken_string';
+function LongTextSamples() {
+  return <section aria-label="長文字樣本" style={{width:160}}>
+    <Button>{longText}</Button>
+    <Select label="長值選單" defaultValue="long"><option value="long">{longText}</option><option value="short">短選項</option></Select>
+    <TextField label={`長標籤${longText}`}/>
+    <TextField label="長值輸入" defaultValue={longText}/>
+    <TextField label="大字輸入" defaultValue="大字" style={{fontSize:'2rem'}}/>
+    <TextField label="長說明輸入" helper={`長說明${longText}`}/>
+  </section>;
+}
+
+// 工具列常見的 flex 列：標題旁的短按鈕不該被擠到斷字，長按鈕也不該撐破窄列。
+function FlexRowSamples() {
+  return <>
+    <div style={{display:'flex', width:400}}><h2 style={{margin:0, fontSize:20, whiteSpace:'nowrap', overflow:'hidden'}}>A fairly long toolbar title goes here</h2><Button>Save</Button></div>
+    <section aria-label="窄 flex 列樣本" style={{display:'flex', width:160}}><Button>{longText}</Button></section>
+  </>;
+}
+
+// 連結樣本（PR-STYLE-57、58）：Button 以元素與函式兩種 render 渲染成連結；點擊次數記在 output，用來確認 Enter 會觸發、Space 不會。
+// 導覽用的假路由：與 Next、React Router 的連結元件相同，攔下點擊、用 history.pushState 換網址，不整頁重載；並加上專案自己的 class。
+function LinkSamples() {
+  const [clicks, setClicks] = useState(0);
+  const [path, setPath] = useState(window.location.pathname);
+  const count = () => setClicks(value => value + 1);
+  const renderLink = ({href, onClick, className, ...props}:NavigationLinkProps) => <a {...props} href={href} className={`${className ?? ''} project-link`.trim()} onClick={event => {
+    onClick?.(event);
+    event.preventDefault();
+    window.history.pushState(null, '', href);
+    setPath(href);
+  }}/>;
+  return <section aria-label="連結樣本">
+    <Navigation label="路由導覽" brand="路由品牌" brandHref="/" currentPath={path} renderLink={renderLink} items={[{label:'第一頁', href:'/first'}, {label:'第二頁', href:'/second'}]}/>
+    <Button render={<a href="#element-link" onClick={count}/>}>元素連結</Button>
+    <Button variant="secondary" href="#function-link" onClick={count} render={props => <a {...props}/>}>函式連結</Button>
+    <output aria-label="連結點擊次數">{clicks}</output>
+  </section>;
+}
+
+// 文字替換樣本（PR-STYLE-59、60）：預設文字與替換後的文字並列；重試次數記在 output。
+// 空字串的 label、retryLabel 要退回預設文字。缺名稱樣本只在 samples=nameless 時渲染，給 axe 的反向控制用。
+function TextSamples() {
+  const [retries, setRetries] = useState(0);
+  const [hidden, setHidden] = useState(false);
+  return <>
+    <section aria-label="文字替換樣本">
+      <StatusMessage tone="success">預設成功</StatusMessage>
+      <StatusMessage tone="warning">預設警告</StatusMessage>
+      <StatusMessage tone="error">預設錯誤</StatusMessage>
+      <StatusMessage tone="success" label="Saved">替換成功</StatusMessage>
+      <StatusMessage tone="warning" label="">空前綴</StatusMessage>
+      <ContentState state="loading"/>
+      <ContentState state="empty"/>
+      <ContentState state="error" onRetry={() => setRetries(value => value + 1)}/>
+      <ContentState state="error" title="Failed to load" description="Try again later." retryLabel="Try again" onRetry={() => setRetries(value => value + 1)}/>
+      <ContentState state="error" title="空重試" retryLabel="" onRetry={() => setRetries(value => value + 1)}/>
+      <output aria-label="重試次數">{retries}</output>
+      <Checkbox label="隱藏標籤核取" hideLabel checked={hidden} onChange={event => setHidden(event.target.checked)} helper="隱藏標籤的說明"/>
+      <output aria-label="隱藏標籤核取值">{String(hidden)}</output>
+      <Checkbox label="可見標籤核取"/>
+    </section>
+    {params.get('samples') === 'nameless' && <section aria-label="缺名稱樣本"><Checkbox label="" hideLabel/></section>}
+  </>;
+}
+
 function Harness() {
   const [mounted, setMounted] = useState(true);
   return <>
     <button onClick={() => setMounted(false)}>卸載</button>
-    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/></ThemeProvider>}
+    {mounted && <ThemeProvider persist={persist} target={target} accent={accent} suite={suite} density={density} shape={shape}><ModeButtons/><Samples/><SelectCompatibility/><ControlCompatibility/><LinkSamples/><TextSamples/>{params.get('samples') === 'long' && <><LongTextSamples/><FlexRowSamples/></>}</ThemeProvider>}
   </>;
 }
 

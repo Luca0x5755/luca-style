@@ -1,13 +1,93 @@
+---
+version: alpha
+name: Luca Style
+description: 由 packages/tokens 的 DTCG 原始檔產生，只含 vibrant 套系日間模式的代表值
+colors:
+  accent-hover: "#007072"
+  accent-pressed: "#006062"
+  focus-ring: "#147F82"
+  bg: "#F7F8FA"
+  surface: "#FFFFFF"
+  surface-subtle: "#F1F3F5"
+  text: "#2C2E31"
+  muted: "#696B6F"
+  border: "#E0E2E6"
+  control-border: "#85878B"
+  accent-ink: "#FFFFFF"
+  metric-background: "#E3F2F0"
+  success: "#237354"
+  warning: "#886018"
+  error: "#B24445"
+  accent: "#147F82"
+  accent-secondary: "#DF826D"
+  accent-soft: "#E3F2F0"
+  primary: "#147F82"
+typography:
+  hero:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "3.5rem"
+    fontWeight: 700
+    lineHeight: 1.2
+  title:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "2rem"
+    fontWeight: 700
+    lineHeight: 1.3
+  section:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    lineHeight: 1.4
+  card:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 600
+    lineHeight: 1.5
+  body:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.75
+  control:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: "1rem"
+    fontWeight: 500
+    lineHeight: 1.5
+  secondary:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: ".875rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  helper:
+    fontFamily: "Inter, 'Noto Sans TC', sans-serif"
+    fontSize: ".75rem"
+    fontWeight: 500
+    lineHeight: 1.5
+rounded:
+  card: "1.25rem"
+  control: "1rem"
+spacing:
+  space-1: "0.25rem"
+  space-2: "0.5rem"
+  space-3: "0.75rem"
+  space-4: "1rem"
+  space-6: "1.5rem"
+  space-8: "2rem"
+  space-12: "3rem"
+  space-16: "4rem"
+---
 # Luca Style 設計系統（給代理讀）
 
 這份文件寫給要在專案裡使用 Luca Style 的代理。先看「決策規則」決定怎麼選，再看「主題軸」與「API」照著寫。術語依 [GLOSSARY.md](https://github.com/Luca0x5755/luca-style/blob/main/GLOSSARY.md)。
+
+檔案開頭的 front matter 由設計變數的原始檔產生，符合 Google 的 DESIGN.md 規格（alpha），但只是 `vibrant` 套系日間模式的代表值；其他套系與暗黑模式的值只看[設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md)，不要從 front matter 推斷。
 
 ## 套件
 
 | 套件 | 內容 |
 | --- | --- |
-| `@luca-style/tokens` | 設計變數：`/css`（CSS 自訂屬性）、`/data`（以套系、明暗兩層索引的 JSON）、`/typography`（響應式字體角色）、`/accent`（`deriveAccent` 推算函式）。 |
-| `@luca-style/react` | React 19 元件與主題控制，互動行為由 Base UI 處理；`/css` 是元件樣式，`/fonts.css` 自行託管 Inter、Noto Sans TC、IBM Plex Mono。 |
+| `@luca-style/tokens` | 設計變數：`/css`（CSS 自訂屬性）、`/data`（以套系、明暗兩層索引的 JSON）、`/typography`（響應式字體角色）、`/accent`（`deriveAccent` 推算函式）、`/tailwind`（Tailwind v3 的 preset，涵蓋所有色彩角色）。 |
+| `@luca-style/react` | React 18 與 19 元件與主題控制，互動行為由 Base UI 處理；`/css` 是元件樣式，`/fonts.css` 自行託管 Inter、Noto Sans TC、IBM Plex Mono。 |
 
 兩個套件版本須一致。每個變數在每種「套系 × 明暗」組合下的值與用途，見[設計變數規格](https://github.com/Luca0x5755/luca-style/blob/main/docs/design-tokens.md)（隨 `@luca-style/tokens` 發布為 `design-tokens.md`，由 DTCG 原始檔產生，是變數值的唯一依據；不要憑記憶或從本文件抄值）。
 
@@ -91,13 +171,13 @@ export const App = () => (
 
 | 元件 | 用途 | 重點 props |
 | --- | --- | --- |
-| `Button` | 按鈕 | `variant`（`primary`、`secondary`）、`loading` |
+| `Button` | 按鈕；傳 `render` 時渲染成連結（型別 `ButtonLinkProps`），外觀相同、保留連結語意，不接受 `disabled`、`loading`、`type` | `variant`（`primary`、`secondary`）、`loading`、`render` |
 | `TextField` | 文字欄位 | `label`、`helper`、`error` |
 | `Select` | 自訂下拉選單，選項仍以 `<option>` 描述 | `label`、`value`、`onChange`（收到的 `event.target.value` 是選到的值） |
-| `Checkbox` | 核取方塊 | `label`、`checked`、`onChange` |
-| `StatusMessage` | 操作結果訊息 | `tone`（`success`、`warning`、`error`） |
-| `ContentState` | 載入、空白、錯誤狀態 | `state`、`title`、`description`、`onRetry` |
-| `Navigation` | 主要導覽 | `items`、`currentPath`、`brand`、`brandHref`、`label` |
+| `Checkbox` | 核取方塊；`hideLabel` 只在視覺上隱藏標籤，名稱仍來自 `label`，不必另給 `aria-label` | `label`、`checked`、`onChange`、`hideLabel` |
+| `StatusMessage` | 操作結果訊息；開頭的「成功／警告／錯誤」可用 `label` 替換，不能拿掉（空字串會退回預設） | `tone`（`success`、`warning`、`error`）、`label` |
+| `ContentState` | 載入、空白、錯誤狀態；標題、說明與「重試」都可替換，沒給時用中文預設 | `state`、`title`、`description`、`retryLabel`、`onRetry` |
+| `Navigation` | 主要導覽；傳 `renderLink` 時選單與品牌連結都用專案的連結元件，點擊不整頁重載，目前頁面仍有 `aria-current` | `items`、`currentPath`、`brand`、`brandHref`、`label`、`renderLink`（收到 `NavigationLinkProps`） |
 | `MetricCard` | 指標卡 | `label`、`value`、`detail`、`eyebrow`、`highlight` |
 | `DataTable` | 資料表 | `caption`、`columns`、`rows`、`rowKey` |
 
@@ -117,8 +197,11 @@ export function Panel() {
       <TextField label="名稱" helper="最多 20 字" />
       <Checkbox label="同意條款" checked={done} onChange={event => setDone(event.target.checked)} />
       <Button loading={saving} onClick={() => setSaving(true)}>送出</Button>
+      <Checkbox label="選取此列" hideLabel />
       <StatusMessage tone="success">已儲存</StatusMessage>
+      <StatusMessage tone="error" label="Error">Could not save</StatusMessage>
       <ContentState state="empty" />
+      <ContentState state="error" title="Failed to load" description="Try again later." retryLabel="Try again" onRetry={() => setSaving(false)} />
       <DataTable
         caption="專案清單"
         rows={rows}
@@ -126,6 +209,26 @@ export function Panel() {
         columns={[{ key: 'name', heading: '名稱', render: row => row.name }, { key: 'amount', heading: '金額', render: row => row.amount }]}
       />
     </section>
+  );
+}
+```
+
+接專案的路由：`Navigation` 的 `renderLink` 收到 `<a>` 的屬性（含 `href`、`className`、`ref`），全部展開到專案的連結元件上，Luca 的樣式與 `aria-current` 才會留著。它只收函式。`Button` 的 `render` 可傳元素或函式，渲染成連結時沒有按鈕的 `type`、停用與載入狀態，按 Space 也不會觸發，與一般連結相同。`Button` 以多載區分兩種寫法，包裝元件要同時轉傳 `ButtonProps` 與 `ButtonLinkProps` 時，以有沒有 `render` 分兩個分支呼叫。
+
+```tsx
+import type { ReactElement, ReactNode } from 'react';
+import { Button, Navigation, type NavigationLinkProps } from '@luca-style/react';
+
+// 換成專案路由的連結元件，例如 next/link 的 Link；React Router 的 Link 收 to，寫成 ({ href, ...props }) => <Link to={href} {...props} />。
+declare function Link(props: { href: string; className?: string; children?: ReactNode }): ReactElement;
+const renderLink = (props: NavigationLinkProps) => <Link {...props} />;
+
+export function Header({ pathname }: { pathname: string }) {
+  return (
+    <>
+      <Navigation currentPath={pathname} renderLink={renderLink} items={[{ label: '專案', href: '/projects' }, { label: '設定', href: '/settings' }]} />
+      <Button render={<Link href="/projects/new" />}>新增專案</Button>
+    </>
   );
 }
 ```

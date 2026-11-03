@@ -1,0 +1,3 @@
+/* 評分工具的正向範例：變數定義、var() 引用與備用值都不算寫死顏色。 */
+:root { --brand: #123456; --shadow: rgb(0 0 0 / 0.2); }
+.card { color: var(--text); background: var(--surface, rgb(255, 255, 255)); border-color: var(--border); }

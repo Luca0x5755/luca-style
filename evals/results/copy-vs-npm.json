@@ -1,0 +1,158 @@
+{
+  "complete": true,
+  "copyBetter": false,
+  "conclusion": "inconclusive, so npm stays: 沒有任何一項達到明顯變好的門檻（平手或改善不足），npm 是預設路線。",
+  "problems": [],
+  "items": [
+    {
+      "item": "hardcodedColors",
+      "scene": "crud",
+      "rule": "percent",
+      "npmMedian": 1,
+      "copyMedian": 1,
+      "worse": false,
+      "improved": false,
+      "comparable": true
+    },
+    {
+      "item": "missingStates",
+      "scene": "crud",
+      "rule": "percent",
+      "npmMedian": 0,
+      "copyMedian": 0,
+      "worse": false,
+      "improved": false,
+      "comparable": true
+    },
+    {
+      "item": "axe",
+      "scene": "crud",
+      "rule": "zero",
+      "npmMedian": 0,
+      "copyMedian": 0,
+      "worse": false,
+      "improved": false,
+      "comparable": true
+    },
+    {
+      "item": "overflow",
+      "scene": "crud",
+      "rule": "zero",
+      "npmMedian": 0,
+      "copyMedian": 0,
+      "worse": false,
+      "improved": false,
+      "comparable": true
+    },
+    {
+      "item": "lostLocalChanges",
+      "scene": "update",
+      "rule": "zero",
+      "npmMedian": 0,
+      "copyMedian": 0,
+      "worse": false,
+      "improved": false,
+      "comparable": true
+    }
+  ],
+  "failed": [
+    {
+      "file": "2026-11-03-03-37-00-crud-luca.json",
+      "scene": "crud",
+      "group": "npm",
+      "outcome": "harness-error",
+      "reason": "harness 例外（事後確認）：npm run build 回傳失敗但沒有任何輸出（outputTail 為空）；代理自己回報建置成功。當時 driver 腳本被停止、行程失去主控台，判斷是 harness 的 build 步驟被中斷，不是代理的專案問題（未能重建驗證）",
+      "harnessCause": "harness-exception",
+      "superseded": true,
+      "supersededBy": "2026-11-03-03-39-22-crud-luca.json"
+    }
+  ],
+  "cells": {
+    "crud-copy": {
+      "files": [
+        "2026-11-03-04-41-43-crud-copy-cvn.json",
+        "2026-11-03-04-43-34-crud-copy-cvn.json",
+        "2026-11-03-04-45-05-crud-copy-cvn.json"
+      ],
+      "passed": 3,
+      "medians": {
+        "hardcodedColors": 1,
+        "missingStates": 0,
+        "axe": 0,
+        "overflow": 0,
+        "lostLocalChanges": null,
+        "costUsd": 0.2428716,
+        "durationMs": 62875
+      }
+    },
+    "crud-npm": {
+      "files": [
+        "2026-11-03-03-33-47-crud-luca.json",
+        "2026-11-03-03-35-10-crud-luca.json",
+        "2026-11-03-03-39-22-crud-luca.json"
+      ],
+      "passed": 3,
+      "medians": {
+        "hardcodedColors": 1,
+        "missingStates": 0,
+        "axe": 0,
+        "overflow": 0,
+        "lostLocalChanges": null,
+        "costUsd": 0.2968099,
+        "durationMs": 66157
+      }
+    },
+    "update-copy": {
+      "files": [
+        "2026-11-03-04-46-39-update-copy-cvn.json",
+        "2026-11-03-04-47-30-update-copy-cvn.json",
+        "2026-11-03-04-48-18-update-copy-cvn.json"
+      ],
+      "passed": 3,
+      "medians": {
+        "hardcodedColors": 0,
+        "missingStates": null,
+        "axe": 0,
+        "overflow": 0,
+        "lostLocalChanges": 0,
+        "costUsd": 0.20031000000000002,
+        "durationMs": 35189
+      }
+    },
+    "update-npm": {
+      "files": [
+        "2026-11-03-04-49-19-update-npm-cvn.json",
+        "2026-11-03-04-49-58-update-npm-cvn.json",
+        "2026-11-03-04-50-38-update-npm-cvn.json"
+      ],
+      "passed": 3,
+      "medians": {
+        "hardcodedColors": 0,
+        "missingStates": null,
+        "axe": 0,
+        "overflow": 0,
+        "lostLocalChanges": 0,
+        "costUsd": 0.0439454,
+        "durationMs": 21096
+      }
+    }
+  },
+  "reuse": {
+    "files": [
+      "2026-11-03-03-33-47-crud-luca.json",
+      "2026-11-03-03-35-10-crud-luca.json",
+      "2026-11-03-03-39-22-crud-luca.json"
+    ],
+    "guideSha": "64ec331",
+    "startedAt": [
+      "2026-11-03T03:33:47.620Z",
+      "2026-11-03T03:35:10.809Z",
+      "2026-11-03T03:39:22.669Z"
+    ],
+    "claudeVersion": [
+      "2.1.317 (Claude Code)"
+    ],
+    "note": "npm 組沿用 ISSUE-013 的結果，與複製組、更新題不是同一批時間跑的；模型、旗標與 claude 版本以各結果檔記錄為準。"
+  },
+  "costUsd": 1.4431777999999997
+}

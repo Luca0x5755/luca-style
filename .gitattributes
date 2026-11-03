@@ -4,3 +4,5 @@ docs/mockup/themes/* -text
 docs/mockup/*.penpot binary
 # dump 是 LF 的 JSON，位元組由 check:penpot 比對，不做換行轉換。
 docs/mockup/*.dump.json -text
+# DESIGN.md 的 front matter 由 npm run generate 產生，測試比對已提交檔與重新產生的結果；固定 LF，不做換行轉換。
+DESIGN.md -text

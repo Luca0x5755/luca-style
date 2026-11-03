@@ -1,0 +1,3 @@
+/* 專案自己的頁面基礎：兩個入口相同，比對時差異才只來自 preflight。 */
+*, ::before, ::after { box-sizing:border-box; }
+body { margin:0; font-family:var(--font-body); line-height:1.5; }
