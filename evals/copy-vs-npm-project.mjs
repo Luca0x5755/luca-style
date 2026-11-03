@@ -11,8 +11,11 @@ const evals = join(root, 'evals');
 const npmTimeoutMs = 10 * 60_000;
 
 const npmCliPath = () => process.env.npm_execpath ?? join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+// 安裝不能受呼叫行程的環境影響：NODE_ENV=production（例如 vite 的 build() 在同一個行程裡設的）或 npm 的 omit 設定會讓 npm 略過 devDependencies，
+// 起始專案就缺 @types/react-dom，型別檢查失敗。這裡把這幾個變數拿掉。
+export const installEnv = env => Object.fromEntries(Object.entries(env).filter(([key]) => !/^(NODE_ENV|npm_config_(omit|production|only|include))$/i.test(key)));
 function npm(args, cwd) {
-  const result = spawnSync(process.execPath, [npmCliPath(), ...args], { cwd, encoding: 'utf8', timeout: npmTimeoutMs, killSignal: 'SIGKILL' });
+  const result = spawnSync(process.execPath, [npmCliPath(), ...args], { cwd, encoding: 'utf8', timeout: npmTimeoutMs, killSignal: 'SIGKILL', env: installEnv(process.env) });
   if (result.status !== 0) throw new Error(`npm ${args.join(' ')} failed\n${result.stdout}\n${result.stderr}`);
   return result;
 }

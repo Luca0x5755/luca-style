@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gradeProject } from '../evals/grade.mjs';
-import { listFiles, prepareCopyVsNpmProject, pristineLibraryFiles } from '../evals/copy-vs-npm-project.mjs';
+import { installEnv, listFiles, prepareCopyVsNpmProject, pristineLibraryFiles } from '../evals/copy-vs-npm-project.mjs';
 import { applyLocalChange, copyGroupProblems, gradeUpdate, newVersionMarker } from '../evals/copy-vs-npm.mjs';
 
 // 複製 vs npm 評測的起始專案（ISSUE-014）。不裝依賴的版本驗證檔案內容；裝依賴的版本真的建置，並用 gradeUpdate 評分。
@@ -20,9 +20,17 @@ async function withProject<T>(kind: Parameters<typeof prepareCopyVsNpmProject>[0
     await rm(temporary, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
   }
 }
+// vite 的 build()（theme-harness 在前面的 spec 用到）會把同一個測試行程的 NODE_ENV 設成 production，npm 看到它就不裝 devDependencies，
+// tsc 找不到 @types/react-dom。起始專案的安裝與建置不能受行程環境影響，所以這個檔的每個測試都在 NODE_ENV=production 下跑，
+// 把整份全套件才會碰到的狀況固定下來。
+let savedNodeEnv: string | undefined;
+test.beforeEach(() => { savedNodeEnv = process.env.NODE_ENV; process.env.NODE_ENV = 'production'; });
+test.afterEach(() => { if (savedNodeEnv === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = savedNodeEnv; });
 const sh = (command: string, args: string[], cwd: string) => {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8', shell: process.platform === 'win32' });
-  expect(result.status, `${command} ${args.join(' ')}\n${result.stdout}\n${result.stderr}`).toBe(0);
+  const result = spawnSync(command, args, { cwd, encoding: 'utf8', shell: process.platform === 'win32', env: installEnv(process.env) });
+  const found = result.status === 0 ? null : spawnSync('npm', ['ls', '@types/react-dom', '--all'], { cwd, encoding: 'utf8', shell: process.platform === 'win32' });
+  const env = Object.entries(process.env).filter(([key]) => /^(npm_config|NODE_ENV|NPM)/i.test(key)).map(([key, value]) => `${key}=${value}`).join(' ');
+  expect(result.status, `${command} ${args.join(' ')}\n${result.stdout}\n${result.stderr}\nENV ${env}\n${found?.stdout}`).toBe(0);
 };
 
 test('crud copy starter holds packages/react/src byte for byte, declares no @luca-style/react, and puts the docs at the project root', async () => {
@@ -70,6 +78,7 @@ test('crud copy starter type-checks and builds with the copied source, and has n
     sh('npm', ['run', 'build'], workspace);
     const scoped = await readdir(join(workspace, 'node_modules/@luca-style'));
     expect(copyGroupProblems({ packageJson: await readFile(join(workspace, 'package.json'), 'utf8'), installedReact: scoped.includes('react') })).toEqual([]);
+    expect((await readdir(join(workspace, 'node_modules/@types'))).sort()).toEqual(expect.arrayContaining(['react', 'react-dom']));
   });
 });
 
