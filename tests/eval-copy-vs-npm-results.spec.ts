@@ -40,15 +40,17 @@ test('ADR 0010 is Accepted if and only if the committed verdict is complete and 
   expect(status).toBe(`Status: ${adrStatusFor(verdict)}`);
 });
 
-test('the promises PR-EVAL-01 to 03 live in the capability spec, which stays CRLF, and delivery verification has a row for each', async () => {
+test('the promises PR-EVAL-01 to 03 live in the capability spec, whose line endings are not mixed, and delivery verification has a row for each', async () => {
   const spec = await read('docs/capabilities/design-system.md');
   const delivery = await read('docs/delivery-verification.md');
   for (const id of ['PR-EVAL-01', 'PR-EVAL-02', 'PR-EVAL-03']) {
     expect(spec, id).toMatch(new RegExp(`^${id} — `, 'm'));
     expect(delivery, id).toContain(`| ${id} |`);
   }
-  expect(spec).not.toMatch(/(?<!\r)\n/);
-  expect(delivery).not.toMatch(/(?<!\r)\n/);
+  // 簽出時的換行依平台而異（Windows 為 CRLF、CI 的 Linux 為 LF），所以只要求同一個檔案不混用。
+  const mixed = (text: string) => /\r\n/.test(text) && /(?<!\r)\n/.test(text);
+  expect(mixed(spec), 'design-system.md').toBe(false);
+  expect(mixed(delivery), 'delivery-verification.md').toBe(false);
 });
 
 test('result files and archives hold no workspace path, home path or Claude project-folder slug of the user name', async () => {
