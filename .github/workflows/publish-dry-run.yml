@@ -1,4 +1,4 @@
-# 發佈試跑：套用 changeset 把版本帶到 0.3.0，再對兩個套件各跑一次 npm publish --dry-run（含來源證明設定）。
+# 發佈試跑：有待處理的 changeset 時先套用，再對兩個套件各跑一次 npm publish --dry-run（含來源證明設定）。
 # 只做試跑，不使用任何機密、也不指定環境；真正發佈在 publish.yml，只能手動觸發。
 # 來源證明需要 id-token: write；分叉的 PR 拿不到，所以跳過。Dependabot 的 PR 雖是同 repo 也拿不到 id-token，這類 PR 的試跑接受跳過或失敗。
 # 所有 action 皆固定到 commit SHA（行尾註解為對應的發行版本）。
@@ -28,7 +28,9 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: npm run build
-      # 套用 changeset，兩個套件都到 0.3.0（只改工作目錄，不提交）。
-      - run: npx changeset version
+      # 套用還沒消耗的 changeset（只改工作目錄，不提交）。版本已經提交、沒有待處理的 changeset 時略過，
+      # 因為這時 npx changeset version 會以 exit 1 結束（No unreleased changesets found）。
+      - if: ${{ hashFiles('.changeset/*.md', '!.changeset/README.md') != '' }}
+        run: npx changeset version
       - run: npm publish --dry-run --provenance --access public --workspace @luca-style/tokens
       - run: npm publish --dry-run --provenance --access public --workspace @luca-style/react

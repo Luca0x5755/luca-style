@@ -1,19 +1,18 @@
 import { test, expect } from '@playwright/test';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// PR-ADOPT-09：changesets 讓兩個套件版本一致，且第一個 changeset 把版本帶到 0.3.0 並附升級說明。
-// 全部離線；版本帶動只在暫存複本跑，不動 repo 本身。
+// PR-ADOPT-09、PR-RELEASE-04：changesets 讓兩個套件版本一致；0.3.0 已套用，升級說明在 CHANGELOG.md。
+// 全部離線；再次套用只在暫存複本跑，不動 repo 本身。
 const root = fileURLToPath(new URL('../', import.meta.url));
 const read = (path: string) => readFileSync(join(root, path), 'utf8').replace(/\r\n/g, '\n');
 const changesetCli = join(root, 'node_modules/@changesets/cli/bin.js');
 const names = ['@luca-style/tokens', '@luca-style/react'];
 
 const config = JSON.parse(read('.changeset/config.json'));
-const files = readdirSync(join(root, '.changeset')).filter((f) => f.endsWith('.md') && f !== 'README.md');
 
 test('config binds both packages into one lockstep version group and publishes publicly', () => {
   expect(config.fixed).toEqual([names]);
@@ -21,42 +20,60 @@ test('config binds both packages into one lockstep version group and publishes p
   expect(config.baseBranch).toBe('main');
 });
 
-// 這組檢查描述「首次發佈 0.3.0 之前」的狀態；0.3.0 版本套用、changeset 被消耗後，由發佈的下一份規格改寫或移除。
-test('exactly one pending changeset raises both packages by minor', () => {
-  expect(files).toHaveLength(1);
-  const front = read(`.changeset/${files[0]}`).match(/^---\n([\s\S]*?)\n---\n/)?.[1] ?? '';
-  const entries = front.split('\n').map((line) => line.match(/^"([^"]+)":\s*(\w+)$/)).map((m) => (m ? [m[1], m[2]] : null));
-  expect(entries).toEqual(names.map((n) => [n, 'minor']));
+const readJson = (path: string) => JSON.parse(read(path));
+
+// 版本已經套用（PR-RELEASE-04）：兩個套件、鎖定檔的工作區條目都是 0.3.0，changeset 已被消耗。
+test('both packages and the lockfile workspace entries are at 0.3.0', () => {
+  const tokens = readJson('packages/tokens/package.json');
+  const react = readJson('packages/react/package.json');
+  expect(tokens.version).toBe('0.3.0');
+  expect(react.version).toBe('0.3.0');
+  expect(react.dependencies['@luca-style/tokens']).toBe('0.3.0');
+  const lock = readJson('package-lock.json').packages;
+  expect(lock['packages/tokens'].version).toBe('0.3.0');
+  expect(lock['packages/react'].version).toBe('0.3.0');
+  expect(lock['packages/react'].dependencies['@luca-style/tokens']).toBe('0.3.0');
 });
 
-test('applying the changeset on a temporary copy gives exactly 0.3.0 for both packages', () => {
+test('no pending changeset is left: .changeset holds only config.json and an optional README', () => {
+  expect(readdirSync(join(root, '.changeset')).filter((f) => f !== 'config.json' && f !== 'README.md')).toEqual([]);
+});
+
+test('each package has a CHANGELOG.md with a 0.3.0 entry', () => {
+  for (const dir of ['tokens', 'react']) {
+    const log = read(`packages/${dir}/CHANGELOG.md`);
+    expect(log).toMatch(new RegExp(`^# @luca-style/${dir}$`, 'm'));
+    expect(log).toMatch(/^## 0\.3\.0$/m);
+    expect(log).toMatch(/^### Minor Changes$/m);
+  }
+});
+
+// 版本已套用後再跑一次：changesets 以 exit 1 回報沒有待處理的 changeset，且不改任何檔案。
+// 在已提交的暫存複本上跑，工作樹乾淨就是 publish.yml 的乾淨工作樹檢查看到的狀態。
+test('running changeset version again changes nothing and leaves a clean working tree', () => {
   const copy = mkdtempSync(join(tmpdir(), 'luca-changeset-'));
   try {
     cpSync(join(root, '.changeset'), join(copy, '.changeset'), { recursive: true });
-    for (const file of ['package.json']) cpSync(join(root, file), join(copy, file));
-    for (const dir of ['tokens', 'react']) {
-      mkdirSync(join(copy, 'packages', dir), { recursive: true });
-      cpSync(join(root, 'packages', dir, 'package.json'), join(copy, 'packages', dir, 'package.json'));
+    for (const file of ['package.json', 'package-lock.json', 'apps/showcase/package.json', 'packages/tokens/package.json', 'packages/react/package.json', 'packages/tokens/CHANGELOG.md', 'packages/react/CHANGELOG.md']) {
+      mkdirSync(dirname(join(copy, file)), { recursive: true });
+      cpSync(join(root, file), join(copy, file));
     }
-    mkdirSync(join(copy, 'apps/showcase'), { recursive: true });
-    cpSync(join(root, 'apps/showcase/package.json'), join(copy, 'apps/showcase/package.json'));
-    // changesets 靠鎖定檔判斷套件管理員才找得到工作區套件；空鎖定檔即可。
-    writeFileSync(join(copy, 'package-lock.json'), '{}');
-    spawnSync('git', ['init', '-q'], { cwd: copy });
+    const git = (...args: string[]) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false', '-c', 'core.autocrlf=false', ...args], { cwd: copy, encoding: 'utf8' });
+    git('init', '-q');
+    git('add', '-A');
+    expect(git('commit', '-q', '-m', 'applied').status).toBe(0);
     const result = spawnSync(process.execPath, [changesetCli, 'version'], { cwd: copy, encoding: 'utf8' });
-    expect(result.status, result.stdout + result.stderr).toBe(0);
-    const tokens = JSON.parse(readFileSync(join(copy, 'packages/tokens/package.json'), 'utf8'));
-    const react = JSON.parse(readFileSync(join(copy, 'packages/react/package.json'), 'utf8'));
-    expect(tokens.version).toBe('0.3.0');
-    expect(react.version).toBe('0.3.0');
-    expect(react.dependencies['@luca-style/tokens']).toBe('0.3.0');
+    expect(result.status, result.stdout + result.stderr).toBe(1);
+    expect(result.stdout + result.stderr).toMatch(/No unreleased changesets found/);
+    expect(git('status', '--porcelain').stdout).toBe('');
   } finally {
     rmSync(copy, { recursive: true, force: true });
   }
 });
 
 // 升級說明：每個項目一條錨定在同一行的樣式，避免只靠散落的關鍵字湊數。
-const notes = read(`.changeset/${files[0]}`);
+// 升級說明現在在各套件的 CHANGELOG.md（changesets 套用時由 first-npm-release.md 產生）。
+const notes = read('packages/react/CHANGELOG.md');
 const mustHave: Array<[string, RegExp]> = [
   ['control height equals control-height instead of 50px', /^.*Button.*Select.*TextField.*`control-height`.*50px.*$/m],
   ['Select long values wrap instead of ellipsis', /^.*Select.*換行.*省略號.*$/m],

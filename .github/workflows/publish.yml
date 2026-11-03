@@ -3,12 +3,21 @@
 #   1. 閘門步驟：evals/results/copy-vs-npm.json 必須存在，complete 為 true 且 copyBetter 為 false（PR-ADOPT-11 與 PR-EVAL-03）。
 #   2. 環境 npm-publish：擁有者要在 GitHub 的 Settings → Environments 設定必要審核者，核准後 job 才會開始。repo 內設定不了這件事。
 #   3. 權杖 NPM_TOKEN 只從 CI 機密讀取，只給發佈步驟；權杖與 @luca-style 組織由擁有者建立。
+# 另有兩個限制：手動觸發時只能選 dist-tag next 或 latest（預設 next）；套用 changeset 後工作樹有任何改動就失敗，只發佈 main 上已提交的版本（PR-RELEASE-01、02）。
 # 來源證明需要 id-token: write。持有權杖的 job 以 npm ci --ignore-scripts 安裝，不執行依賴的安裝腳本。
 # 所有 action 皆固定到 commit SHA（行尾註解為對應的發行版本）。
 name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 發佈到哪個 dist-tag（第一次發佈先選 next，驗證後再提升 latest）
+        type: choice
+        options:
+          - next
+          - latest
+        default: next
 
 permissions:
   contents: read
@@ -30,11 +39,15 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm audit signatures
       - run: npm run build
-      # 套用還沒消耗的 changeset；版本已經套用過時沒有動作。
-      - run: npx changeset version
-      - run: npm publish --provenance --access public --workspace @luca-style/tokens
+      # 套用還沒消耗的 changeset。版本已經提交進 main、.changeset 沒有待處理的 changeset 時略過：
+      # 這時 npx changeset version 會以 exit 1 結束（No unreleased changesets found）。
+      - if: ${{ hashFiles('.changeset/*.md', '!.changeset/README.md') != '' }}
+        run: npx changeset version
+      # 只發佈 main 上已提交的版本：套用 changeset 後工作樹有任何改動就失敗，兩個套件都不發佈。
+      - run: test -z "$(git status --porcelain)"
+      - run: npm publish --provenance --access public --tag ${{ inputs.tag }} --workspace @luca-style/tokens
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: npm publish --provenance --access public --workspace @luca-style/react
+      - run: npm publish --provenance --access public --tag ${{ inputs.tag }} --workspace @luca-style/react
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
