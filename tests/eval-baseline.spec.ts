@@ -344,7 +344,8 @@ test('the committed baseline report is 18 of 18, regenerates byte for byte from 
   expect(pilot).not.toContain('baseline');
 });
 
-test('new baseline result files, their claude output and archived workspaces carry no home directory path or user name', async () => {
+// 逐次執行的存檔（工作區、claude-output.json）已移到標籤 archive/eval-runs-2026-11-03，不在樹裡；這裡只掃留在樹裡的結果檔。
+test('baseline result files carry no home directory path or user name', async () => {
   const baselineNames = [];
   for (const name of await readdir(results)) if (name.endsWith('.json') && JSON.parse(await readFile(join(results, name), 'utf8')).series === 'baseline') baselineNames.push(name.replace(/\.json$/, ''));
   expect(baselineNames.length).toBeGreaterThan(0);
@@ -352,10 +353,7 @@ test('new baseline result files, their claude output and archived workspaces car
   const forms = [home, home.replaceAll('\\', '/'), home.replaceAll('\\', '\\\\'), `/${home[0].toLowerCase()}${home.slice(2).replaceAll('\\', '/')}`].map(form => form.toLowerCase());
   const user = home.split(/[\\/]/).at(-1)!.toLowerCase();
   const files: string[] = [];
-  for (const name of baselineNames) {
-    files.push(join(results, `${name}.json`));
-    for (const entry of await readdir(join(results, name), { recursive: true, withFileTypes: true })) if (entry.isFile()) files.push(join(entry.parentPath, entry.name));
-  }
+  for (const name of baselineNames) files.push(join(results, `${name}.json`));
   for (const file of files) {
     const text = (await readFile(file, 'utf8')).toLowerCase();
     for (const form of forms) expect(text.includes(form), `${file} 含 ${form}`).toBe(false);

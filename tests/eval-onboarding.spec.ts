@@ -109,7 +109,9 @@ test('scrubbing replaces the workspace and the home directory in every path styl
 // 新結果檔不得帶家目錄路徑；涵蓋結果檔、claude-output.json 與封存的工作區。ISSUE-011 既有的結果不在範圍內。
 test('new onboarding result files, their claude output and archived workspace carry no home directory path', async () => {
   const directory = join(root, 'evals/results');
-  const names = (await readdir(directory)).filter(name => name.includes('-onboarding-'));
+  // 逐次存檔已移到標籤 archive/eval-runs-2026-11-03；這裡只掃留在樹裡的結果 JSON，並要求至少 3 個，免得掃空。
+  const names = (await readdir(directory)).filter(name => name.includes('-onboarding-') && name.endsWith('.json'));
+  expect(names.length).toBeGreaterThanOrEqual(3);
   const home = homedir();
   const forms = [home, home.replaceAll('\\', '/'), home.replaceAll('\\', '\\\\'), `/${home[0].toLowerCase()}${home.slice(2).replaceAll('\\', '/')}`].map(form => form.toLowerCase());
   const user = home.split(/[\\/]/).at(-1)!.toLowerCase();

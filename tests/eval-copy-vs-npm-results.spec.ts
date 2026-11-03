@@ -57,7 +57,8 @@ test('result files and archives hold no workspace path, home path or Claude proj
   const home = homedir();
   const forms = [home, home.replace(/\\/g, '/'), home.replace(/\\/g, '\\\\'), home.replace(/[^A-Za-z0-9]/g, '-')].map(form => form.toLowerCase());
   const files = (await readdir(results, { recursive: true, withFileTypes: true })).filter(entry => entry.isFile() && relative(results, join(entry.parentPath, entry.name)).includes("-cvn"));
-  expect(files.length).toBeGreaterThan(9);
+  // 逐次存檔在標籤 archive/eval-runs-2026-11-03，樹裡只剩 3 組 × 3 次的結果 JSON。
+  expect(files.length).toBeGreaterThanOrEqual(9);
   for (const entry of files) {
     if (!/\.(json|md|tsx?|css|html|txt)$/.test(entry.name)) continue;
     const text = (await readFile(join(entry.parentPath, entry.name), 'utf8')).toLowerCase();

@@ -10,3 +10,6 @@ packages/react/DESIGN.md
 packages/react/llms.txt
 packages/tokens/design-tokens.md
 .env
+
+# 評測的逐次執行存檔（工作區、claude-output.json）不進樹；頂層結果 JSON 與報告照常提交。已提交的存檔在標籤 archive/eval-runs-2026-11-03
+evals/results/*/
