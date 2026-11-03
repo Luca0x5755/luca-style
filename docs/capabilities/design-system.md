@@ -184,6 +184,7 @@ PR-ADOPT-10 — CI 能對 0.3.0 跑完發佈的試跑：`.github/workflows/publi
 PR-ADOPT-11 — 沒有 `PR-EVAL-03` 的結論和擁有者的確認，發佈流程不會真的發佈：真正發佈只在 `.github/workflows/publish.yml`，只能由 `workflow_dispatch` 手動觸發。job 在 checkout 之後、任何發佈步驟之前先跑 `node scripts/check-publish-gate.mjs evals/results/copy-vs-npm.json`，該檔不存在、不是 JSON 物件、`complete` 不是布林 `true`（評測資料不完整）、`copyBetter` 缺少或不是布林 `false`（含資料不完整時的 `null`）都以非 0 結束，閘門步驟不能被 `if`、`|| true` 等跳過。確認由 GitHub 環境 `npm-publish` 的必要審核者提供。限制：必要審核者要擁有者在 GitHub 設定，repo 內設定不了也測不到；`tests/publish-gate.spec.ts` 用假的結論檔驗證各種失敗情況，`tests/publish-workflow.spec.ts` 檢查接線。
 PR-RELEASE-01 — `publish.yml` 手動觸發時可選 dist-tag，只接受 `next` 或 `latest`，預設 `next`；兩個套件都以所選 tag 發佈。
 PR-RELEASE-02 — `publish.yml` 只發佈 main 上已提交的版本：套用 changeset 會改動任何檔案時，發佈失敗，不發佈任何套件。
+PR-RELEASE-03 — `npm run test:registry -- <版本>` 在乾淨專案從 npm registry 安裝指定版本的 `@luca-style/tokens` 與 `@luca-style/react`，跑與 `test:consumer` 相同的檢查（型別檢查、production build、主題與元件操作、字體與授權），並以 `npm audit signatures` 確認來源證明，失敗即整個指令失敗；不打包本機原始碼、不安裝本機 tarball；沒有給版本號時失敗並說明用法。
 
 ### 評測承諾
 

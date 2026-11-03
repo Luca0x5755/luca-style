@@ -57,6 +57,7 @@ npm run test:clean-projects
 | PR-EVAL-04 | `eval-baseline.spec`：三份題目含評分器依賴的四態契約與逐字相同的限制區塊，sha256 釘死；兩組的題目位元組、指令、旗標與 settings 相同，plain 的 README 中性、luca 只多一段，luca 的工作區多指南與套件內附的 DESIGN.md、llms.txt；每個場景的手做探針專案經評分器乾跑，合理分化的 empty 與 error 不判缺漏、error 重複 empty 判缺漏；累計費用護欄（含被取代的檔）、補跑規則（只限 harness 例外、每格一次）、結果分類（隔離失敗、逾時、超出預算、建置失敗都算沒通過）、越界判定雙向（luca 讀已安裝套件檔案不算越界）、每格剛好 3 次的彙整與中位數、未滿時 `INCOMPLETE n/18`；已提交的 `baseline-report.md` 必須 18/18 並與結果檔重新產生的內容相同，結果檔沒有家目錄路徑。真正的 18 次實測結果在 `evals/results/`，不在 CI 重跑（花真的錢）。 |
 | PR-RELEASE-01 | `publish-workflow.spec`：`workflow_dispatch` 只有一個 `choice` input，選項恰為 `next`、`latest`，預設 `next`；兩個 `npm publish` 步驟都帶 `--tag ${{ inputs.<名稱> }}`，沒有寫死的 tag。離線只測文字結構，GitHub 介面的下拉與 npm 的實際 tag 要等第一次發佈才看得到。 |
 | PR-RELEASE-02 | `publish-workflow.spec`：`test -z "$(git status --porcelain)"` 步驟位於 `npx changeset version` 之後、第一個 `npm publish` 之前，沒有 `if`、`continue-on-error`、`||`、`;`。離線測不到 runner 上的實際工作樹；建置產物在 `.gitignore` 內，不會觸發檢查。 |
+| PR-RELEASE-03 | `registry-verify.spec`：`planConsumerSource` 的計畫（registry 模式不 pack、安裝引數恰為兩個 `@<版本>` 規格、audit 為 `audit signatures`；無模式維持 `test:consumer` 的 pack 兩個套件且不 audit；缺版本、空版本、選項式版本都丟出用法）；`installConsumer` 以假 npm 驗證順序（registry 不 pack、不裝殘留 tgz、install 後於同一專案 audit，audit 失敗即 reject）；以假的 `npm_execpath` 跑真正的 `verify-consumer.mjs registry`：沒版本號時在碰 npm 與建暫存目錄前失敗，有版本號時依序 install、audit、`run build`（走到共用檢查），audit 失敗時退出非零且不再 build。離線，不連 registry。**真實執行（對 npm 上的 0.3.0 與真正的 `npm audit signatures`）在 ISSUE-019**，目前 npm 上還沒有任何版本。 |
 
 ## 五頁矩陣與操作
 

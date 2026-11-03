@@ -5,9 +5,18 @@ import {tmpdir} from 'node:os';
 import {join, resolve, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from '@playwright/test';
+import {installConsumer, planConsumerSource} from './consumer-source.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
+// 先解析參數：沒給版本號要在碰 npm、建暫存目錄之前就以用法說明失敗。
+let plan;
+try {
+  plan = planConsumerSource(process.argv.slice(2));
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
 const npmCli = process.env.npm_execpath;
-if (!npmCli) throw new Error('Run through npm run test:consumer');
+if (!npmCli) throw new Error('Run through npm run test:consumer or npm run test:registry');
 const temporary = await mkdtemp(join(tmpdir(),'luca-consumer-'));
 function npm(args,cwd) {
   const result=spawnSync(process.execPath,[npmCli,...args],{cwd,encoding:'utf8'});
@@ -24,11 +33,16 @@ function unexpectedBuildWarnings(output) {
 let server;
 let browser;
 try {
-  for(const name of ['tokens','react']) npm(['pack','--pack-destination',temporary],join(root,'packages',name));
   const consumer=join(temporary,'consumer');
-  await cp(join(root,'examples','consumer'),consumer,{recursive:true,filter:source=>!['node_modules','dist'].includes(source.split(sep).at(-1))});
-  const tarballs=(await readdir(temporary)).filter(name=>name.endsWith('.tgz')).map(name=>join(temporary,name));
-  npm(['install','--no-audit','--no-fund',...tarballs],consumer);
+  // 來源（本機 tarball 或 registry）在 installConsumer 裡切換；之後的檢查兩種模式共用。registry 模式的 audit signatures 也在這裡，失敗就中止，不再往下跑。
+  await installConsumer(plan,{
+    npm,
+    temporary,
+    consumerDir:consumer,
+    packageDir:name=>join(root,'packages',name),
+    copyConsumer:()=>cp(join(root,'examples','consumer'),consumer,{recursive:true,filter:source=>!['node_modules','dist'].includes(source.split(sep).at(-1))}),
+    listTarballs:async()=>(await readdir(temporary)).filter(name=>name.endsWith('.tgz')).map(name=>join(temporary,name))
+  });
   // tarball 須隨附 prepack 複製的 MIT 授權。
   for(const name of ['tokens','react']) assert.match(await readFile(join(consumer,'node_modules','@luca-style',name,'LICENSE'),'utf8'),/^MIT License/);
   // 給代理讀的文件（ISSUE-013）須隨套件安裝：react 帶 DESIGN.md 與 llms.txt，tokens 帶設計變數規格。
@@ -80,7 +94,7 @@ try {
     assert.match(await response.text(),/SIL OPEN FONT LICENSE/i);
   }
   assert.equal(await page.evaluate(async()=>{const faces=await Promise.all(['16px Inter','16px "Noto Sans TC"','16px "IBM Plex Mono"','600 16px "IBM Plex Mono"'].map(font=>document.fonts.load(font)));return faces.every(group=>group.length>0 && group.every(face=>face.status==='loaded'));}),true);
-  console.log('PASS independent tarball consumer: install, public imports, typecheck, production build without undocumented warnings, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license');
+  console.log(`PASS independent ${plan.mode==='registry'?`registry consumer (${plan.install.join(', ')}, audit signatures)`:'tarball consumer'}: install, public imports, typecheck, production build without undocumented warnings, theme/mode/accent/status, Select popup inside the theme container, fonts, font licenses and MIT license`);
 } finally {
   if(browser) await browser.close();
   if(server && server.exitCode===null) {const closed=new Promise(done=>server.once('exit',done));server.kill();await closed;}

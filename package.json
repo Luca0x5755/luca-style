@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test:consumer": "node scripts/verify-consumer.mjs",
+    "test:registry": "node scripts/verify-consumer.mjs registry",
     "test:clean-projects": "node scripts/verify-clean-projects.mjs",
     "eval": "node evals/run.mjs",
     "screenshots": "node scripts/screenshots.mjs",
