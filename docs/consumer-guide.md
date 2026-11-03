@@ -394,6 +394,7 @@ npm run test:consumer
 | `getByLabel('…').selectOption('dark')` | `getByLabel('…').click()` 後 `getByRole('option', {name:'暗黑'}).click()` | Select 改為自訂選單 |
 | Select 上的 `toHaveValue('dark')` | `toHaveText('暗黑')`（比對顯示文字） | 欄位是 `<button>`，沒有 `value` |
 | `select`、`document.querySelectorAll('select')` | `.luca-select-trigger` 或 `getByRole('combobox')` | 同上 |
+| jsdom（Vitest、Jest）的 `fireEvent.change(select, …)`、`select.value`、`select.options` | 點欄位、再點選項，見〈在 jsdom 測試 Select〉 | 欄位不是 `<select>`：`.value` 是 `undefined`，`.options` 不存在，`fireEvent.change` 不報錯但 `onChange` 不會被呼叫 |
 | Checkbox 的 `getByLabel('…')` | `getByRole('checkbox', {name:'…'})` | `getByLabel` 會同時找到方框與隱藏的 input，strict mode 報錯 |
 | `input[type=checkbox]`、`.luca-checkbox input` | `[role=checkbox]` 或 `.luca-checkbox-box` | 可見的方框改為 `<span>` |
 | 斷言按鈕滑過的 `filter: brightness(...)` | 斷言背景色等於 `--accent-hover` | 滑過改用推算色 |
@@ -520,9 +521,9 @@ await page.getByRole('option', {name:'暗黑'}).click();
 - `onChange` 收到的不是瀏覽器原生的 change 事件，只有 `type: 'change'` 與 `target`／`currentTarget` 上的 `value`、`name`、`id`。`preventDefault()`、`nativeEvent`、`target.selectedOptions` 等都不存在。
 - 其他屬性（`title`、`data-*`、`onFocus`、`onBlur`、`onKeyDown` 等）套在欄位的 `<button>` 上；型別仍宣告為 `HTMLSelectElement` 的事件，但執行時的 `currentTarget` 是 button。
 - 子元素只讀 `<option>`（包在 Fragment 裡也可以）；`<optgroup>` 和其他元素會被略過，群組內的選項也不會出現。
-- 停用的選項在選單中顯示為「名稱（不可選）」，可以用方向鍵移到它，但無法選取。
+- 停用的選項在選單中顯示為「名稱（不可選）」，可以用方向鍵移到它，但無法選取。「（不可選）」是名稱後面的獨立節點，選項的無障礙名稱因此是「名稱 （不可選）」（中間有一個空白）；用 `getByRole('option', {name: …})` 找停用選項時，用正規表示式（例如 `/^Q4.*（不可選）$/`），不要比對「Q4（不可選）」整串。
 - 以 `select` 標籤選擇器寫的 CSS 或 DOM 查詢（例如 `document.querySelectorAll('select')`）不再找得到 `Select`；改用 `.luca-select-trigger`。
-- Vite 建置時，Base UI 檔案開頭的 `'use client'` 會產生「module level directive may not be preserved」警告，不影響輸出，可以忽略。
+- 用 Vite 8 建置時，Base UI 檔案開頭的 `'use client'` 會產生「module level directive may not be preserved」警告，不影響輸出，可以忽略（Vite 5.4 實測沒有這則警告，見〈Vite 的 `'use client'` 警告〉）。
 
 ### 其餘共用元件改用 Base UI
 
@@ -546,4 +547,4 @@ await page.getByRole('option', {name:'暗黑'}).click();
 - 連結列由 `<div>` 改為 `<ul class="luca-navigation-list">` 加 `<li>`；`.luca-navigation > div` 的 CSS 或查詢要改為 `.luca-navigation-list`。連結仍是 `<a>`，目前頁面仍有 `aria-current="page"`，`.luca-brand` 仍是 `<nav>` 下的第一個 `<a>`。
 - 外層 `<nav>` 由 Base UI 的 NavigationMenu 渲染，會多帶 Base UI 自己的 `data-*` 屬性。
 
-另外，Vite 建置時多出幾個 Base UI 檔案的 `'use client'` 警告，與 Select 相同，可以忽略。
+另外，用 Vite 8 建置時多出幾個 Base UI 檔案的 `'use client'` 警告，與 Select 相同，可以忽略。
