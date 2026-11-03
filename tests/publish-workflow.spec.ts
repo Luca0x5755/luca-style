@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 // 發佈工作流程（PR-ADOPT-10、PR-ADOPT-11）：不連網，以固定縮排的文字結構切出頂層區塊、job 與步驟。
 // 試跑與真正發佈分成兩個檔，讓「真正發佈只由 workflow_dispatch 觸發」能直接從 on 區塊看出。
@@ -230,4 +230,21 @@ test('PR-RELEASE-02: the job fails on any working-tree change after changeset ve
   expect(version).toBeGreaterThanOrEqual(0);
   expect(at).toBeGreaterThan(version);
   expect(firstPublish).toBeGreaterThan(at);
+});
+
+// ---- 版本已套用後的工作流程（PR-RELEASE-04） ----
+// changeset version 在沒有待處理的 changeset 時以 exit 1 結束；版本已提交進 main 後，這個步驟只在 .changeset 還有 changeset 時執行。
+// hashFiles 在 runner 上的實際求值離線測不到，這裡釘住運算式字面值，並以 repo 現況交叉驗證。
+const applyGuard = "hashFiles('.changeset/*.md', '!.changeset/README.md') != ''";
+for (const [file, yml, name] of [['publish-dry-run.yml', dryRun, 'dry-run'], ['publish.yml', publish, 'publish']] as const) {
+  test(`PR-RELEASE-04: ${file} runs changeset version only while a changeset is pending`, () => {
+    const matches = steps(job(yml, name)).filter((s) => runOf(s) === 'npx changeset version');
+    expect(matches).toHaveLength(1);
+    expect(matches[0]).toContain('if: ${{ ' + applyGuard + ' }}');
+  });
+}
+
+test('PR-RELEASE-04: with the version applied the guard expression is empty, so the step is skipped', () => {
+  const pending = readdirSync(new URL('../.changeset/', import.meta.url)).filter((f) => f.endsWith('.md') && f !== 'README.md');
+  expect(pending).toEqual([]);
 });

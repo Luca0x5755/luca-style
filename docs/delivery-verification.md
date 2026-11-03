@@ -58,6 +58,9 @@ npm run test:clean-projects
 | PR-RELEASE-01 | `publish-workflow.spec`：`workflow_dispatch` 只有一個 `choice` input，選項恰為 `next`、`latest`，預設 `next`；兩個 `npm publish` 步驟都帶 `--tag ${{ inputs.<名稱> }}`，沒有寫死的 tag。離線只測文字結構，GitHub 介面的下拉與 npm 的實際 tag 要等第一次發佈才看得到。 |
 | PR-RELEASE-02 | `publish-workflow.spec`：`test -z "$(git status --porcelain)"` 步驟位於 `npx changeset version` 之後、第一個 `npm publish` 之前，沒有 `if`、`continue-on-error`、`||`、`;`。離線測不到 runner 上的實際工作樹；建置產物在 `.gitignore` 內，不會觸發檢查。 |
 | PR-RELEASE-03 | `registry-verify.spec`：`planConsumerSource` 的計畫（registry 模式不 pack、安裝引數恰為兩個 `@<版本>` 規格、audit 為 `audit signatures`；無模式維持 `test:consumer` 的 pack 兩個套件且不 audit；缺版本、空版本、選項式版本都丟出用法）；`installConsumer` 以假 npm 驗證順序（registry 不 pack、不裝殘留 tgz、install 後於同一專案 audit，audit 失敗即 reject）；以假的 `npm_execpath` 跑真正的 `verify-consumer.mjs registry`：沒版本號時在碰 npm 與建暫存目錄前失敗，有版本號時依序 install、audit、`run build`（走到共用檢查），audit 失敗時退出非零且不再 build。離線，不連 registry。**真實執行（對 npm 上的 0.3.0 與真正的 `npm audit signatures`）在 ISSUE-019**，目前 npm 上還沒有任何版本。 |
+| PR-RELEASE-04 | `changesets.spec`：兩個 `package.json` 與 `package-lock.json` 的工作區條目為 0.3.0、react 依賴 tokens 0.3.0；`.changeset/` 只含 `config.json`（可有 README）；兩個 `CHANGELOG.md` 含 `## 0.3.0` 與升級說明逐項；暫存的已提交複本再跑一次 `changeset version`，exit 1、檔案不變、`git status --porcelain` 為空。`publish-workflow.spec` 釘住兩個工作流程版本步驟的 `if` 運算式並與 repo 現況交叉驗證。離線測不到 runner 上 `hashFiles` 的實際求值與 `publish-dry-run.yml` 的實跑，要等 CI。 |
+| PR-RELEASE-05 | `release-checklist.spec`：`docs/releasing.md` 的六個編號步驟依序出現，各錨點（`publish.yml` 的 choice input 名稱、`next`、`npm-publish`、`package.json` 有的 `test:registry`、兩條 `npm dist-tag add`、`git tag -a v<版本> <SHA>` 與 Actions 執行紀錄）落在自己那一節內；`【僅擁有者】` 只出現在環境核准、`npm dist-tag add`、推 tag 三個步驟與發錯一節（`npm deprecate`），其餘步驟與全文別處都沒有。離線只驗文字，步驟實際可行要等 ISSUE-019、021 照清單做。 |
+| PR-RELEASE-06 | `release-checklist.spec`：發錯一節含「不 unpublish」、新版本修正與標有 `【僅擁有者】` 的 `npm deprecate @luca-style/<套件>@<版本> "<原因>"`；清單不含權杖形狀的字串。 |
 
 ## 五頁矩陣與操作
 

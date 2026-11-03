@@ -39,8 +39,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm audit signatures
       - run: npm run build
-      # 套用還沒消耗的 changeset；版本已經套用過時沒有動作。
-      - run: npx changeset version
+      # 套用還沒消耗的 changeset。版本已經提交進 main、.changeset 沒有待處理的 changeset 時略過：
+      # 這時 npx changeset version 會以 exit 1 結束（No unreleased changesets found）。
+      - if: ${{ hashFiles('.changeset/*.md', '!.changeset/README.md') != '' }}
+        run: npx changeset version
       # 只發佈 main 上已提交的版本：套用 changeset 後工作樹有任何改動就失敗，兩個套件都不發佈。
       - run: test -z "$(git status --porcelain)"
       - run: npm publish --provenance --access public --tag ${{ inputs.tag }} --workspace @luca-style/tokens
