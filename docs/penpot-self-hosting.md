@@ -67,6 +67,25 @@ Penpot 的 MCP 有兩種接法，來源：[Penpot MCP 文件](https://help.penpo
 
 本專案實際連線方式（維護者本機的 `mcp` 容器 `--multi-user`，用哪個接法、是否用 MCP 金鑰、外掛從哪個網址載入）：待確認。金鑰屬於密鑰，不要寫進 repo、提交紀錄或聊天紀錄。
 
+## 其他專案的版本與快照
+
+用 Penpot 畫 mockup 的專案，可以把設計歷史存成 Penpot 版本，repo 只放由使用者決定何時更新的快照。本 repo 的元件庫設計檔另有流程（見下節），不用這支腳本。
+
+腳本是 `scripts/design/penpot-versions.mjs`，只用 Node 內建模組，不隨 npm 套件發佈。在該專案的根目錄執行：
+
+```sh
+node <luca-style 路徑>/scripts/design/penpot-versions.mjs --file <檔案 id> --pr <編號>      # PR 開好後存 pr-<編號>，並把標籤寫進 PR 說明
+node <luca-style 路徑>/scripts/design/penpot-versions.mjs --file <檔案 id> --export <路徑>  # 使用者要求時存 repo-r<revn> 並覆蓋快照
+node <luca-style 路徑>/scripts/design/penpot-versions.mjs --file <檔案 id> --check          # 只回報上次快照後累積的 pr-* 數量與天數
+```
+
+- **Token：** 先讀環境變數 `PENPOT_ACCESS_TOKEN`，沒有才讀執行目錄的 `.env`。
+- **`--pr` 略過：** `revn` 沒有比人存的最新版本新時，不存版本也不改 PR 說明。之後設計又改了就再跑一次；同一個 PR 存多次，`--check` 只算一個。
+- **`--export` 失敗：** 舊快照不受影響。匯出期間設計被修改也算失敗，停止編輯後重跑；要匯出時也可以改用 Penpot 介面的「Download Penpot file」。提交由人決定。
+- **限制：** 版本只留在 Penpot，快照帶不走版本。腳本使用 Penpot 的內部 API（`create-file-snapshot`、`export-binfile`），升級後可能失效。
+
+接入時，在專案的 `CLAUDE.md` 或 `AGENTS.md` 寫下檔案 id、快照路徑、上面的指令和「每個 PR 開好後存版本」的規則。
+
 ## 與 repo 的關係
 
 - 設計檔改完後的匯出與提交流程（匯出覆蓋 `.penpot`、重新產生 `luca-style-library.dump.json`、`npm run check:penpot`，兩個檔案一起提交）見[使用端接入](consumer-guide.md#更新元件庫設計檔維護-luca-style-的人)。
